@@ -12,7 +12,7 @@ from pathlib import Path
 
 import httpx
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from loguru import logger
 from starlette.responses import Response
@@ -21,6 +21,7 @@ from channel_relay import __version__
 from channel_relay.config.loader import load_config
 from channel_relay.config.models import RelayConfig
 from channel_relay.health import readiness_reasons
+from channel_relay.middleware.auth import verify_basic_auth
 from channel_relay.observability.logging import configure_logging
 from channel_relay.proxy.forwarder import find_channel, forward
 from channel_relay.settings import Settings
@@ -99,7 +100,11 @@ def create_app(
             )
         return JSONResponse(status_code=200, content={"status": "ready"})
 
-    @application.api_route("/channel/{name}/{path:path}", methods=_RELAY_METHODS)
+    @application.api_route(
+        "/channel/{name}/{path:path}",
+        methods=_RELAY_METHODS,
+        dependencies=[Depends(verify_basic_auth)],
+    )
     async def relay(name: str, path: str, request: Request) -> Response:
         """Route to a channel and forward transparently (§3.1, §5)."""
         channel = find_channel(request.app.state.config, name)
