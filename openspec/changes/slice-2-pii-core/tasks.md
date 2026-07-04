@@ -42,14 +42,14 @@
 
 ## 5. Redaction engine — response (T2.5)
 
-- [ ] 5.1 Author synthetic sanitized golden fixtures under `tests/fixtures/mock/` (SOAP + plain
+- [x] 5.1 Author synthetic sanitized golden fixtures under `tests/fixtures/mock/` (SOAP + plain
       XML request/response pairs with expected redacted output per action type)
-- [ ] 5.2 TDD red: generic operation parser tests (SOAP body child, root element, header ignored);
+- [x] 5.2 TDD red: generic operation parser tests (SOAP body child, root element, header ignored);
       engine tests (rule select by channel+operation, ignored patterns, unknown ns prefix
       no-match + metric, per-action golden tests with decrypt-and-compare, structure/namespace
       preservation, pii-disabled byte-identical pass-through, mid-document failure → 502
       `pii_redaction_failed` with no partial body)
-- [ ] 5.3 Implement `pii/engine.py` redaction + generic operation parser; wire response hook in
+- [x] 5.3 Implement `pii/engine.py` redaction + generic operation parser; wire response hook in
       forwarder (before response header hygiene); commit
 
 ## 6. De-anonymization engine — request (T2.6)
