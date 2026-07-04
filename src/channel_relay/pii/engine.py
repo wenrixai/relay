@@ -12,18 +12,30 @@ Fail closed: every unexpected error is wrapped in :class:`RedactionError` /
 
 from __future__ import annotations
 
+import re
+
 from lxml import etree
 
-from channel_relay.pii.codec import TOKEN_RE, decrypt, encrypt
+from channel_relay.pii.codec import TOKEN_RE, TokenError, decrypt, encrypt
 from channel_relay.pii.crypto import Keyring
 from channel_relay.pii.rules import (
     FieldRule,
     MaskAction,
+    ReferenceRule,
     RemoveAction,
     ReplaceAction,
+    Rule,
     RuleSet,
 )
 from channel_relay.pii.xml_ops import parse_bytes, serialize
+
+# Un-anchored token matcher for scanning tokens embedded within free text (§8.6). The
+# base64url alphabet has no whitespace/punctuation, so each match ends at the first such
+# boundary — the codec's ``TOKEN_RE`` is the anchored (full-value) form of this pattern.
+_EMBEDDED_TOKEN_RE = re.compile(r"ENC_[A-Za-z0-9_-]+")
+
+# Type alias for the collector: pii_type value → set of plaintext values seen this pass.
+_Collector = dict[str, set[str]]
 
 _SOAP_LOCAL_ENVELOPE = "Envelope"
 _SOAP_LOCAL_BODY = "Body"
@@ -69,7 +81,7 @@ def _apply_action(rule: FieldRule, value: str, keyring: Keyring) -> str | None:
     return encrypt(value, keyring)
 
 
-def _locate(root: etree._Element, rule: FieldRule) -> list[object]:
+def _locate(root: etree._Element, rule: FieldRule | ReferenceRule) -> list[object]:
     """Evaluate the rule's XPath; unknown prefixes/invalid paths are a no-match (§9.4)."""
     try:
         result = root.xpath(rule.path, namespaces=rule.namespaces or None)
@@ -82,12 +94,22 @@ def _ignored(rule: FieldRule, value: str) -> bool:
     return any(pattern.search(value) for pattern in rule.ignored_re)
 
 
-def _rewrite_node(node: object, rule: FieldRule, keyring: Keyring) -> bool:
-    """Apply the rule's action to one located node. Returns True when a field changed."""
+def _collect(collector: _Collector, rule: FieldRule, value: str) -> None:
+    """Record a matched plaintext value under its pii_type for later reference rules."""
+    collector.setdefault(rule.pii_type.value, set()).add(value)
+
+
+def _rewrite_node(node: object, rule: FieldRule, keyring: Keyring, collector: _Collector) -> bool:
+    """Apply the rule's action to one located node. Returns True when a field changed.
+
+    The pre-rewrite plaintext is collected first, so reference rules (phase 2) can search
+    free text for it even though this node is about to become a token (D4).
+    """
     if isinstance(node, etree._Element):  # pylint: disable=protected-access  # lxml's public-in-practice type
         value = node.text
         if value is None or _ignored(rule, value):
             return False
+        _collect(collector, rule, value)
         node.text = _apply_action(rule, value, keyring)
         return True
     # Attribute results are "smart strings" carrying their owner element.
@@ -96,6 +118,7 @@ def _rewrite_node(node: object, rule: FieldRule, keyring: Keyring) -> bool:
         attrname = getattr(node, "attrname", None)
         if parent is None or attrname is None or _ignored(rule, str(node)):
             return False
+        _collect(collector, rule, str(node))
         replacement = _apply_action(rule, str(node), keyring)
         if replacement is None:
             del parent.attrib[attrname]
@@ -105,13 +128,59 @@ def _rewrite_node(node: object, rule: FieldRule, keyring: Keyring) -> bool:
     return False
 
 
-def select_rules(ruleset: RuleSet, channel: str, operation: str) -> list[FieldRule]:
+def select_rules(ruleset: RuleSet, channel: str, operation: str) -> list[Rule]:
     """Rules applicable to this channel + operation; jsonpath rules are deferred (O6)."""
     return [
         rule
         for rule in ruleset.rules
         if rule.path_type == "xpath" and rule.channel == channel and rule.operation_re.search(operation)
     ]
+
+
+def _reference_pattern(rule: ReferenceRule, values: set[str]) -> re.Pattern[str] | None:
+    """A case-insensitive alternation over guarded literal values, longest-first.
+
+    Values are ``re.escape``-d (a collected value is a literal, never a rule-supplied
+    regex — D6), length-filtered, and — when ``word_boundary`` — fenced by alphanumeric
+    look-arounds so "John" cannot hit "Johnson".
+    """
+    candidates = sorted(
+        {v for v in values if len(v) >= rule.min_match_len},
+        key=len,
+        reverse=True,
+    )
+    if not candidates:
+        return None
+    alternation = "|".join(re.escape(v) for v in candidates)
+    if rule.word_boundary:
+        alternation = rf"(?<![0-9A-Za-z])(?:{alternation})(?![0-9A-Za-z])"
+    return re.compile(alternation, re.IGNORECASE)
+
+
+def _redact_reference_rule(
+    root: etree._Element,
+    rule: ReferenceRule,
+    keyring: Keyring,
+    collector: _Collector,
+    counts: dict[str, int],
+) -> None:
+    """Phase 2: encrypt occurrences of collected source values inside the rule's target nodes."""
+    values: set[str] = set()
+    for pii_type in rule.source_pii_types:
+        values |= collector.get(pii_type.value, set())
+    pattern = _reference_pattern(rule, values)
+    if pattern is None:
+        return
+    for node in _locate(root, rule):
+        if not isinstance(node, etree._Element):  # pylint: disable=protected-access  # lxml public-in-practice
+            continue
+        text = node.text
+        if text is None:
+            continue
+        new_text, hits = pattern.subn(lambda m: encrypt(m.group(0), keyring), text)
+        if hits:
+            node.text = new_text
+            counts[rule.pii_type.value] = counts.get(rule.pii_type.value, 0) + hits
 
 
 def redact_response_body(
@@ -133,17 +202,48 @@ def redact_response_body(
     kwargs = {"max_bytes": max_bytes} if max_bytes is not None else {}
     root = parse_bytes(body, **kwargs)
     counts: dict[str, int] = {}
+    collector: _Collector = {}
     try:
         operation = parse_operation(root)
-        for rule in select_rules(ruleset, channel, operation):
-            for node in _locate(root, rule):
-                if _rewrite_node(node, rule, keyring):
-                    counts[rule.pii_type.value] = counts.get(rule.pii_type.value, 0) + 1
+        selected = select_rules(ruleset, channel, operation)
+        # Phase 1: structured field rules — collect plaintext, then rewrite each node (D4).
+        for rule in selected:
+            if isinstance(rule, FieldRule):
+                for node in _locate(root, rule):
+                    if _rewrite_node(node, rule, keyring, collector):
+                        counts[rule.pii_type.value] = counts.get(rule.pii_type.value, 0) + 1
+        # Phase 2: reference rules — search free text for the values collected in phase 1.
+        for rule in selected:
+            if isinstance(rule, ReferenceRule):
+                _redact_reference_rule(root, rule, keyring, collector, counts)
         return serialize(root), counts
     except Exception as exc:
         # Never propagate partially processed output; message carries the type only.
         msg = f"redaction failed: {type(exc).__name__}"
         raise RedactionError(msg) from exc
+
+
+def _deanonymize_value(value: str, keyring: Keyring) -> tuple[str, int]:
+    """Decrypt ``ENC_`` tokens in one text/attribute value; return (new_value, count).
+
+    A value that is EXACTLY one token fails closed on a bad token (the caller raises 502);
+    an embedded lookalike that will not decrypt is left untouched, because free text may
+    legitimately contain an ``ENC_``-prefixed word (§8.6, D3-A).
+    """
+    if TOKEN_RE.fullmatch(value):
+        return decrypt(value, keyring), 1  # may raise TokenError → caller fails closed
+    hits = 0
+
+    def _replace(match: re.Match[str]) -> str:
+        nonlocal hits
+        try:
+            plaintext = decrypt(match.group(0), keyring)
+        except TokenError:
+            return match.group(0)  # embedded lookalike, not a real token — leave as-is
+        hits += 1
+        return plaintext
+
+    return _EMBEDDED_TOKEN_RE.sub(_replace, value), hits
 
 
 def deanonymize_request_body(
@@ -165,14 +265,14 @@ def deanonymize_request_body(
     decrypted = 0
     try:
         for element in root.iter("*"):  # "*" yields elements only (no comments/PIs)
-            if element.text is not None and TOKEN_RE.fullmatch(element.text):
-                element.text = decrypt(element.text, keyring)
-                decrypted += 1
+            if element.text is not None:
+                element.text, hits = _deanonymize_value(element.text, keyring)
+                decrypted += hits
             for name, value in element.attrib.items():
-                text_value = str(value)
-                if TOKEN_RE.fullmatch(text_value):
-                    element.set(name, decrypt(text_value, keyring))
-                    decrypted += 1
+                new_value, hits = _deanonymize_value(str(value), keyring)
+                if hits:
+                    element.set(name, new_value)
+                    decrypted += hits
         return serialize(root), decrypted
     except Exception as exc:
         msg = f"de-anonymization failed: {type(exc).__name__}"

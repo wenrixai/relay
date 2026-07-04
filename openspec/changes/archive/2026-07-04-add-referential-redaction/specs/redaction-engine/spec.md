@@ -1,8 +1,5 @@
-# redaction-engine Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change slice-2-pii-core. Update Purpose after archive.
-## Requirements
 ### Requirement: Response redaction
 
 For channels with `pii.enabled: true`, the relay SHALL redact channel responses before returning
@@ -87,30 +84,3 @@ the ciphertext-looking text forwards as-is under confidentiality-only + TLS inte
 #### Scenario: Full-value bad token fails closed
 - **WHEN** a value is EXACTLY one `ENC_` token that fails decoding or decryption
 - **THEN** the channel receives nothing and the client gets 502 `pii_deanonymization_failed`
-
-### Requirement: Fail-closed error semantics
-Any crypto, rule, or XML error during redaction or de-anonymization SHALL produce the 502 JSON
-error contract (reason `pii_redaction_failed` or `pii_deanonymization_failed`) and the relay SHALL
-never forward a partially processed body in either direction. Error details SHALL never contain
-PII or key material.
-
-#### Scenario: Redaction failure drops response
-- **WHEN** encryption of a located field fails mid-document
-- **THEN** the client receives 502 `pii_redaction_failed` and none of the upstream body
-
-#### Scenario: Bad token blocks request
-- **WHEN** a request token fails decoding or decryption
-- **THEN** the channel receives nothing and the client gets 502 `pii_deanonymization_failed`
-
-### Requirement: Generic operation parsing (interim)
-Until per-channel parsers land (T3.2), the relay SHALL parse the operation from the body with a
-generic XML parser: the SOAP Body's first child local-name, or the document root local-name for
-non-SOAP XML. Operations SHALL never be taken from client headers.
-
-#### Scenario: SOAP operation parsed
-- **WHEN** a SOAP request's Body contains `<ns:PNR_Retrieve>`
-- **THEN** the parsed operation is `PNR_Retrieve`
-
-#### Scenario: Header ignored
-- **WHEN** a client supplies an operation-naming header contradicting the body
-- **THEN** rule selection uses only the body-derived operation

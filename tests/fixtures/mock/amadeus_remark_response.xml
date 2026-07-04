@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <pnr:PNR_Reply xmlns:pnr="urn:amadeus:pnr">
+      <pnr:travellerInfo>
+        <pnr:passengerName>
+          <pnr:firstName>JOHN</pnr:firstName>
+          <pnr:lastName>SMITH</pnr:lastName>
+        </pnr:passengerName>
+      </pnr:travellerInfo>
+      <pnr:generalRemark>
+        <pnr:remarkText>RM PSGR JOHN SMITH RQ WHEELCHAIR ASSISTANCE AT GATE</pnr:remarkText>
+      </pnr:generalRemark>
+      <pnr:generalRemark>
+        <pnr:remarkText>OSI YY CTCM SMITH MOBILE ONFILE</pnr:remarkText>
+      </pnr:generalRemark>
+    </pnr:PNR_Reply>
+  </soap:Body>
+</soap:Envelope>

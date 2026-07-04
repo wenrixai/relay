@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "rules_version": "remark-fixture-2026-07-04",
+  "rules": [
+    {
+      "id": "amd.pnr.firstname.001",
+      "channel": "amd",
+      "operation": "^PNR_Reply",
+      "path": "//a:passengerName/a:firstName",
+      "namespaces": {"a": "urn:amadeus:pnr"},
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amd.pnr.lastname.001",
+      "channel": "amd",
+      "operation": "^PNR_Reply",
+      "path": "//a:passengerName/a:lastName",
+      "namespaces": {"a": "urn:amadeus:pnr"},
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amd.pnr.remark-name.001",
+      "rule_type": "reference",
+      "channel": "amd",
+      "operation": "^PNR_Reply",
+      "path": "//a:generalRemark/a:remarkText",
+      "namespaces": {"a": "urn:amadeus:pnr"},
+      "source_pii_types": ["person"],
+      "pii_type": "person",
+      "method": "encrypt"
+    }
+  ]
+}

@@ -208,6 +208,22 @@ entries; documented as deprecated but functional. Parity tested against a v1 con
     "ignored_content_patterns": ["^TMX"] } ] }
 ```
 `path_type`: `xpath` (default) | `jsonpath` (§5.4). `method`: `encrypt` (default) | `mask`.
+`rule_type`: `field` (default) | `reference`.
+
+A **reference** rule redacts occurrences of PII values that `field` rules already extracted this
+same pass — the name that also appears inside a free-text remark (Amadeus/Sabre `RM`/`OSI`/`SSR`).
+It declares `source_pii_types` (which extracted buckets to hunt), a bounded target `path` (the
+free-text nodes to search — never document-wide), guards `min_match_len` (default 3) and
+`word_boundary` (default true, case-insensitive), and a reversible `encrypt` action:
+```json
+{ "id": "amadeus.pnr_reply.remark.001", "rule_type": "reference",
+  "channel": "amadeus", "operation": "^PNR_Reply",
+  "path": "//ns:generalRemark/ns:remarkText", "path_type": "xpath",
+  "source_pii_types": ["person"], "pii_type": "person", "method": "encrypt" }
+```
+Matching is literal (a collected value is a fixed string, escaped, never a regex) and structural
+(edits the parsed node's text, never the raw body). Values live only for the one pass — no
+persistence, no cross-request memory.
 
 ### 8.2 Matching flow
 Detect channel from route; parse operation from body; select rules where `channel` matches and
@@ -239,12 +255,19 @@ PII; IV length is tunable in `codec.py` (never below 96-bit).
 ### 8.5 / 8.6 Encrypt (response) / decrypt (request)
 Encrypt: parse → select rules → per node compute payload/iv/ciphertext → replace with `ENC_...` →
 re-serialize. Decrypt: scan values for the `ENC_` marker (envelope-driven, no rule needed) → decode
-→ epoch → key → CTR-decrypt → smaz-decompress if flagged → replace. Any crypto/rule error → **502
-JSON** (§10.3); never forward partially processed PII.
+→ epoch → key → CTR-decrypt → smaz-decompress if flagged → replace. The scan matches each `ENC_`
+token whether it is the whole value or **embedded** in free text (so remark-scrubbed names, §8.1
+reference rules, round-trip). Shape decides failure semantics: a whole-value token that will not
+decrypt → **502 JSON** (§10.3, fail closed); an embedded `ENC_`-lookalike span that will not
+decrypt is left untouched (free text may legitimately contain one). Never forward partially
+processed PII.
 
-### 8.7 Free text (later phase)
-`rule_type: free_text` uses Presidio NER (optional FLAIR) behind a feature flag; detected spans
-encrypted with the same codec.
+### 8.7 Free text
+Two complementary mechanisms. **Reference rules** (§8.1, shipped) scrub free text by reusing values
+that structured rules already extracted this pass — deterministic, no ML, bounded to declared remark
+paths. A later, separate phase MAY add `rule_type: free_text` using Presidio NER (optional FLAIR)
+behind a feature flag for PII the channel *originates* that no structured rule extracted; detected
+spans encrypted with the same codec.
 
 ### 8.8 Rule delivery
 Fetch latest versioned rules from the Wenrix rules API on startup; if unreachable, use the **baked

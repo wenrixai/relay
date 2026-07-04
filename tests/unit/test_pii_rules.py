@@ -9,7 +9,9 @@ from pydantic import ValidationError
 
 from channel_relay.pii.rules import (
     EncryptAction,
+    FieldRule,
     MaskAction,
+    ReferenceRule,
     RemoveAction,
     ReplaceAction,
     RuleSet,
@@ -25,6 +27,22 @@ def rule(**overrides: Any) -> dict[str, Any]:
         "path": "//ns:Traveler/ns:Name",
         "path_type": "xpath",
         "rule_type": "field",
+        "pii_type": "person",
+        "method": "encrypt",
+    }
+    base.update(overrides)
+    return base
+
+
+def ref_rule(**overrides: Any) -> dict[str, Any]:
+    base: dict[str, Any] = {
+        "id": "mock.op.ref.001",
+        "channel": "mock",
+        "operation": "^PNR_Retrieve$",
+        "path": "//m:Remark/m:Text",
+        "path_type": "xpath",
+        "rule_type": "reference",
+        "source_pii_types": ["person"],
         "pii_type": "person",
         "method": "encrypt",
     }
@@ -104,6 +122,7 @@ def test_bad_ignored_pattern_rejected_at_load() -> None:
 def test_ignored_patterns_precompiled() -> None:
     loaded = RuleSet.model_validate(ruleset(rule(ignored_content_patterns=["^TMX"])))
     first = loaded.rules[0]
+    assert isinstance(first, FieldRule)
     assert first.operation_re.match("PNR_Retrieve")
     assert first.ignored_re[0].match("TMX123")
 
@@ -137,3 +156,57 @@ def test_generated_schema_documents_discriminated_actions() -> None:
     assert "replacement" in text
     assert "mask_char" in text
     assert schema["title"] == "RuleSet"
+
+
+def test_valid_reference_rule_loads() -> None:
+    loaded = RuleSet.model_validate(ruleset(ref_rule()))
+    ref = loaded.rules[0]
+    assert isinstance(ref, ReferenceRule)
+    assert ref.source_pii_types == ["person"]
+    assert isinstance(ref.action, EncryptAction)
+
+
+def test_reference_rule_guard_defaults() -> None:
+    ref = RuleSet.model_validate(ruleset(ref_rule())).rules[0]
+    assert isinstance(ref, ReferenceRule)
+    assert ref.min_match_len == 3
+    assert ref.word_boundary is True
+
+
+def test_reference_empty_source_pii_types_rejected() -> None:
+    with pytest.raises(ValidationError):
+        RuleSet.model_validate(ruleset(ref_rule(source_pii_types=[])))
+
+
+def test_reference_unknown_source_pii_type_rejected() -> None:
+    with pytest.raises(ValidationError):
+        RuleSet.model_validate(ruleset(ref_rule(source_pii_types=["shoe_size"])))
+
+
+def test_reference_non_encrypt_method_rejected() -> None:
+    # v1: reference action is encrypt-only; a mask method must not silently load.
+    with pytest.raises(ValidationError):
+        RuleSet.model_validate(ruleset(ref_rule(method="mask", mask_char="#")))
+
+
+def test_reference_bad_operation_regex_rejected_at_load() -> None:
+    with pytest.raises(ValidationError):
+        RuleSet.model_validate(ruleset(ref_rule(operation="([unclosed")))
+
+
+def test_reference_extra_keys_forbidden() -> None:
+    with pytest.raises(ValidationError):
+        RuleSet.model_validate(ruleset(ref_rule(surprise="x")))
+
+
+def test_mixed_field_and_reference_ruleset_loads() -> None:
+    loaded = RuleSet.model_validate(ruleset(rule(), ref_rule()))
+    assert loaded.rules[0].rule_type == "field"
+    assert loaded.rules[1].rule_type == "reference"
+
+
+def test_generated_schema_documents_rule_type_discriminator() -> None:
+    text = str(generate_rules_json_schema())
+    assert "rule_type" in text
+    assert "reference" in text
+    assert "source_pii_types" in text

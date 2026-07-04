@@ -8,9 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from channel_relay.pii.codec import TOKEN_RE, decrypt
+from channel_relay.pii.codec import TOKEN_RE, decrypt, encrypt
 from channel_relay.pii.crypto import Keyring
-from channel_relay.pii.engine import RedactionError, parse_operation, redact_response_body
+from channel_relay.pii.engine import (
+    DeanonymizationError,
+    RedactionError,
+    deanonymize_request_body,
+    parse_operation,
+    redact_response_body,
+)
 from channel_relay.pii.rules import RuleSet
 from channel_relay.pii.xml_ops import parse_bytes
 
@@ -115,3 +121,137 @@ class TestRedaction:
         monkeypatch.setattr("channel_relay.pii.engine.encrypt", boom)
         with pytest.raises(RedactionError):
             redact_response_body(response_body, channel="mock", ruleset=ruleset, keyring=keyring)
+
+
+NS = "urn:mock:pnr"
+
+
+def _ref_ruleset(*, name_path: str = "//m:Traveler/m:Name", **ref_overrides: object) -> RuleSet:
+    field_rule = {
+        "id": "r.person",
+        "channel": "mock",
+        "operation": "^PNR_Retrieve",
+        "path": name_path,
+        "namespaces": {"m": NS},
+        "pii_type": "person",
+        "method": "encrypt",
+    }
+    reference_rule = {
+        "id": "r.remark",
+        "rule_type": "reference",
+        "channel": "mock",
+        "operation": "^PNR_Retrieve",
+        "path": "//m:Remark/m:Text",
+        "namespaces": {"m": NS},
+        "source_pii_types": ["person"],
+        "pii_type": "person",
+        "method": "encrypt",
+        **ref_overrides,
+    }
+    return RuleSet.model_validate(
+        {"schema_version": "1.0", "rules_version": "t", "rules": [field_rule, reference_rule]}
+    )
+
+
+def _doc(name: str, *remarks: str) -> bytes:
+    remark_xml = "".join(f"<Remark><Text>{text}</Text></Remark>" for text in remarks)
+    return (f'<PNR_Retrieve xmlns="{NS}"><Traveler><Name>{name}</Name></Traveler>{remark_xml}</PNR_Retrieve>').encode()
+
+
+def _remark_texts(body: bytes) -> list[str]:
+    root = parse_bytes(body)
+    return [node.text or "" for node in root.xpath("//*[local-name()='Text']")]
+
+
+class TestReferenceRedaction:
+    def test_name_scrubbed_from_remark_round_trips(self, keyring: Keyring) -> None:
+        body = _doc("John Smith", "PSGR JOHN SMITH RQ WHEELCHAIR")
+        redacted, counts = redact_response_body(body, channel="mock", ruleset=_ref_ruleset(), keyring=keyring)
+        text = _remark_texts(redacted)[0]
+        assert "JOHN SMITH" not in text
+        assert text.startswith("PSGR ") and text.endswith(" RQ WHEELCHAIR")
+        token = text.removeprefix("PSGR ").removesuffix(" RQ WHEELCHAIR")
+        assert TOKEN_RE.fullmatch(token) and decrypt(token, keyring) == "JOHN SMITH"
+        assert counts["person"] == 2  # structured Name + one remark occurrence
+
+    def test_search_bounded_to_target_path(self, keyring: Keyring) -> None:
+        # A collected value sitting in a non-target node is left alone.
+        body = (
+            f'<PNR_Retrieve xmlns="{NS}"><Traveler><Name>John Smith</Name></Traveler>'
+            "<Other>JOHN SMITH ELSEWHERE</Other></PNR_Retrieve>"
+        ).encode()
+        redacted, _ = redact_response_body(body, channel="mock", ruleset=_ref_ruleset(), keyring=keyring)
+        other = parse_bytes(redacted).xpath("//*[local-name()='Other']")[0].text
+        assert other == "JOHN SMITH ELSEWHERE"
+
+    def test_word_boundary_prevents_substring(self, keyring: Keyring) -> None:
+        body = _doc("John", "JOHNSON PAID CASH")
+        redacted, _ = redact_response_body(body, channel="mock", ruleset=_ref_ruleset(), keyring=keyring)
+        assert _remark_texts(redacted)[0] == "JOHNSON PAID CASH"
+
+    def test_short_value_below_min_len_skipped(self, keyring: Keyring) -> None:
+        body = _doc("Li", "MR LI PAID")
+        redacted, _ = redact_response_body(body, channel="mock", ruleset=_ref_ruleset(), keyring=keyring)
+        assert _remark_texts(redacted)[0] == "MR LI PAID"
+
+    def test_case_insensitive_preserves_surrounding(self, keyring: Keyring) -> None:
+        body = _doc("John", "john smith here")
+        redacted, _ = redact_response_body(body, channel="mock", ruleset=_ref_ruleset(), keyring=keyring)
+        text = _remark_texts(redacted)[0]
+        assert text.endswith(" smith here")
+        token = text.removesuffix(" smith here")
+        assert decrypt(token, keyring) == "john"
+
+    def test_empty_source_bucket_is_noop(self, keyring: Keyring) -> None:
+        # No structured name present -> nothing collected -> remark untouched.
+        body = f'<PNR_Retrieve xmlns="{NS}"><Remark><Text>JOHN SMITH</Text></Remark></PNR_Retrieve>'.encode()
+        redacted, _ = redact_response_body(body, channel="mock", ruleset=_ref_ruleset(), keyring=keyring)
+        assert _remark_texts(redacted)[0] == "JOHN SMITH"
+
+    def test_reference_encrypt_failure_fails_closed(self, keyring: Keyring, monkeypatch: pytest.MonkeyPatch) -> None:
+        body = _doc("John Smith", "PSGR JOHN SMITH")
+        calls = {"n": 0}
+
+        def sometimes_boom(value: str, kr: Keyring) -> str:
+            calls["n"] += 1
+            if calls["n"] > 1:  # let phase-1 field encrypt succeed, blow up in phase 2
+                raise ValueError("boom")
+            return "ENC_ok"
+
+        monkeypatch.setattr("channel_relay.pii.engine.encrypt", sometimes_boom)
+        with pytest.raises(RedactionError):
+            redact_response_body(body, channel="mock", ruleset=_ref_ruleset(), keyring=keyring)
+
+
+class TestEmbeddedDeanonymization:
+    def test_embedded_token_round_trips(self, keyring: Keyring) -> None:
+        token = encrypt("JOHN SMITH", keyring)
+        body = f"<r><Note>PSGR {token} RQ WCHR</Note></r>".encode()
+        out, count = deanonymize_request_body(body, keyring=keyring)
+        assert count == 1
+        assert parse_bytes(out).xpath("//Note")[0].text == "PSGR JOHN SMITH RQ WCHR"
+
+    def test_token_adjacent_to_punctuation(self, keyring: Keyring) -> None:
+        token = encrypt("Jane", keyring)
+        body = f"<r><Note>NAME: {token}, CONFIRMED</Note></r>".encode()
+        out, count = deanonymize_request_body(body, keyring=keyring)
+        assert count == 1
+        assert parse_bytes(out).xpath("//Note")[0].text == "NAME: Jane, CONFIRMED"
+
+    def test_full_value_token_still_round_trips(self, keyring: Keyring) -> None:
+        token = encrypt("Solo", keyring)
+        body = f"<r><Name>{token}</Name></r>".encode()
+        out, count = deanonymize_request_body(body, keyring=keyring)
+        assert count == 1
+        assert parse_bytes(out).xpath("//Name")[0].text == "Solo"
+
+    def test_embedded_lookalike_left_untouched(self, keyring: Keyring) -> None:
+        body = b"<r><Note>Plain Name ENC_not a token</Note></r>"
+        out, count = deanonymize_request_body(body, keyring=keyring)
+        assert count == 0
+        assert parse_bytes(out).xpath("//Note")[0].text == "Plain Name ENC_not a token"
+
+    def test_full_value_bad_token_fails_closed(self, keyring: Keyring) -> None:
+        body = b"<r><Name>ENC_dG9vc2hvcnQ</Name></r>"
+        with pytest.raises(DeanonymizationError):
+            deanonymize_request_body(body, keyring=keyring)
