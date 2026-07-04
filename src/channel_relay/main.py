@@ -27,10 +27,29 @@ from channel_relay.middleware.access_log import log_access
 from channel_relay.middleware.auth import verify_basic_auth
 from channel_relay.observability.logging import configure_logging
 from channel_relay.observability.metrics import METER_NAME, RelayMetrics, build_meter_provider
+from channel_relay.pii.crypto import Keyring, load_keyring
 from channel_relay.proxy.forwarder import find_channel, forward
 from channel_relay.settings import Settings
 
 _RELAY_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+
+
+def build_keyring(settings: Settings, config: RelayConfig | None) -> Keyring | None:
+    """Load the PII keyring; abort startup when PII is enabled without a valid one.
+
+    Invalid keyring material raises regardless of PII flags (misconfiguration must be
+    loud); a missing keyring raises only when some channel has ``pii.enabled`` (§8.3).
+    """
+    keyring = load_keyring(
+        inline=settings.pii_keyring,
+        file_path=settings.pii_keyring_file,
+        active_epoch=settings.pii_key_epoch_active,
+    )
+    pii_enabled = config is not None and any(channel.pii.enabled for channel in config.channels)
+    if keyring is None and pii_enabled:
+        msg = "PII is enabled for a channel but no keyring is configured"
+        raise RuntimeError(msg)
+    return keyring
 
 
 def _load_startup_config(settings: Settings) -> RelayConfig | None:
@@ -74,6 +93,8 @@ def create_app(
             application.state.config = _load_startup_config(settings)
         if application.state.config is not None:
             metrics.set_channels_configured(len(application.state.config.channels))
+        # PII keyring: invalid → abort; missing while PII enabled → abort (§8.3).
+        application.state.keyring = build_keyring(settings, application.state.config)
         owns_client = application.state.client is None
         if owns_client:
             # No retries: the client owns retry policy, not the relay (§10.5, D12).

@@ -85,6 +85,8 @@ def test_oversize_inspectable_body_returns_413() -> None:
         config=config, http_client=httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(200)))
     )
     app.state.settings.max_inspect_bytes = 8  # tiny cap
+    # PII-enabled channels require a keyring at startup (§8.3).
+    app.state.settings.pii_keyring = '{"0": "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE="}'
     with TestClient(app) as client:
         resp = client.post("/channel/tf/op", content=b"way-too-large-body")
     assert resp.status_code == 413

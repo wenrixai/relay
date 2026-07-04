@@ -30,4 +30,7 @@ class Settings(BaseSettings):
     telemetry_metrics_enabled: bool = True
     otlp_endpoint: str | None = None
     rules_api_url: str | None = None
+    pii_keyring: str | None = None
+    pii_keyring_file: str | None = None
+    pii_key_epoch_active: int | None = None
     debug: bool = False
