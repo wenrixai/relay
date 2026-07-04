@@ -54,11 +54,11 @@
 
 ## 6. De-anonymization engine — request (T2.6)
 
-- [ ] 6.1 TDD red: scan/replace tests (text + attribute tokens, non-token values untouched, bad
+- [x] 6.1 TDD red: scan/replace tests (text + attribute tokens, non-token values untouched, bad
       token → 502 `pii_deanonymization_failed`, request never forwarded on failure); e2e
       round-trip test (mock channel: redacted response token → later request → mock asserts
       plaintext received)
-- [ ] 6.2 Implement de-anonymization in `pii/engine.py`; wire request hook in forwarder; commit
+- [x] 6.2 Implement de-anonymization in `pii/engine.py`; wire request hook in forwarder; commit
 
 ## 7. PII metrics + close-out (T2.7)
 

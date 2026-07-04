@@ -26,6 +26,7 @@ from channel_relay.middleware.header_hygiene import (
     clean_request_headers,
     clean_response_headers,
 )
+from channel_relay.observability.metrics import RelayMetrics
 from channel_relay.pii.crypto import Keyring
 from channel_relay.pii.engine import (
     DeanonymizationError,
@@ -45,6 +46,11 @@ from channel_relay.proxy.errors import (
 
 # Headers that become stale once the relay rewrites a body (recomputed downstream).
 _BODY_SENSITIVE_HEADERS = frozenset({"content-length", "content-encoding"})
+
+
+def _record_xml_error(metrics: RelayMetrics | None, channel: str, kind: str) -> None:
+    if metrics is not None:
+        metrics.record_xml_parse_error(channel, kind)
 
 
 def find_channel(config: RelayConfig | None, name: str) -> ChannelConfig | None:
@@ -93,6 +99,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     requires inspection, an oversize body is rejected with 413 (§5.4, §9.4).
     """
     trace_id = request.headers.get(TRACE_ID_HEADER)
+    metrics = getattr(request.app.state, "metrics", None)
     if channel.proxy_pass is None:
         logger.error("Channel {} has no upstream base configured", channel.name)
         return internal_error_response(ErrorReason.INTERNAL_ERROR, "channel has no upstream configured", trace_id)
@@ -118,6 +125,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
             content_encoding=request.headers.get("content-encoding", "").lower(),
             max_inspect_bytes=max_inspect_bytes,
             trace_id=trace_id,
+            metrics=metrics,
         )
         if isinstance(outcome, Response):
             return outcome
@@ -135,7 +143,6 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
         )
     except httpx.TimeoutException:
         logger.warning("Upstream timeout for channel {}", channel.name)
-        metrics = getattr(request.app.state, "metrics", None)
         if metrics is not None:
             metrics.record_upstream_timeout(channel.name)
         return upstream_timeout_response()
@@ -163,6 +170,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
             content=content,
             max_inspect_bytes=max_inspect_bytes,
             trace_id=trace_id,
+            metrics=metrics,
         )
         if isinstance(outcome, Response):
             return outcome
@@ -185,6 +193,7 @@ def _request_pii_stage(  # pylint: disable=too-many-arguments
     content_encoding: str,
     max_inspect_bytes: int,
     trace_id: str | None,
+    metrics: RelayMetrics | None = None,
 ) -> bytes | Response:
     """Pipeline stage [7]: de-anonymize the request body; error → contract Response."""
     gzipped = content_encoding == "gzip"
@@ -192,9 +201,11 @@ def _request_pii_stage(  # pylint: disable=too-many-arguments
         working = gzip.decompress(body) if gzipped else body
         working, decrypted = deanonymize_request_body(working, keyring=keyring, max_bytes=max_inspect_bytes)
         result = gzip.compress(working) if gzipped else working
-    except XmlOversizeError:
+    except XmlOversizeError as exc:
+        _record_xml_error(metrics, channel.name, exc.kind)
         return payload_too_large_response()
-    except XmlOpsError:
+    except XmlOpsError as exc:
+        _record_xml_error(metrics, channel.name, exc.kind)
         logger.warning("Request XML rejected by hardened parser for channel {}", channel.name)
         return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not parseable XML", trace_id)
     except (DeanonymizationError, zlib.error, OSError):
@@ -206,6 +217,8 @@ def _request_pii_stage(  # pylint: disable=too-many-arguments
         )
     if decrypted:
         logger.debug("De-anonymized {} tokens for channel {}", decrypted, channel.name)
+        if metrics is not None:
+            metrics.record_pii_decrypted(channel.name, decrypted)
     return result
 
 
@@ -217,6 +230,7 @@ def _response_pii_stage(  # pylint: disable=too-many-arguments
     content: bytes,
     max_inspect_bytes: int,
     trace_id: str | None,
+    metrics: RelayMetrics | None = None,
 ) -> bytes | Response:
     """Pipeline stage [9]: redact the response body; error → contract Response."""
     try:
@@ -228,9 +242,11 @@ def _response_pii_stage(  # pylint: disable=too-many-arguments
             keyring=keyring,
             max_bytes=max_inspect_bytes,
         )
-    except XmlOversizeError:
+    except XmlOversizeError as exc:
+        _record_xml_error(metrics, channel.name, exc.kind)
         return payload_too_large_response()
-    except XmlOpsError:
+    except XmlOpsError as exc:
+        _record_xml_error(metrics, channel.name, exc.kind)
         logger.warning("Response XML rejected by hardened parser for channel {}", channel.name)
         return internal_error_response(ErrorReason.XML_PARSE_ERROR, "response body is not parseable XML", trace_id)
     except RedactionError:
@@ -238,4 +254,6 @@ def _response_pii_stage(  # pylint: disable=too-many-arguments
         return internal_error_response(ErrorReason.PII_REDACTION_FAILED, "response redaction failed", trace_id)
     if counts:
         logger.debug("Redacted fields for channel {}: {}", channel.name, counts)
+        if metrics is not None:
+            metrics.record_pii_redacted(channel.name, counts)
     return redacted

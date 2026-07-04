@@ -8,7 +8,7 @@ the relay; the periodic exporter swallows export errors.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 from opentelemetry.metrics import CallbackOptions, Counter, Meter, Observation
@@ -62,6 +62,21 @@ class RelayMetrics:
             unit="1",
             description="Loaded PII rules version (info-style gauge).",
         )
+        self._pii_redacted: Counter = meter.create_counter(
+            "pii_fields_redacted_total",
+            unit="1",
+            description="PII fields actioned on responses.",
+        )
+        self._pii_decrypted: Counter = meter.create_counter(
+            "pii_fields_decrypted_total",
+            unit="1",
+            description="ENC_ tokens de-anonymized on requests.",
+        )
+        self._xml_parse_errors: Counter = meter.create_counter(
+            "xml_parse_errors_total",
+            unit="1",
+            description="Hardened XML parse/structure rejections.",
+        )
 
     def _observe_channels(
         self,
@@ -90,3 +105,18 @@ class RelayMetrics:
     def record_upstream_timeout(self, channel: str) -> None:
         """Increment the upstream-timeout counter for a channel."""
         self._upstream_timeouts.add(1, {"channel": channel})
+
+    def record_pii_redacted(self, channel: str, counts: Mapping[str, int]) -> None:
+        """Record redacted-field counts per ``pii_type`` (label values, never field data)."""
+        for pii_type, count in counts.items():
+            if count:
+                self._pii_redacted.add(count, {"channel": channel, "pii_type": pii_type})
+
+    def record_pii_decrypted(self, channel: str, count: int) -> None:
+        """Record how many tokens were de-anonymized on a request."""
+        if count:
+            self._pii_decrypted.add(count, {"channel": channel})
+
+    def record_xml_parse_error(self, channel: str, kind: str) -> None:
+        """Record a hardened-parser rejection with its stable ``kind``."""
+        self._xml_parse_errors.add(1, {"channel": channel, "kind": kind})

@@ -178,3 +178,28 @@ def test_pii_disabled_channel_passes_through(mock_channel: MockChannel) -> None:
         response = test_client.post("/channel/plain/op", content=b"<Ping/>")
     assert response.status_code == 200
     assert b"John Smith" in response.content  # untouched: PII off for this channel
+
+
+def test_logs_never_contain_pii_or_tokens(client: TestClient, mock_channel: MockChannel) -> None:
+    import io
+
+    from loguru import logger
+
+    sink = io.StringIO()
+    handle = logger.add(sink, level="DEBUG")
+    try:
+        with client:
+            redacted = client.post("/channel/mock/op", content=b"<Ping/>").content
+            name_token = extract_token(redacted, "Name")
+            client.post(
+                "/channel/mock/op",
+                content=REQUEST_TEMPLATE.format(name=name_token, attr="none").encode(),
+                headers={"content-type": "text/xml"},
+            )
+    finally:
+        logger.remove(handle)
+    output = sink.getvalue()
+    assert "John Smith" not in output
+    assert "john.smith@example.com" not in output
+    assert "ENC_" not in output
+    assert KEYRING_JSON not in output
