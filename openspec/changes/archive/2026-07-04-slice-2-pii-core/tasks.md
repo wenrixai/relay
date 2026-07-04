@@ -66,6 +66,6 @@
       `pii_fields_decrypted_total{channel}`, `xml_parse_errors_total{channel,kind}`,
       `rule_version` in `observability/metrics.py`; assert via in-memory reader; log-cleanliness
       test (no PII/tokens/keys in captured logs); commit
-- [x] 7.2 Docs parity: the relay-configuration spec check (keyring/epoch/rules URL), README PII note; `just ci`
-      green + coverage ≥85%; pre-commit all-files; mark OpenSpec task lists T2 complete
+- [x] 7.2 Docs parity: relay-configuration spec check (keyring/epoch/rules URL), README PII note; `just ci`
+      green + coverage ≥85%; pre-commit all-files
 - [x] 7.3 Run end-of-file-fixer before archive; `openspec archive slice-2-pii-core`; final commit

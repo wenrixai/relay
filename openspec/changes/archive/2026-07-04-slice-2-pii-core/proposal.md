@@ -3,7 +3,7 @@
 ## Why
 
 Slice 1 shipped a safe transparent relay, but Wenrix still sees traveler PII in readable form.
-Slice 2 (the Slice 2 task list) delivers the privacy-first core: PII fields in channel responses are
+Slice 2 delivers the privacy-first core: PII fields in channel responses are
 encrypted into self-describing `ENC_` tokens before reaching Wenrix, and tokens in later requests
 are de-anonymized back to plaintext before reaching the channel. This is the zero-trust value
 proposition of v2 (PROJECT.md §7–§8) and blocks Slice 3 (per-channel swap) and Slice 4.
@@ -61,6 +61,6 @@ No breaking changes; PII stays off by default (zero-config channels unaffected).
   baked `rules_fallback.json`; `tests/fixtures/mock/` golden fixtures.
 - Dependencies: `cryptography`, `lxml` added via `uv add`; Alpine image must keep musllinux wheels
   (no compiler in final stage).
-- Docs: the relay-configuration spec parity check (keyring/epoch/rules-API already specified), README PII note.
+- Docs: relay-configuration spec parity check (keyring/epoch/rules API already specified), README PII note.
 - Security surface: key material handling (never logged/committed), fail-closed redaction, XML
   attack hardening — SECURITY.md threat model unchanged, implementation now enforces it.
