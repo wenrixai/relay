@@ -49,4 +49,4 @@ slice builds on.
 - Dependencies (via `uv add`): `opentelemetry-sdk`, `opentelemetry-exporter-otlp`.
 - Infra: `Dockerfile`, `Dockerfile.mockserver`, `docker-compose.yml`, `.github/workflows/*`,
   `.github/{dependabot.yml,CODEOWNERS,PULL_REQUEST_TEMPLATE.md}`.
-- Config surface: `RELAY_*` env vars and JSON channel config per `the relay-configuration spec`.
+- Config surface: `RELAY_*` env vars and JSON channel config per the relay-configuration spec.
