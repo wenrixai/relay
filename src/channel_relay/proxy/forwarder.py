@@ -12,6 +12,10 @@ from fastapi import Request
 from starlette.responses import Response
 
 from channel_relay.config.models import ChannelConfig, RelayConfig
+from channel_relay.middleware.header_hygiene import (
+    clean_request_headers,
+    clean_response_headers,
+)
 
 
 def find_channel(config: RelayConfig | None, name: str) -> ChannelConfig | None:
@@ -57,9 +61,7 @@ async def forward(
     body = await request.body()
     url = build_target_url(channel, path, request.url.query)
 
-    headers = dict(request.headers)
-    if channel.host is not None:
-        headers["host"] = channel.host
+    headers = clean_request_headers(request.headers.items(), channel.host)
 
     upstream = await client.request(
         request.method,
@@ -71,5 +73,5 @@ async def forward(
     return Response(
         content=upstream.content,
         status_code=upstream.status_code,
-        headers=dict(upstream.headers),
+        headers=dict(clean_response_headers(upstream.headers.items())),
     )
