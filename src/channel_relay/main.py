@@ -105,7 +105,13 @@ def create_app(
         channel = find_channel(request.app.state.config, name)
         if channel is None:
             return JSONResponse(status_code=404, content={"error": "unknown_channel"})
-        return await forward(request.app.state.client, channel, path, request)
+        return await forward(
+            request.app.state.client,
+            channel,
+            path,
+            request,
+            request.app.state.settings.max_inspect_bytes,
+        )
 
     return application
 

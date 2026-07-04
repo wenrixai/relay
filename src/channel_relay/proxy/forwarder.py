@@ -9,9 +9,15 @@ from __future__ import annotations
 
 import httpx
 from fastapi import Request
-from starlette.responses import Response
+from loguru import logger
+from starlette.responses import JSONResponse, Response
 
 from channel_relay.config.models import ChannelConfig, RelayConfig
+from channel_relay.middleware.content import (
+    body_exceeds_cap,
+    classify_content,
+    requires_inspection,
+)
 from channel_relay.middleware.header_hygiene import (
     clean_request_headers,
     clean_response_headers,
@@ -52,13 +58,21 @@ async def forward(
     channel: ChannelConfig,
     path: str,
     request: Request,
+    max_inspect_bytes: int,
 ) -> Response:
     """Forward the incoming request to the channel and relay the response.
 
     Host is rewritten to the channel host (SNI follows the URL host). Full header hygiene
     is applied by the header-hygiene stage; this function keeps the raw body untouched.
+    Non-XML/unknown and compressed bodies pass through unchanged; when this channel
+    requires inspection, an oversize body is rejected with 413 (§5.4, §9.4).
     """
     body = await request.body()
+    kind = classify_content(request.headers.get("content-type"))
+    if requires_inspection(channel) and body_exceeds_cap(len(body), max_inspect_bytes):
+        logger.warning("Inspectable body over cap for channel {}: {} bytes", channel.name, len(body))
+        return JSONResponse(status_code=413, content={"error": "payload_too_large"})
+    logger.debug("Relaying {} body for channel {}", kind, channel.name)
     url = build_target_url(channel, path, request.url.query)
 
     headers = clean_request_headers(request.headers.items(), channel.host)
