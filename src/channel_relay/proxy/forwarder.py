@@ -99,6 +99,9 @@ async def forward(
         )
     except httpx.TimeoutException:
         logger.warning("Upstream timeout for channel {}", channel.name)
+        metrics = getattr(request.app.state, "metrics", None)
+        if metrics is not None:
+            metrics.record_upstream_timeout(channel.name)
         return upstream_timeout_response()
     except httpx.HTTPError:
         logger.error("Upstream request failed for channel {}", channel.name)

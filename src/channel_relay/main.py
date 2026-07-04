@@ -6,6 +6,7 @@ boots the app with health routes; feature stages are added per slice under TDD.
 
 from __future__ import annotations
 
+import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -15,14 +16,17 @@ import uvicorn
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from loguru import logger
+from opentelemetry.sdk.metrics.export import MetricReader
 from starlette.responses import Response
 
 from channel_relay import __version__
 from channel_relay.config.loader import load_config
 from channel_relay.config.models import RelayConfig
 from channel_relay.health import readiness_reasons
+from channel_relay.middleware.access_log import log_access
 from channel_relay.middleware.auth import verify_basic_auth
 from channel_relay.observability.logging import configure_logging
+from channel_relay.observability.metrics import METER_NAME, RelayMetrics, build_meter_provider
 from channel_relay.proxy.forwarder import find_channel, forward
 from channel_relay.settings import Settings
 
@@ -43,6 +47,7 @@ def _load_startup_config(settings: Settings) -> RelayConfig | None:
 def create_app(
     config: RelayConfig | None = None,
     http_client: httpx.AsyncClient | None = None,
+    metric_reader: MetricReader | None = None,
 ) -> FastAPI:
     """Build the FastAPI application.
 
@@ -51,17 +56,24 @@ def create_app(
             from ``Settings.config_file``.
         http_client: an explicit httpx client (used in tests). When omitted, the lifespan
             creates and owns one.
+        metric_reader: an explicit metric reader (used in tests) to collect metrics in
+            memory; production uses the OTLP periodic exporter.
 
     ``server_header=False`` is enforced at the server level (uvicorn) per §9.1.
     """
     settings = Settings()
     configure_logging(debug=settings.debug)
 
+    meter_provider = build_meter_provider(settings, reader=metric_reader)
+    metrics = RelayMetrics(meter_provider.get_meter(METER_NAME))
+
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
         # Load config once on startup unless one was injected (invalid → abort).
         if application.state.config is None:
             application.state.config = _load_startup_config(settings)
+        if application.state.config is not None:
+            metrics.set_channels_configured(len(application.state.config.channels))
         owns_client = application.state.client is None
         if owns_client:
             # No retries: the client owns retry policy, not the relay (§10.5, D12).
@@ -71,6 +83,7 @@ def create_app(
         finally:
             if owns_client:
                 await application.state.client.aclose()
+            meter_provider.shutdown()
 
     application = FastAPI(
         title="Wenrix Channel Relay",
@@ -83,6 +96,8 @@ def create_app(
     application.state.settings = settings
     application.state.config = config
     application.state.client = http_client
+    application.state.metrics = metrics
+    application.state.meter_provider = meter_provider
 
     @application.get("/liveness")
     async def liveness() -> dict[str, str]:
@@ -110,13 +125,23 @@ def create_app(
         channel = find_channel(request.app.state.config, name)
         if channel is None:
             return JSONResponse(status_code=404, content={"error": "unknown_channel"})
-        return await forward(
+        start = time.perf_counter()
+        response = await forward(
             request.app.state.client,
             channel,
             path,
             request,
             request.app.state.settings.max_inspect_bytes,
         )
+        log_access(
+            channel=name,
+            method=request.method,
+            path=path,
+            status=response.status_code,
+            latency_ms=(time.perf_counter() - start) * 1000,
+            trace_id=request.headers.get("x-wenrix-trace-id"),
+        )
+        return response
 
     return application
 
