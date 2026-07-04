@@ -1,0 +1,114 @@
+[project]
+name = "channel-relay"
+version = "0.1.0"
+description = "Wenrix Channel Relay v2 — privacy-first transparent relay for travel channels."
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "Proprietary" }
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "httpx>=0.28",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "loguru>=0.7",
+    "lxml>=5.3",
+    "cryptography>=44",
+]
+
+[project.scripts]
+channel-relay = "channel_relay.main:cli"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pylint>=3.3",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-timeout>=2.3",
+    "pytest-cov>=6.0",
+    "pytest-fail-slow>=0.6",
+    "pre-commit>=4.0",
+    "lxml-stubs>=0.5",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/channel_relay"]
+
+# --- ruff -------------------------------------------------------------------
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",    # pycodestyle
+    "F",         # pyflakes
+    "I",         # isort
+    "N",         # pep8-naming
+    "UP",        # pyupgrade
+    "B",         # bugbear
+    "A",         # builtins shadowing
+    "C4",        # comprehensions
+    "SIM",       # simplify
+    "PTH",       # use pathlib
+    "RUF",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+# --- mypy (strict) ----------------------------------------------------------
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_unreachable = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_generics = true
+no_implicit_reexport = true
+show_error_codes = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+# --- pylint -----------------------------------------------------------------
+[tool.pylint.main]
+py-version = "3.13"
+jobs = 0
+[tool.pylint.format]
+max-line-length = 120
+
+# --- pytest -----------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "--strict-markers --strict-config --cov --cov-report=term-missing --fail-slow=100ms"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+timeout = 60
+filterwarnings = [
+    "error",
+    # Third-party deprecation we don't control (starlette TestClient on httpx).
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+]
+markers = [
+    "e2e: end-to-end tests against local mock channels (slower subset).",
+    "integration: integration tests spanning multiple components.",
+]
+
+# --- coverage ---------------------------------------------------------------
+[tool.coverage.run]
+source = ["src/channel_relay"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "\\.\\.\\."]

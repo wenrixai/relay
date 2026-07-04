@@ -1,0 +1,59 @@
+# Pre-commit hooks (T1.2). Install with: uv run pre-commit install
+# CI runs: uv run pre-commit run --all-files
+minimum_pre_commit_version: "4.0.0"
+default_language_version:
+  python: python3.13
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-json
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: no-commit-to-branch
+        args: [--branch, main]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+  # GitHub Actions workflow linting (activates once .github/workflows/*.yml exist).
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+
+  # Dockerfile linting (activates once a Dockerfile exists). Vendors the hadolint
+  # binary via pip, so no Docker daemon required at commit time.
+  - repo: https://github.com/AleksaC/hadolint-py
+    rev: v2.14.0
+    hooks:
+      - id: hadolint
+
+  # mypy and pylint run against the local synced environment so they see deps.
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy (strict)
+        entry: uv run mypy src
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: pylint
+        name: pylint
+        entry: uv run pylint src
+        language: system
+        types: [python]
+        pass_filenames: false
