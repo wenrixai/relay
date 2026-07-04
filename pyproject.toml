@@ -48,25 +48,9 @@ target-version = "py313"
 line-length = 120
 src = ["src", "tests"]
 
-[tool.ruff.lint]
-select = [
-    "E", "W",    # pycodestyle
-    "F",         # pyflakes
-    "I",         # isort
-    "N",         # pep8-naming
-    "UP",        # pyupgrade
-    "B",         # bugbear
-    "A",         # builtins shadowing
-    "C4",        # comprehensions
-    "SIM",       # simplify
-    "PTH",       # use pathlib
-    "RUF",
-]
-
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]
 
-# --- mypy (strict) ----------------------------------------------------------
 [tool.mypy]
 python_version = "3.13"
 strict = true
@@ -82,7 +66,6 @@ plugins = ["pydantic.mypy"]
 module = "tests.*"
 disallow_untyped_defs = false
 
-# --- pylint -----------------------------------------------------------------
 [tool.pylint.main]
 py-version = "3.13"
 jobs = 0
@@ -91,7 +74,6 @@ extension-pkg-allow-list = ["lxml.etree", "lxml"]
 [tool.pylint.format]
 max-line-length = 120
 
-# --- pytest -----------------------------------------------------------------
 [tool.pytest.ini_options]
 minversion = "8.0"
 addopts = "--strict-markers --strict-config --cov --cov-report=term-missing --fail-slow=100ms"
@@ -108,7 +90,6 @@ markers = [
     "integration: integration tests spanning multiple components.",
 ]
 
-# --- coverage ---------------------------------------------------------------
 [tool.coverage.run]
 source = ["src/channel_relay"]
 branch = true
