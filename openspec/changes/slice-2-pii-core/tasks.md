@@ -21,10 +21,10 @@
 
 ## 3. Hardened XML ops (T2.3)
 
-- [ ] 3.1 `uv add lxml` (verify musllinux wheel in Alpine build); TDD red: attack suite (XXE file
+- [x] 3.1 `uv add lxml` (verify musllinux wheel in Alpine build); TDD red: attack suite (XXE file
       read, billion-laughs, external DTD, DOCTYPE reject, depth/node/byte limits, malformed) +
       error-type mapping tests (413 oversize, 502 structural/parse)
-- [ ] 3.2 Implement `pii/xml_ops.py` (parser factory, raising resolver, limit-enforcing
+- [x] 3.2 Implement `pii/xml_ops.py` (parser factory, raising resolver, limit-enforcing
       `parse_bytes`, typed errors, `xml_parse_errors_total{kind}` hook); commit
 
 ## 4. Rules model + loader (T2.4)

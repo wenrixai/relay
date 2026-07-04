@@ -28,6 +28,7 @@ from channel_relay.middleware.auth import verify_basic_auth
 from channel_relay.observability.logging import configure_logging
 from channel_relay.observability.metrics import METER_NAME, RelayMetrics, build_meter_provider
 from channel_relay.pii.crypto import Keyring, load_keyring
+from channel_relay.pii.rules_loader import load_rules
 from channel_relay.proxy.forwarder import find_channel, forward
 from channel_relay.settings import Settings
 
@@ -99,6 +100,17 @@ def create_app(
         if owns_client:
             # No retries: the client owns retry policy, not the relay (§10.5, D12).
             application.state.client = httpx.AsyncClient(transport=httpx.AsyncHTTPTransport(retries=0))
+        # Rules: one startup fetch with baked fallback; no polling (§8.8, D7).
+        pii_required = application.state.config is not None and any(
+            channel.pii.enabled for channel in application.state.config.channels
+        )
+        application.state.rules = await load_rules(
+            application.state.client,
+            settings.rules_api_url,
+            pii_required=pii_required,
+        )
+        if application.state.rules is not None:
+            metrics.set_rule_version(application.state.rules.rules_version)
         try:
             yield
         finally:
@@ -117,6 +129,7 @@ def create_app(
     application.state.settings = settings
     application.state.config = config
     application.state.client = http_client
+    application.state.rules = None
     application.state.metrics = metrics
     application.state.meter_provider = meter_provider
 

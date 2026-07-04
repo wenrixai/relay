@@ -44,6 +44,7 @@ class RelayMetrics:
 
     def __init__(self, meter: Meter) -> None:
         self._channels_configured = 0
+        self._rules_version: str | None = None
         self._upstream_timeouts: Counter = meter.create_counter(
             "upstream_timeouts_total",
             unit="1",
@@ -55,6 +56,12 @@ class RelayMetrics:
             unit="1",
             description="Number of configured channels.",
         )
+        meter.create_observable_gauge(
+            "rule_version",
+            callbacks=[self._observe_rule_version],
+            unit="1",
+            description="Loaded PII rules version (info-style gauge).",
+        )
 
     def _observe_channels(
         self,
@@ -62,6 +69,19 @@ class RelayMetrics:
     ) -> Iterable[Observation]:
         # ``options`` is required by the OTel observable-gauge callback signature.
         return [Observation(self._channels_configured)]
+
+    def _observe_rule_version(
+        self,
+        options: CallbackOptions,  # pylint: disable=unused-argument
+    ) -> Iterable[Observation]:
+        # Info-style gauge: constant 1 with the version as an attribute (§11.1).
+        if self._rules_version is None:
+            return []
+        return [Observation(1, {"rules_version": self._rules_version})]
+
+    def set_rule_version(self, version: str) -> None:
+        """Report the loaded ``rules_version`` via the ``rule_version`` gauge."""
+        self._rules_version = version
 
     def set_channels_configured(self, count: int) -> None:
         """Set the gauge value reported for configured channels."""
