@@ -2,10 +2,10 @@
 
 ## 1. Crypto keyring (T2.1)
 
-- [ ] 1.1 `uv add cryptography`; TDD red: keyring tests (valid load, epoch 0–15 bounds, 32-byte
+- [x] 1.1 `uv add cryptography`; TDD red: keyring tests (valid load, epoch 0–15 bounds, 32-byte
       check, file-over-env precedence, active-epoch resolution incl. missing-epoch abort, HKDF
       determinism/domain separation, wrong-key negative, no key material in error strings)
-- [ ] 1.2 Implement `pii/crypto.py` (Keyring, HKDF `K_enc` derivation, typed errors) + config
+- [x] 1.2 Implement `pii/crypto.py` (Keyring, HKDF `K_enc` derivation, typed errors) + config
       settings `RELAY_PII_KEYRING`, `RELAY_PII_KEY_EPOCH_ACTIVE` in `config/models.py`; startup
       abort when PII enabled without valid keyring (readiness reason); commit
 
