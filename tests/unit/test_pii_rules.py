@@ -113,6 +113,11 @@ def test_unknown_pii_type_rejected() -> None:
         RuleSet.model_validate(ruleset(rule(pii_type="shoe_size")))
 
 
+def test_namespaces_accepted() -> None:
+    loaded = RuleSet.model_validate(ruleset(rule(namespaces={"m": "urn:mock:pnr"})))
+    assert loaded.rules[0].namespaces == {"m": "urn:mock:pnr"}
+
+
 def test_jsonpath_path_type_accepted() -> None:
     loaded = RuleSet.model_validate(ruleset(rule(path_type="jsonpath", path="$.traveler.name")))
     assert loaded.rules[0].path_type == "jsonpath"

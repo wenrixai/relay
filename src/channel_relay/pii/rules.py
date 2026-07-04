@@ -92,6 +92,10 @@ class FieldRule(BaseModel):
     operation: str
     path: str = Field(min_length=1)
     path_type: Literal["xpath", "jsonpath"] = "xpath"
+    namespaces: dict[str, str] = Field(
+        default_factory=dict,
+        description="XPath prefix → namespace URI declarations used by `path`.",
+    )
     pii_type: PiiType
     action: RuleAction
     ignored_content_patterns: list[str] = Field(default_factory=list)

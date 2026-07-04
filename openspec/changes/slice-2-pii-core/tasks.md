@@ -29,15 +29,15 @@
 
 ## 4. Rules model + loader (T2.4)
 
-- [ ] 4.1 TDD red: rule model tests (encrypt/mask/replace/remove variants, discriminated required
+- [x] 4.1 TDD red: rule model tests (encrypt/mask/replace/remove variants, discriminated required
       params, unknown method rejects ruleset, extra keys forbidden, regex compile-at-load, flat
       wire format folding, generated JSON Schema shape)
-- [ ] 4.2 Implement `pii/rules.py` models + flat-wire validator + JSON Schema generation (extend
+- [x] 4.2 Implement `pii/rules.py` models + flat-wire validator + JSON Schema generation (extend
       `config/json_schema.py` pattern)
-- [ ] 4.3 TDD red: loader tests (fetch ok, timeout→fallback, bad schema_version→fallback,
+- [x] 4.3 TDD red: loader tests (fetch ok, timeout→fallback, bad schema_version→fallback,
       malformed JSON→fallback, invalid baked bundle aborts when PII enabled, no polling) with
       httpx MockTransport
-- [ ] 4.4 Implement startup fetch (single attempt, no retries) + baked `rules_fallback.json` +
+- [x] 4.4 Implement startup fetch (single attempt, no retries) + baked `rules_fallback.json` +
       `RELAY_RULES_API_URL` setting + `rule_version` gauge; wire into lifespan; commit
 
 ## 5. Redaction engine — response (T2.5)

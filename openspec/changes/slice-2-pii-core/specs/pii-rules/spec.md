@@ -8,7 +8,9 @@ carries `schema_version`, `rules_version`, and `rules[]`. Each field rule carrie
 `operation` (compilable regex), `path`, `path_type` (`xpath` default | `jsonpath`), `pii_type`, an
 action, and optional `ignored_content_patterns` (each a compilable regex). Actions SHALL form a
 discriminated union on `method`: `encrypt` (no params), `mask` (`mask_char`, `keep_prefix`),
-`replace` (`replacement` required), `remove` (no params). The wire format stays flat (§8.1 style:
+`replace` (`replacement` required), `remove` (no params). Each rule MAY declare `namespaces`
+(prefix → URI) used to evaluate its XPath; a prefix used in `path` but not declared is a
+no-match at evaluation time, never an error. The wire format stays flat (§8.1 style:
 `method` plus its params at rule level). The rules JSON Schema SHALL be generated from the models,
 never hand-written.
 

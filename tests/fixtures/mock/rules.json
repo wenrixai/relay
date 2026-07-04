@@ -1,0 +1,99 @@
+{
+  "schema_version": "1.0",
+  "rules_version": "fixture-2026-07-04",
+  "rules": [
+    {
+      "id": "mock.pnr.person.001",
+      "channel": "mock",
+      "operation": "^PNR_Retrieve",
+      "path": "//m:Traveler/m:Name",
+      "namespaces": {"m": "urn:mock:pnr"},
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "mock.pnr.email.001",
+      "channel": "mock",
+      "operation": "^PNR_Retrieve",
+      "path": "//m:Email",
+      "namespaces": {"m": "urn:mock:pnr"},
+      "pii_type": "email",
+      "method": "encrypt"
+    },
+    {
+      "id": "mock.pnr.payment.001",
+      "channel": "mock",
+      "operation": "^PNR_Retrieve",
+      "path": "//m:Card",
+      "namespaces": {"m": "urn:mock:pnr"},
+      "pii_type": "payment",
+      "method": "mask",
+      "mask_char": "*",
+      "keep_prefix": 4
+    },
+    {
+      "id": "mock.pnr.address.001",
+      "channel": "mock",
+      "operation": "^PNR_Retrieve",
+      "path": "//m:Address",
+      "namespaces": {"m": "urn:mock:pnr"},
+      "pii_type": "address",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "mock.pnr.passport.001",
+      "channel": "mock",
+      "operation": "^PNR_Retrieve",
+      "path": "//m:Passport",
+      "namespaces": {"m": "urn:mock:pnr"},
+      "pii_type": "passport_id",
+      "method": "remove"
+    },
+    {
+      "id": "mock.pnr.ff-text.001",
+      "channel": "mock",
+      "operation": "^PNR_Retrieve",
+      "path": "//m:FrequentFlyer",
+      "namespaces": {"m": "urn:mock:pnr"},
+      "pii_type": "frequent_flyer",
+      "method": "encrypt",
+      "ignored_content_patterns": ["^TMX"]
+    },
+    {
+      "id": "mock.pnr.ff-attr.001",
+      "channel": "mock",
+      "operation": "^PNR_Retrieve",
+      "path": "//m:Traveler/@loyalty",
+      "namespaces": {"m": "urn:mock:pnr"},
+      "pii_type": "frequent_flyer",
+      "method": "encrypt"
+    },
+    {
+      "id": "mock.pnr.badns.001",
+      "channel": "mock",
+      "operation": "^PNR_Retrieve",
+      "path": "//nope:Thing",
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "other.channel.person.001",
+      "channel": "other",
+      "operation": ".*",
+      "path": "//m:PnrRef",
+      "namespaces": {"m": "urn:mock:pnr"},
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "mock.wrongop.person.001",
+      "channel": "mock",
+      "operation": "^Book_Flight$",
+      "path": "//m:PnrRef",
+      "namespaces": {"m": "urn:mock:pnr"},
+      "pii_type": "person",
+      "method": "encrypt"
+    }
+  ]
+}

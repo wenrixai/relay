@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <res:PNR_RetrieveResponse xmlns:res="urn:mock:pnr">
+      <res:Traveler loyalty="FF-778899">
+        <res:Name>John Smith</res:Name>
+        <res:Email>john.smith@example.com</res:Email>
+        <res:Passport>P1234567</res:Passport>
+        <res:Card>4111111111111111</res:Card>
+        <res:Address>1 High Street, London</res:Address>
+        <res:FrequentFlyer>TMX12345</res:FrequentFlyer>
+      </res:Traveler>
+      <res:PnrRef>ABC123</res:PnrRef>
+    </res:PNR_RetrieveResponse>
+  </soap:Body>
+</soap:Envelope>
