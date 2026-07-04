@@ -13,6 +13,7 @@ Fail closed: every unexpected error is wrapped in :class:`RedactionError` /
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 
 from lxml import etree
 
@@ -39,6 +40,7 @@ _Collector = dict[str, set[str]]
 
 _SOAP_LOCAL_ENVELOPE = "Envelope"
 _SOAP_LOCAL_BODY = "Body"
+_Span = tuple[int, int]
 
 
 class RedactionError(Exception):
@@ -99,33 +101,96 @@ def _collect(collector: _Collector, rule: FieldRule, value: str) -> None:
     collector.setdefault(rule.pii_type.value, set()).add(value)
 
 
-def _rewrite_node(node: object, rule: FieldRule, keyring: Keyring, collector: _Collector) -> bool:
-    """Apply the rule's action to one located node. Returns True when a field changed.
+def _span_for_match(match: re.Match[str]) -> _Span | None:
+    """Return the PII span for an extraction match.
+
+    A single capture group narrows the redaction to that group. With zero or multiple
+    groups the whole match is the PII span, keeping the rule behavior unambiguous.
+    """
+    if match.re.groups == 1:
+        start, end = match.span(1)
+    else:
+        start, end = match.span(0)
+    if start < 0 or end <= start:
+        return None
+    return start, end
+
+
+def _extract_spans(rule: FieldRule, value: str) -> list[_Span]:
+    """Return non-overlapping extraction spans in source order."""
+    spans: list[_Span] = []
+    occupied: list[_Span] = []
+    for pattern in rule.extract_re:
+        for match in pattern.finditer(value):
+            span = _span_for_match(match)
+            if span is None:
+                continue
+            start, end = span
+            if any(start < used_end and end > used_start for used_start, used_end in occupied):
+                continue
+            spans.append(span)
+            occupied.append(span)
+    return sorted(spans)
+
+
+def _apply_extracted_actions(
+    value: str,
+    spans: Sequence[_Span],
+    rule: FieldRule,
+    keyring: Keyring,
+    collector: _Collector,
+) -> tuple[str, int]:
+    """Rewrite extracted spans inside ``value`` while preserving surrounding text."""
+    rewritten = value
+    for start, end in reversed(spans):
+        plaintext = value[start:end]
+        _collect(collector, rule, plaintext)
+        replacement = _apply_action(rule, plaintext, keyring) or ""
+        rewritten = f"{rewritten[:start]}{replacement}{rewritten[end:]}"
+    return rewritten, len(spans)
+
+
+def _rewrite_value(value: str, rule: FieldRule, keyring: Keyring, collector: _Collector) -> tuple[str | None, int]:
+    """Apply a field rule to one text/attribute value."""
+    if _ignored(rule, value):
+        return value, 0
+    if rule.extract_patterns:
+        spans = _extract_spans(rule, value)
+        if not spans:
+            return value, 0
+        return _apply_extracted_actions(value, spans, rule, keyring, collector)
+    _collect(collector, rule, value)
+    return _apply_action(rule, value, keyring), 1
+
+
+def _rewrite_node(node: object, rule: FieldRule, keyring: Keyring, collector: _Collector) -> int:
+    """Apply the rule's action to one located node. Returns the number of changed fields/spans.
 
     The pre-rewrite plaintext is collected first, so reference rules (phase 2) can search
     free text for it even though this node is about to become a token (D4).
     """
     if isinstance(node, etree._Element):  # pylint: disable=protected-access  # lxml's public-in-practice type
         value = node.text
-        if value is None or _ignored(rule, value):
-            return False
-        _collect(collector, rule, value)
-        node.text = _apply_action(rule, value, keyring)
-        return True
+        if value is None:
+            return 0
+        replacement, count = _rewrite_value(value, rule, keyring, collector)
+        if count:
+            node.text = replacement
+        return count
     # Attribute results are "smart strings" carrying their owner element.
     if isinstance(node, str) and hasattr(node, "getparent"):
         parent = node.getparent()
         attrname = getattr(node, "attrname", None)
-        if parent is None or attrname is None or _ignored(rule, str(node)):
-            return False
-        _collect(collector, rule, str(node))
-        replacement = _apply_action(rule, str(node), keyring)
-        if replacement is None:
-            del parent.attrib[attrname]
-        else:
-            parent.set(attrname, replacement)
-        return True
-    return False
+        if parent is None or attrname is None:
+            return 0
+        replacement, count = _rewrite_value(str(node), rule, keyring, collector)
+        if count:
+            if replacement is None:
+                del parent.attrib[attrname]
+            else:
+                parent.set(attrname, replacement)
+        return count
+    return 0
 
 
 def select_rules(ruleset: RuleSet, channel: str, operation: str) -> list[Rule]:
@@ -183,6 +248,24 @@ def _redact_reference_rule(
             counts[rule.pii_type.value] = counts.get(rule.pii_type.value, 0) + hits
 
 
+def _redact_field_rule(
+    root: etree._Element,
+    rule: FieldRule,
+    keyring: Keyring,
+    collector: _Collector,
+) -> int:
+    """Apply one field rule and return the number of rewritten fields/spans."""
+    located = _locate(root, rule)
+    if rule.required and not located:
+        msg = f"required rule {rule.id!r} matched no nodes"
+        raise RedactionError(msg)
+    rewrites = sum(_rewrite_node(node, rule, keyring, collector) for node in located)
+    if rule.required and not rewrites:
+        msg = f"required rule {rule.id!r} rewrote no values"
+        raise RedactionError(msg)
+    return rewrites
+
+
 def redact_response_body(
     body: bytes,
     *,
@@ -209,9 +292,9 @@ def redact_response_body(
         # Phase 1: structured field rules — collect plaintext, then rewrite each node (D4).
         for rule in selected:
             if isinstance(rule, FieldRule):
-                for node in _locate(root, rule):
-                    if _rewrite_node(node, rule, keyring, collector):
-                        counts[rule.pii_type.value] = counts.get(rule.pii_type.value, 0) + 1
+                rewrites = _redact_field_rule(root, rule, keyring, collector)
+                if rewrites:
+                    counts[rule.pii_type.value] = counts.get(rule.pii_type.value, 0) + rewrites
         # Phase 2: reference rules — search free text for the values collected in phase 1.
         for rule in selected:
             if isinstance(rule, ReferenceRule):

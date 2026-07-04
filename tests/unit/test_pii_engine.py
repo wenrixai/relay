@@ -163,6 +163,29 @@ def _remark_texts(body: bytes) -> list[str]:
     return [node.text or "" for node in root.xpath("//*[local-name()='Text']")]
 
 
+def _extract_ruleset(
+    *,
+    path: str = "//m:Remark/m:Text",
+    method: str = "mask",
+    required: bool = False,
+    pattern: str = r"([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})",
+    **extra: object,
+) -> RuleSet:
+    rule: dict[str, object] = {
+        "id": "r.extract",
+        "channel": "mock",
+        "operation": "^PNR_Retrieve",
+        "path": path,
+        "namespaces": {"m": NS},
+        "pii_type": "email",
+        "method": method,
+        "extract_patterns": [{"pattern": pattern}],
+        "required": required,
+        **extra,
+    }
+    return RuleSet.model_validate({"schema_version": "1.0", "rules_version": "t", "rules": [rule]})
+
+
 class TestReferenceRedaction:
     def test_name_scrubbed_from_remark_round_trips(self, keyring: Keyring) -> None:
         body = _doc("John Smith", "PSGR JOHN SMITH RQ WHEELCHAIR")
@@ -221,6 +244,53 @@ class TestReferenceRedaction:
         monkeypatch.setattr("channel_relay.pii.engine.encrypt", sometimes_boom)
         with pytest.raises(RedactionError):
             redact_response_body(body, channel="mock", ruleset=_ref_ruleset(), keyring=keyring)
+
+
+class TestExtractPatternRedaction:
+    def test_partial_email_mask_preserves_surrounding_text(self, keyring: Keyring) -> None:
+        body = _doc("John Smith", "EMAIL john.smith@example.com OK")
+        redacted, counts = redact_response_body(body, channel="mock", ruleset=_extract_ruleset(), keyring=keyring)
+        assert _remark_texts(redacted)[0] == "EMAIL ********************** OK"
+        assert counts["email"] == 1
+
+    def test_partial_email_encrypt_round_trips(self, keyring: Keyring) -> None:
+        body = _doc("John Smith", "EMAIL john.smith@example.com OK")
+        redacted, counts = redact_response_body(
+            body, channel="mock", ruleset=_extract_ruleset(method="encrypt"), keyring=keyring
+        )
+        text = _remark_texts(redacted)[0]
+        assert text.startswith("EMAIL ") and text.endswith(" OK")
+        token = text.removeprefix("EMAIL ").removesuffix(" OK")
+        assert TOKEN_RE.fullmatch(token)
+        assert decrypt(token, keyring) == "john.smith@example.com"
+        assert counts["email"] == 1
+
+    def test_partial_attribute_redaction(self, keyring: Keyring) -> None:
+        body = f'<PNR_Retrieve xmlns="{NS}"><Remark data="contact john@example.com ok"/></PNR_Retrieve>'.encode()
+        redacted, counts = redact_response_body(
+            body,
+            channel="mock",
+            ruleset=_extract_ruleset(path="//m:Remark/@data", method="replace", replacement="[email]"),
+            keyring=keyring,
+        )
+        value = parse_bytes(redacted).xpath("//*[local-name()='Remark']/@data")[0]
+        assert value == "contact [email] ok"
+        assert counts["email"] == 1
+
+    def test_required_missing_path_fails_closed(self, keyring: Keyring) -> None:
+        body = _doc("John Smith", "EMAIL john.smith@example.com OK")
+        with pytest.raises(RedactionError):
+            redact_response_body(
+                body,
+                channel="mock",
+                ruleset=_extract_ruleset(path="//m:Missing", required=True),
+                keyring=keyring,
+            )
+
+    def test_required_extract_no_match_fails_closed(self, keyring: Keyring) -> None:
+        body = _doc("John Smith", "NO EMAIL HERE")
+        with pytest.raises(RedactionError):
+            redact_response_body(body, channel="mock", ruleset=_extract_ruleset(required=True), keyring=keyring)
 
 
 class TestEmbeddedDeanonymization:

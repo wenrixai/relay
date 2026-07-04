@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from channel_relay.pii.rules import (
     EncryptAction,
+    ExtractPattern,
     FieldRule,
     MaskAction,
     ReferenceRule,
@@ -127,6 +128,30 @@ def test_ignored_patterns_precompiled() -> None:
     assert first.ignored_re[0].match("TMX123")
 
 
+def test_extract_patterns_precompiled() -> None:
+    loaded = RuleSet.model_validate(ruleset(rule(extract_patterns=[{"pattern": r"([^\s]+@[^\s]+)"}])))
+    first = loaded.rules[0]
+    assert isinstance(first, FieldRule)
+    assert isinstance(first.extract_patterns[0], ExtractPattern)
+    assert first.extract_re[0].search("email john@example.test")
+
+
+def test_bad_extract_pattern_rejected_at_load() -> None:
+    with pytest.raises(ValidationError):
+        RuleSet.model_validate(ruleset(rule(extract_patterns=[{"pattern": "([bad"}])))
+
+
+def test_required_defaults_false_and_can_be_set() -> None:
+    loaded = RuleSet.model_validate(ruleset(rule()))
+    first = loaded.rules[0]
+    assert isinstance(first, FieldRule)
+    assert first.required is False
+
+    required = RuleSet.model_validate(ruleset(rule(required=True))).rules[0]
+    assert isinstance(required, FieldRule)
+    assert required.required is True
+
+
 def test_unknown_pii_type_rejected() -> None:
     with pytest.raises(ValidationError):
         RuleSet.model_validate(ruleset(rule(pii_type="shoe_size")))
@@ -210,3 +235,5 @@ def test_generated_schema_documents_rule_type_discriminator() -> None:
     assert "rule_type" in text
     assert "reference" in text
     assert "source_pii_types" in text
+    assert "extract_patterns" in text
+    assert "required" in text

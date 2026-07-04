@@ -124,6 +124,24 @@ class _BaseRule(BaseModel):
         return re.compile(self.operation)
 
 
+class ExtractPattern(BaseModel):
+    """A regex used to extract PII spans from a selected field value."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    pattern: str = Field(min_length=1)
+
+    @field_validator("pattern")
+    @classmethod
+    def _compilable_pattern(cls, value: str) -> str:
+        return _compilable(value)
+
+    @cached_property
+    def compiled(self) -> re.Pattern[str]:
+        """Compiled extraction regex."""
+        return re.compile(self.pattern)
+
+
 class FieldRule(_BaseRule):
     """A single field-redaction rule (``rule_type: field``)."""
 
@@ -131,6 +149,14 @@ class FieldRule(_BaseRule):
     pii_type: PiiType
     action: RuleAction
     ignored_content_patterns: list[str] = Field(default_factory=list)
+    extract_patterns: list[ExtractPattern] = Field(
+        default_factory=list,
+        description=(
+            "Regexes applied inside selected values. If a regex has exactly one capture group, "
+            "that group's span is rewritten; otherwise the full match is rewritten."
+        ),
+    )
+    required: bool = False
 
     @model_validator(mode="before")
     @classmethod
@@ -160,6 +186,11 @@ class FieldRule(_BaseRule):
     def ignored_re(self) -> tuple[re.Pattern[str], ...]:
         """Compiled ``ignored_content_patterns``."""
         return tuple(re.compile(pattern) for pattern in self.ignored_content_patterns)
+
+    @cached_property
+    def extract_re(self) -> tuple[re.Pattern[str], ...]:
+        """Compiled ``extract_patterns``."""
+        return tuple(pattern.compiled for pattern in self.extract_patterns)
 
 
 class ReferenceRule(_BaseRule):
