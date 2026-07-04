@@ -7,10 +7,10 @@ mTLS is opt-in and handled at the server layer (later).
 
 from __future__ import annotations
 
-import base64
 import binascii
 import hmac
 
+import pybase64
 from fastapi import HTTPException, Request
 
 from channel_relay.settings import Settings
@@ -37,7 +37,7 @@ def parse_basic_credentials(header: str | None) -> tuple[str, str] | None:
     if scheme.lower() != "basic" or not encoded:
         return None
     try:
-        decoded = base64.b64decode(encoded, validate=True).decode("utf-8")
+        decoded = pybase64.b64decode(encoded, validate=True).decode("utf-8")
     except (binascii.Error, ValueError, UnicodeDecodeError):
         return None
     user, sep, password = decoded.partition(":")

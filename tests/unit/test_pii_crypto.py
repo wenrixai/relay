@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import base64
 import json
 from pathlib import Path
 
+import pybase64
 import pytest
 
 from channel_relay.config.models import ChannelConfig, ChannelPII, ChannelType, RelayConfig
@@ -21,7 +21,7 @@ from channel_relay.settings import Settings
 
 def b64key(seed: int) -> str:
     """A deterministic base64 32-byte key for tests."""
-    return base64.b64encode(bytes([seed]) * 32).decode()
+    return pybase64.b64encode(bytes([seed]) * 32).decode()
 
 
 def keyring_json(epochs: dict[int, str]) -> str:
@@ -48,7 +48,7 @@ def test_non_integer_epoch_rejected() -> None:
 
 
 def test_wrong_key_length_rejected() -> None:
-    short = base64.b64encode(b"short").decode()
+    short = pybase64.b64encode(b"short").decode()
     with pytest.raises(KeyringError):
         Keyring.from_json(keyring_json({0: short}))
 

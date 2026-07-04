@@ -7,11 +7,11 @@ network. Mirrors ``test_pii_roundtrip`` for a channel that carries PII inside re
 
 from __future__ import annotations
 
-import base64
 import json
 from pathlib import Path
 
 import httpx
+import pybase64
 import pytest
 from fastapi.testclient import TestClient
 
@@ -21,7 +21,7 @@ from channel_relay.pii.xml_ops import parse_bytes
 
 FIXTURES = Path(__file__).parent.parent / "fixtures" / "mock"
 RULES_URL = "https://rules.wenrix.test/v1"
-KEYRING_JSON = json.dumps({"0": base64.b64encode(bytes([5]) * 32).decode()})
+KEYRING_JSON = json.dumps({"0": pybase64.b64encode(bytes([5]) * 32).decode()})
 
 
 class MockChannel:

@@ -8,11 +8,11 @@ transport integrity per the threat model. The IV must never drop below 96 bits.
 
 from __future__ import annotations
 
-import base64
 import binascii
 import os
 import re
 
+import pybase64
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 from channel_relay.pii import smaz
@@ -50,7 +50,7 @@ def encrypt(plaintext: str, keyring: Keyring) -> str:
     encryptor = _ctr(keyring.enc_key(epoch), iv).encryptor()
     ciphertext = encryptor.update(payload) + encryptor.finalize()
     packed = bytes([control]) + iv + ciphertext
-    return TOKEN_PREFIX + base64.urlsafe_b64encode(packed).decode().rstrip("=")
+    return TOKEN_PREFIX + pybase64.urlsafe_b64encode(packed).decode().rstrip("=")
 
 
 def decrypt(token: str, keyring: Keyring) -> str:
@@ -64,7 +64,7 @@ def decrypt(token: str, keyring: Keyring) -> str:
         raise TokenError("token missing ENC_ prefix")
     body = token[len(TOKEN_PREFIX) :]
     try:
-        packed = base64.urlsafe_b64decode(body + "=" * (-len(body) % 4))
+        packed = pybase64.b64decode(body + "=" * (-len(body) % 4), altchars=b"-_", validate=True)
     except (binascii.Error, ValueError) as exc:
         raise TokenError("token is not valid base64url") from exc
     if len(packed) < 1 + _IV_BYTES:

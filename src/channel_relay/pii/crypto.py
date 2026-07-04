@@ -8,11 +8,11 @@ must never appear in logs or error messages.
 
 from __future__ import annotations
 
-import base64
 import binascii
 import json
 from pathlib import Path
 
+import pybase64
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
@@ -72,7 +72,7 @@ class Keyring:
             if not isinstance(key_b64, str):
                 raise KeyringError(f"keyring epoch {epoch} key must be a base64 string")
             try:
-                master = base64.b64decode(key_b64, validate=True)
+                master = pybase64.b64decode(key_b64, validate=True)
             except (binascii.Error, ValueError) as exc:
                 raise KeyringError(f"keyring epoch {epoch} key is not valid base64") from exc
             if len(master) != _KEY_BYTES:

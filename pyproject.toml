@@ -16,6 +16,7 @@ dependencies = [
     "cryptography>=44",
     "opentelemetry-sdk>=1.43.0",
     "opentelemetry-exporter-otlp>=1.43.0",
+    "pybase64>=1.4.3",
 ]
 
 [project.scripts]

@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import base64
-
 import httpx
+import pybase64
 from fastapi.testclient import TestClient
 
 from channel_relay.config.models import ChannelConfig, ChannelType, RelayConfig
@@ -18,7 +17,7 @@ from channel_relay.settings import Settings
 
 
 def _basic(user: str, password: str) -> str:
-    token = base64.b64encode(f"{user}:{password}".encode()).decode()
+    token = pybase64.b64encode(f"{user}:{password}".encode()).decode()
     return f"Basic {token}"
 
 

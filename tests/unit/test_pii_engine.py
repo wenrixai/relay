@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import base64
 import json
 from pathlib import Path
 
+import pybase64
 import pytest
 
 from channel_relay.pii.codec import TOKEN_RE, decrypt, encrypt
@@ -25,7 +25,7 @@ FIXTURES = Path(__file__).parent.parent / "fixtures" / "mock"
 
 @pytest.fixture(name="keyring")
 def keyring_fixture() -> Keyring:
-    key = base64.b64encode(bytes([7]) * 32).decode()
+    key = pybase64.b64encode(bytes([7]) * 32).decode()
     return Keyring.from_json(json.dumps({"0": key}))
 
 

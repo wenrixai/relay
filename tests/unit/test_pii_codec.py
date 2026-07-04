@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import base64
 import contextlib
 import json
 import re
 
+import pybase64
 import pytest
 
 from channel_relay.pii.codec import TOKEN_RE, TokenError, decrypt, encrypt
@@ -19,7 +19,7 @@ FIXED_OVERHEAD = 13
 
 
 def make_keyring(epochs: dict[int, int], active: int | None = None) -> Keyring:
-    ring = {str(e): base64.b64encode(bytes([seed]) * 32).decode() for e, seed in epochs.items()}
+    ring = {str(e): pybase64.b64encode(bytes([seed]) * 32).decode() for e, seed in epochs.items()}
     return Keyring.from_json(json.dumps(ring), active_epoch=active)
 
 
@@ -61,25 +61,25 @@ def test_size_bound(keyring: Keyring) -> None:
     for plaintext in ("a", "ab", "John Smith", "日本語テキスト", "y" * 300):
         raw_len = len(plaintext.encode())
         token = encrypt(plaintext, keyring)
-        payload = base64.urlsafe_b64decode(token[len("ENC_") :] + "==")
+        payload = pybase64.urlsafe_b64decode(token[len("ENC_") :] + "==")
         assert len(payload) <= raw_len + FIXED_OVERHEAD
 
 
 def test_compressible_uses_smaz_flag(keyring: Keyring) -> None:
     token = encrypt("this is a test of the compression", keyring)
-    payload = base64.urlsafe_b64decode(token[len("ENC_") :] + "==")
+    payload = pybase64.urlsafe_b64decode(token[len("ENC_") :] + "==")
     assert payload[0] & 0x10  # compressed flag set
 
 
 def test_incompressible_stays_raw(keyring: Keyring) -> None:
     token = encrypt("日本語", keyring)
-    payload = base64.urlsafe_b64decode(token[len("ENC_") :] + "==")
+    payload = pybase64.urlsafe_b64decode(token[len("ENC_") :] + "==")
     assert not payload[0] & 0x10
 
 
 def test_active_epoch_encoded_in_control(keyring: Keyring) -> None:
     token = encrypt("value", keyring)
-    payload = base64.urlsafe_b64decode(token[len("ENC_") :] + "==")
+    payload = pybase64.urlsafe_b64decode(token[len("ENC_") :] + "==")
     assert payload[0] & 0x0F == keyring.active_epoch
 
 
@@ -111,16 +111,16 @@ def test_malformed_base64_fails(keyring: Keyring) -> None:
 
 
 def test_truncated_payload_fails(keyring: Keyring) -> None:
-    short = "ENC_" + base64.urlsafe_b64encode(b"\x00" + b"\x01" * 5).decode().rstrip("=")
+    short = "ENC_" + pybase64.urlsafe_b64encode(b"\x00" + b"\x01" * 5).decode().rstrip("=")
     with pytest.raises(TokenError):
         decrypt(short, keyring)
 
 
 def test_reserved_control_bits_rejected(keyring: Keyring) -> None:
     token = encrypt("value", keyring)
-    payload = bytearray(base64.urlsafe_b64decode(token[len("ENC_") :] + "=="))
+    payload = bytearray(pybase64.urlsafe_b64decode(token[len("ENC_") :] + "=="))
     payload[0] |= 0x80  # set a reserved bit
-    forged = "ENC_" + base64.urlsafe_b64encode(bytes(payload)).decode().rstrip("=")
+    forged = "ENC_" + pybase64.urlsafe_b64encode(bytes(payload)).decode().rstrip("=")
     with pytest.raises(TokenError):
         decrypt(forged, keyring)
 
