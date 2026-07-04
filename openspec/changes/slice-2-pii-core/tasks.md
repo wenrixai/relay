@@ -62,7 +62,7 @@
 
 ## 7. PII metrics + close-out (T2.7)
 
-- [ ] 7.1 TDD red then implement: `pii_fields_redacted_total{channel,pii_type}`,
+- [x] 7.1 TDD red then implement: `pii_fields_redacted_total{channel,pii_type}`,
       `pii_fields_decrypted_total{channel}`, `xml_parse_errors_total{channel,kind}`,
       `rule_version` in `observability/metrics.py`; assert via in-memory reader; log-cleanliness
       test (no PII/tokens/keys in captured logs); commit

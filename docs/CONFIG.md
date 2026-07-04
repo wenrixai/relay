@@ -88,6 +88,8 @@ channels:
 | `RELAY_TELEMETRY_METRICS_ENABLED` | true | Toggle metric export. |
 | `RELAY_OTLP_ENDPOINT` | Wenrix default | Override telemetry endpoint. |
 | `RELAY_RULES_API_URL` | Wenrix default | Rules API; startup fetch, baked fallback (§8.8). |
+| `RELAY_PII_KEYRING` | (none) | Inline keyring JSON `{epoch_int: base64key}` (§5). |
+| `RELAY_PII_KEYRING_FILE` | (none) | Path to a mounted keyring file; wins over `RELAY_PII_KEYRING`. |
 | `RELAY_PII_KEY_EPOCH_ACTIVE` | (highest present) | Active epoch for new encryptions. |
 | `RELAY_DEBUG` | false | Verbose startup; never logs secrets/PII. |
 

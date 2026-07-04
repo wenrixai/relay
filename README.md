@@ -33,6 +33,15 @@ just cov          # tests with coverage gate
 just lint / fmt / types / pylint
 ```
 
+## PII redaction (opt-in)
+Per channel, `pii.enabled: true` turns on response redaction and request de-anonymization:
+PII fields in channel responses are replaced with self-describing `ENC_` tokens
+(AES-256-CTR, epoch keyring) before Wenrix sees them, and tokens in later requests are
+decrypted back to plaintext before reaching the channel. Requires a keyring
+(`RELAY_PII_KEYRING` / `RELAY_PII_KEYRING_FILE`) and redaction rules (fetched from
+`RELAY_RULES_API_URL` at startup, baked fallback otherwise). See `docs/PROJECT.md` §7-§8
+and `docs/the relay-configuration spec`.
+
 ## Layout
 ```
 src/channel_relay/   application package (main, config, middleware, channels, proxy, pii, observability)
