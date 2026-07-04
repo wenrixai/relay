@@ -1,9 +1,3 @@
 # Code owners for the Wenrix Channel Relay.
 # Adjust the owner handle/team to match the repository's org.
 * @wenrix
-
-# Security-sensitive areas warrant explicit review.
-/src/channel_relay/pii/ @wenrix
-/src/channel_relay/middleware/auth.py @wenrix
-/deployment/ @wenrix
-/.github/ @wenrix

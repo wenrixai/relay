@@ -177,14 +177,6 @@ Implement PROJECT.md §13.4: 50 rps/instance @ 1000m vCPU target; hardware basel
 round-trip; fixed mock upstream latency; pass/fail thresholds; k6 or locust; results as CI artifact
 (non-gating by default).
 
-### T5.5 — Security & contribution docs wired (P1)
-Ensure `SECURITY.md`, `CONTRIBUTING.md`, `.github/` templates, and the review skill
-(`thermo-nuclear-code-quality-review`) are referenced from README; verify links.
-
-### T5.6 — Documentation portal (P1) — Depends: T4.3
-Main article + sub-articles (install/config incl. Helm/K8s + channel implementation; advanced
-config; PII redaction explainer); deprecate old env vars.
-
 ---
 
 ## Slice 6 — Later capabilities (postponed by design)
