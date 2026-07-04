@@ -86,6 +86,8 @@ disallow_untyped_defs = false
 [tool.pylint.main]
 py-version = "3.13"
 jobs = 0
+# lxml is a C extension; allow runtime introspection so etree members resolve.
+extension-pkg-allow-list = ["lxml.etree", "lxml"]
 [tool.pylint.format]
 max-line-length = 120
 

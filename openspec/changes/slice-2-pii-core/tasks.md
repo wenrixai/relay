@@ -11,12 +11,12 @@
 
 ## 2. Token codec + smaz (T2.2)
 
-- [ ] 2.1 Vendor pure-Python smaz (`pii/smaz.py`) with canonical codebook; round-trip + pinned
+- [x] 2.1 Vendor pure-Python smaz (`pii/smaz.py`) with canonical codebook; round-trip + pinned
       vector tests
-- [ ] 2.2 TDD red: codec property tests (unicode round-trip, IV uniqueness, token regex
+- [x] 2.2 TDD red: codec property tests (unicode round-trip, IV uniqueness, token regex
       `^ENC_[A-Za-z0-9_-]+$`, size bound raw+13B pre-base64, compress flag set/clear, truncated/
       malformed/unknown-epoch/reserved-bits typed failures)
-- [ ] 2.3 Implement `pii/codec.py` (encrypt/decrypt, control byte, AES-256-CTR `iv‖0x00000000`,
+- [x] 2.3 Implement `pii/codec.py` (encrypt/decrypt, control byte, AES-256-CTR `iv‖0x00000000`,
       compress-if-smaller); commit
 
 ## 3. Hardened XML ops (T2.3)
