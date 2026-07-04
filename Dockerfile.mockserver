@@ -1,0 +1,10 @@
+# syntax=docker/dockerfile:1
+# Tiny stdlib-only mock channel for local compose / CI smoke tests.
+
+FROM python:3.13-alpine AS runtime
+RUN addgroup -S mock && adduser -S -G mock mock
+WORKDIR /app
+COPY --chown=mock:mock deployment/mock_channel.py ./mock_channel.py
+USER mock
+EXPOSE 9000
+CMD ["python", "mock_channel.py"]

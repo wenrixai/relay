@@ -1,0 +1,9 @@
+{
+  "channels": [
+    {
+      "name": "mock",
+      "type": "travelport",
+      "proxy_pass": "http://mock-channel:9000"
+    }
+  ]
+}
