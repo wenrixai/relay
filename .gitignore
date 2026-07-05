@@ -29,3 +29,6 @@ relay.json
 .DS_Store
 .idea/
 .vscode/
+
+# Raw (unsanitized) supplier payloads — never commit
+/sabre/

@@ -1,0 +1,1006 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap-env:Header>
+        <eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0"
+                          soap-env:mustUnderstand="1">
+            <eb:From>
+                <eb:PartyId eb:type="URI">123123</eb:PartyId>
+            </eb:From>
+            <eb:To>
+                <eb:PartyId eb:type="URI">999999</eb:PartyId>
+            </eb:To>
+            <eb:CPAId>7X3K</eb:CPAId>
+            <eb:ConversationId>V1@24b7ef8e-90dc-4132-a083-11661f171c51@658b6465-9883-4e51-a522-1679806f2e8c@
+            </eb:ConversationId>
+            <eb:Service>GetReservationRQ</eb:Service>
+            <eb:Action>GetReservationRQ</eb:Action>
+            <eb:MessageData>
+                <eb:MessageId>187299334090740170</eb:MessageId>
+                <eb:Timestamp>2023-02-21T09:16:49</eb:Timestamp>
+                <eb:RefToMessageId>32385014909</eb:RefToMessageId>
+            </eb:MessageData>
+        </eb:MessageHeader>
+        <wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+            <wsse:BinarySecurityToken valueType="String" EncodingType="wsse:Base64Binary">
+                Shared/IDL:IceSess/SessMgr:1.0.IDL/Common/!ICESMS/SANITIZED!0!0
+            </wsse:BinarySecurityToken>
+        </wsse:Security>
+    </soap-env:Header>
+    <soap-env:Body>
+        <stl19:GetReservationRS xmlns:stl19="http://webservices.sabre.com/pnrbuilder/v1_19"
+                                xmlns:ns6="http://services.sabre.com/res/orr/v0"
+                                xmlns:or114="http://services.sabre.com/res/or/v1_14"
+                                xmlns:raw="http://tds.sabre.com/itinerary"
+                                xmlns:ns4="http://webservices.sabre.com/pnrconn/ReaccSearch" Version="1.19.12">
+            <stl19:Reservation numberInParty="1" numberOfInfants="0" NumberInSegment="1">
+                <stl19:BookingDetails>
+                    <stl19:RecordLocator>TESTBC</stl19:RecordLocator>
+                    <stl19:CreationTimestamp>2023-02-20T11:16:00</stl19:CreationTimestamp>
+                    <stl19:SystemCreationTimestamp>2023-02-20T11:16:00</stl19:SystemCreationTimestamp>
+                    <stl19:CreationAgentID>AWX</stl19:CreationAgentID>
+                    <stl19:UpdateTimestamp>2023-02-20T11:23:32</stl19:UpdateTimestamp>
+                    <stl19:PNRSequence>7</stl19:PNRSequence>
+                    <stl19:FlightsRange Start="2023-04-09T09:54:00" End="2023-04-09T12:35:00"/>
+                    <stl19:DivideSplitDetails/>
+                    <stl19:EstimatedPurgeTimestamp>2023-09-06T00:00:00</stl19:EstimatedPurgeTimestamp>
+                    <stl19:UpdateToken>-5ccdf5be145eed97226c220a54549b14f4bd0b8158200797</stl19:UpdateToken>
+                    <stl19:ACSIssuedBagTags>false</stl19:ACSIssuedBagTags>
+                    <stl19:VeryImportantTraveler>false</stl19:VeryImportantTraveler>
+                </stl19:BookingDetails>
+                <stl19:POS AirExtras="false" InhibitCode="U">
+                    <stl19:Source BookingSource="3ZFI" AgentSine="AWX" PseudoCityCode="3ZFI" ISOCountry="US"
+                                  AgentDutyCode="*" AirlineVendorID="AA" HomePseudoCityCode="3ZFI" PrimeHostID="1S"/>
+                </stl19:POS>
+                <stl19:PassengerReservation>
+                    <stl19:Passengers>
+                        <stl19:Passenger id="17" nameType="S" passengerType="ADT" nameId="01.01" nameAssocId="1"
+                                         elementId="pnr-17.1">
+                            <stl19:LastName>MR</stl19:LastName>
+                            <stl19:FirstName>MR</stl19:FirstName>
+                            <stl19:FrequentFlyer RPH="1" id="22">
+                                <stl19:SupplierCode>DL</stl19:SupplierCode>
+                                <stl19:Number>0000000000</stl19:Number>
+                                <stl19:ReceivingCarrierCode>DL</stl19:ReceivingCarrierCode>
+                                <stl19:StatusCode>HK</stl19:StatusCode>
+                            </stl19:FrequentFlyer>
+                            <stl19:EmailAddress id="20">
+                                <stl19:Address>SUPPLIER-CONTACT@ACMEX.COM</stl19:Address>
+                                <stl19:Comment/>
+                            </stl19:EmailAddress>
+                            <stl19:SpecialRequests>
+                                <stl19:GenericSpecialRequest id="26" type="G" msgType="S">
+                                    <stl19:Code>CTCR</stl19:Code>
+                                    <stl19:FreeText>/REFUSED TO PROVIDE</stl19:FreeText>
+                                    <stl19:ActionCode>HK</stl19:ActionCode>
+                                    <stl19:NumberInParty>1</stl19:NumberInParty>
+                                    <stl19:AirlineCode>DL</stl19:AirlineCode>
+                                    <stl19:FullText>CTCR DL HK1/REFUSED TO PROVIDE</stl19:FullText>
+                                </stl19:GenericSpecialRequest>
+                                <stl19:APISRequest>
+                                    <stl19:DOCSEntry id="23" type="G">
+                                        <stl19:DateOfBirth>1990-01-01</stl19:DateOfBirth>
+                                        <stl19:Gender>M</stl19:Gender>
+                                        <stl19:Surname>MR</stl19:Surname>
+                                        <stl19:Forename>MR</stl19:Forename>
+                                        <stl19:MiddleName/>
+                                        <stl19:PrimaryHolder>false</stl19:PrimaryHolder>
+                                        <stl19:FreeText/>
+                                        <stl19:ActionCode>HK</stl19:ActionCode>
+                                        <stl19:NumberInParty>1</stl19:NumberInParty>
+                                        <stl19:VendorCode>DL</stl19:VendorCode>
+                                    </stl19:DOCSEntry>
+                                </stl19:APISRequest>
+                                <stl19:APISRequest>
+                                    <stl19:DOCOEntry id="35" type="G">
+                                        <stl19:FreeText>DOCO DL HK1//K/TT00TEST0///US</stl19:FreeText>
+                                        <stl19:ActionCode>HK</stl19:ActionCode>
+                                        <stl19:NumberInParty>1</stl19:NumberInParty>
+                                    </stl19:DOCOEntry>
+                                </stl19:APISRequest>
+                                <stl19:TicketingRequest>
+                                    <stl19:TicketType>G</stl19:TicketType>
+                                    <stl19:ValidatingCarrier>DL</stl19:ValidatingCarrier>
+                                    <stl19:ActionCode>HK</stl19:ActionCode>
+                                    <stl19:NumberInParty>1</stl19:NumberInParty>
+                                    <stl19:BoardPoint>ATL</stl19:BoardPoint>
+                                    <stl19:OffPoint>SEA</stl19:OffPoint>
+                                    <stl19:ClassOfService>K</stl19:ClassOfService>
+                                    <stl19:DateOfTravel>2023-04-09T00:00:00</stl19:DateOfTravel>
+                                    <stl19:TicketNumber>0067890261595C1</stl19:TicketNumber>
+                                </stl19:TicketingRequest>
+                            </stl19:SpecialRequests>
+                            <stl19:Seats>
+                                <stl19:PreReservedSeats>
+                                    <stl19:PreReservedSeat id="39">
+                                        <stl19:SeatNumber>33A</stl19:SeatNumber>
+                                        <stl19:SmokingPrefOfferedIndicator>false</stl19:SmokingPrefOfferedIndicator>
+                                        <stl19:SeatStatusCode>KK</stl19:SeatStatusCode>
+                                        <stl19:PreviousSeatStatusCode>KK</stl19:PreviousSeatStatusCode>
+                                        <stl19:BoardPoint>ATL</stl19:BoardPoint>
+                                        <stl19:OffPoint>SEA</stl19:OffPoint>
+                                        <stl19:Changed>N</stl19:Changed>
+                                        <stl19:NameNumber>01.01</stl19:NameNumber>
+                                    </stl19:PreReservedSeat>
+                                </stl19:PreReservedSeats>
+                            </stl19:Seats>
+                            <stl19:Remarks/>
+                            <stl19:PhoneNumbers/>
+                            <stl19:TicketingInfo>
+                                <stl19:ETicketNumber id="52" index="2" elementId="pnr-52">TE 0067890261595-AT TESTR/T
+                                    3ZFI*AW5 0920/20FEB
+                                </stl19:ETicketNumber>
+                                <stl19:TicketDetails id="52" index="2" elementId="pnr-52">
+                                    <stl19:OriginalTicketDetails>TE 0067890261595-AT TESTR/T 3ZFI*AW5 0920/20FEB
+                                    </stl19:OriginalTicketDetails>
+                                    <stl19:TransactionIndicator>TE</stl19:TransactionIndicator>
+                                    <stl19:TicketNumber>0067890261595</stl19:TicketNumber>
+                                    <stl19:PassengerName>TESTR/T</stl19:PassengerName>
+                                    <stl19:AgencyLocation>3ZFI</stl19:AgencyLocation>
+                                    <stl19:DutyCode>*</stl19:DutyCode>
+                                    <stl19:AgentSine>AW5</stl19:AgentSine>
+                                    <stl19:Timestamp>2023-02-20T09:20:00</stl19:Timestamp>
+                                    <stl19:PaymentType/>
+                                </stl19:TicketDetails>
+                            </stl19:TicketingInfo>
+                        </stl19:Passenger>
+                    </stl19:Passengers>
+                    <stl19:Segments>
+                        <stl19:Poc>
+                            <stl19:Airport>ATL</stl19:Airport>
+                            <stl19:Departure>2023-04-09T09:54:00</stl19:Departure>
+                        </stl19:Poc>
+                        <stl19:Segment sequence="1" id="3">
+                            <stl19:Air id="3" sequence="1" segmentAssociationId="2" isPast="false" DayOfWeekInd="7"
+                                       ArrivalDayOfWeekInd="7" CodeShare="false" SpecialMeal="false" StopQuantity="00"
+                                       SmokingAllowed="false" ResBookDesigCode="K" Code="DL" isIgnored="false">
+                                <stl19:DepartureAirport>ATL</stl19:DepartureAirport>
+                                <stl19:DepartureAirportCodeContext>IATA</stl19:DepartureAirportCodeContext>
+                                <stl19:DepartureTerminalName>SOUTH TERMINAL</stl19:DepartureTerminalName>
+                                <stl19:DepartureTerminalCode>S</stl19:DepartureTerminalCode>
+                                <stl19:ArrivalAirport>SEA</stl19:ArrivalAirport>
+                                <stl19:ArrivalAirportCodeContext>IATA</stl19:ArrivalAirportCodeContext>
+                                <stl19:OperatingAirlineCode>DL</stl19:OperatingAirlineCode>
+                                <stl19:OperatingAirlineShortName>DELTA AIR LINES INC</stl19:OperatingAirlineShortName>
+                                <stl19:OperatingFlightNumber>0697</stl19:OperatingFlightNumber>
+                                <stl19:EquipmentType>757</stl19:EquipmentType>
+                                <stl19:MarketingAirlineCode>DL</stl19:MarketingAirlineCode>
+                                <stl19:MarketingFlightNumber>0697</stl19:MarketingFlightNumber>
+                                <stl19:OperatingClassOfService>K</stl19:OperatingClassOfService>
+                                <stl19:MarketingClassOfService>K</stl19:MarketingClassOfService>
+                                <stl19:MarriageGrp>
+                                    <stl19:Ind>0</stl19:Ind>
+                                    <stl19:Group>0</stl19:Group>
+                                    <stl19:Sequence>0</stl19:Sequence>
+                                </stl19:MarriageGrp>
+                                <stl19:Meal Code="F"/>
+                                <stl19:Seats>
+                                    <stl19:PreReservedSeats>
+                                        <stl19:PreReservedSeat id="39">
+                                            <stl19:SeatNumber>33A</stl19:SeatNumber>
+                                            <stl19:SmokingPrefOfferedIndicator>false</stl19:SmokingPrefOfferedIndicator>
+                                            <stl19:SeatStatusCode>KK</stl19:SeatStatusCode>
+                                            <stl19:PreviousSeatStatusCode>KK</stl19:PreviousSeatStatusCode>
+                                            <stl19:BoardPoint>ATL</stl19:BoardPoint>
+                                            <stl19:OffPoint>SEA</stl19:OffPoint>
+                                            <stl19:Changed>N</stl19:Changed>
+                                            <stl19:NameNumber>01.01</stl19:NameNumber>
+                                        </stl19:PreReservedSeat>
+                                    </stl19:PreReservedSeats>
+                                </stl19:Seats>
+                                <stl19:AirlineRefId>DCDL*TESTCC</stl19:AirlineRefId>
+                                <stl19:Eticket>true</stl19:Eticket>
+                                <stl19:DepartureDateTime>2023-04-09T09:54:00</stl19:DepartureDateTime>
+                                <stl19:ArrivalDateTime>2023-04-09T12:35:00</stl19:ArrivalDateTime>
+                                <stl19:FlightNumber>0697</stl19:FlightNumber>
+                                <stl19:ClassOfService>K</stl19:ClassOfService>
+                                <stl19:ActionCode>HK</stl19:ActionCode>
+                                <stl19:PreviousActionCode>NN</stl19:PreviousActionCode>
+                                <stl19:NumberInParty>1</stl19:NumberInParty>
+                                <stl19:SegmentSpecialRequests>
+                                    <stl19:GenericSpecialRequest id="55" type="G" msgType="S">
+                                        <stl19:Code>TKNE</stl19:Code>
+                                        <stl19:FreeText>DL HK1 ATLSEA0697K09APR/0067890261595C1</stl19:FreeText>
+                                        <stl19:ActionCode>HK</stl19:ActionCode>
+                                        <stl19:NumberInParty>1</stl19:NumberInParty>
+                                        <stl19:AirlineCode>DL</stl19:AirlineCode>
+                                        <stl19:TicketNumber>0067890261595</stl19:TicketNumber>
+                                        <stl19:FullText>TKNE DL HK1 ATLSEA0697K09APR/0067890261595C1</stl19:FullText>
+                                    </stl19:GenericSpecialRequest>
+                                </stl19:SegmentSpecialRequests>
+                                <stl19:inboundConnection>false</stl19:inboundConnection>
+                                <stl19:outboundConnection>false</stl19:outboundConnection>
+                                <stl19:ScheduleChangeIndicator>false</stl19:ScheduleChangeIndicator>
+                                <stl19:SegmentBookedDate>2023-02-20T11:16:00</stl19:SegmentBookedDate>
+                                <stl19:ElapsedTime>05.41</stl19:ElapsedTime>
+                                <stl19:AirMilesFlown>2182</stl19:AirMilesFlown>
+                                <stl19:FunnelFlight>false</stl19:FunnelFlight>
+                                <stl19:ChangeOfGauge>false</stl19:ChangeOfGauge>
+                                <stl19:Cabin Code="Y" SabreCode="Y" Name="ECONOMY" ShortName="ECONOMY" Lang="EN"/>
+                                <stl19:Banner>MARKETED BY DELTA AIR LINES INC</stl19:Banner>
+                                <stl19:Informational>false</stl19:Informational>
+                                <stl19:TimeSinceBooked>16h0m</stl19:TimeSinceBooked>
+                            </stl19:Air>
+                            <stl19:Product id="3">
+                                <or114:ProductDetails productCategory="AIR">
+                                    <or114:ProductName type="AIR"/>
+                                    <or114:Air sequence="1" segmentAssociationId="2">
+                                        <or114:DepartureAirport>ATL</or114:DepartureAirport>
+                                        <or114:DepartureTerminalName>SOUTH TERMINAL</or114:DepartureTerminalName>
+                                        <or114:DepartureTerminalCode>S</or114:DepartureTerminalCode>
+                                        <or114:ArrivalAirport>SEA</or114:ArrivalAirport>
+                                        <or114:EquipmentType>757</or114:EquipmentType>
+                                        <or114:MarketingAirlineCode>DL</or114:MarketingAirlineCode>
+                                        <or114:MarketingFlightNumber>697</or114:MarketingFlightNumber>
+                                        <or114:MarketingClassOfService>K</or114:MarketingClassOfService>
+                                        <or114:MarriageGrp/>
+                                        <or114:Cabin code="Y" sabreCode="Y" name="ECONOMY" shortName="ECONOMY"
+                                                     lang="EN"/>
+                                        <or114:MealCode>F</or114:MealCode>
+                                        <or114:ElapsedTime>341</or114:ElapsedTime>
+                                        <or114:AirMilesFlown>2182</or114:AirMilesFlown>
+                                        <or114:FunnelFlight>false</or114:FunnelFlight>
+                                        <or114:ChangeOfGauge>false</or114:ChangeOfGauge>
+                                        <or114:SecureFlight>true</or114:SecureFlight>
+                                        <or114:DisclosureCarrier Code="DL" DOT="false">
+                                            <or114:Banner>DELTA AIR LINES INC</or114:Banner>
+                                        </or114:DisclosureCarrier>
+                                        <or114:AirlineRefId>DCDL*TESTCC</or114:AirlineRefId>
+                                        <or114:Eticket>true</or114:Eticket>
+                                        <or114:DepartureDateTime>2023-04-09T09:54:00</or114:DepartureDateTime>
+                                        <or114:ArrivalDateTime>2023-04-09T12:35:00</or114:ArrivalDateTime>
+                                        <or114:FlightNumber>697</or114:FlightNumber>
+                                        <or114:ClassOfService>K</or114:ClassOfService>
+                                        <or114:ActionCode>HK</or114:ActionCode>
+                                        <or114:NumberInParty>1</or114:NumberInParty>
+                                        <or114:inboundConnection>false</or114:inboundConnection>
+                                        <or114:outboundConnection>false</or114:outboundConnection>
+                                        <or114:ScheduleChangeIndicator>false</or114:ScheduleChangeIndicator>
+                                        <or114:SegmentBookedDate>2023-02-20T11:16:00</or114:SegmentBookedDate>
+                                    </or114:Air>
+                                </or114:ProductDetails>
+                            </stl19:Product>
+                        </stl19:Segment>
+                        <stl19:Segment sequence="2" id="37">
+                            <stl19:General isPast="false" dayOfWeekInd="3">
+                                <stl19:Line Number="2" Type="OTH" Status="GK"/>
+                                <stl19:Vendor Code="ZZ"/>
+                                <stl19:NumberInParty>1</stl19:NumberInParty>
+                                <stl19:Location LocationCode="SFO"/>
+                                <stl19:DateTime>2023-09-06T00:00:00</stl19:DateTime>
+                                <stl19:Text>THANK YOU FOR USING ACMEX</stl19:Text>
+                            </stl19:General>
+                            <stl19:Product id="37">
+                                <or114:ProductDetails productCategory="OTH" vendorCode="ZZ" statusCode="GK"
+                                                      previousStatusCode="GK">
+                                    <or114:ProductName type="OTH"/>
+                                </or114:ProductDetails>
+                            </stl19:Product>
+                        </stl19:Segment>
+                    </stl19:Segments>
+                    <stl19:FormsOfPayment>
+                        <stl19:CreditCardPayment ShortText="CREDIT CARD DATA EXISTS *CC TO DISPLAY"/>
+                    </stl19:FormsOfPayment>
+                    <stl19:TicketingInfo>
+                        <stl19:AlreadyTicketed id="54" index="1" elementId="pnr-54">
+                            <stl19:Code>T-20FEB-3ZFI*AW5</stl19:Code>
+                        </stl19:AlreadyTicketed>
+                        <stl19:ETicketNumber id="52" index="2" elementId="pnr-52">TE 0067890261595-AT TESTR/T 3ZFI*AW5
+                            0920/20FEB
+                        </stl19:ETicketNumber>
+                        <stl19:TicketDetails id="52" index="2" elementId="pnr-52">
+                            <stl19:OriginalTicketDetails>TE 0067890261595-AT TESTR/T 3ZFI*AW5 0920/20FEB
+                            </stl19:OriginalTicketDetails>
+                            <stl19:TransactionIndicator>TE</stl19:TransactionIndicator>
+                            <stl19:TicketNumber>0067890261595</stl19:TicketNumber>
+                            <stl19:PassengerName>TESTR/T</stl19:PassengerName>
+                            <stl19:AgencyLocation>3ZFI</stl19:AgencyLocation>
+                            <stl19:DutyCode>*</stl19:DutyCode>
+                            <stl19:AgentSine>AW5</stl19:AgentSine>
+                            <stl19:Timestamp>2023-02-20T09:20:00</stl19:Timestamp>
+                            <stl19:PaymentType/>
+                        </stl19:TicketDetails>
+                    </stl19:TicketingInfo>
+                    <stl19:ItineraryPricing/>
+                </stl19:PassengerReservation>
+                <stl19:DKNumbers>
+                    <stl19:DKNumber>010226</stl19:DKNumber>
+                </stl19:DKNumbers>
+                <stl19:ReceivedFrom>
+                    <stl19:Name>TESTAGENCY</stl19:Name>
+                </stl19:ReceivedFrom>
+                <stl19:Addresses>
+                    <stl19:Address>
+                        <stl19:AddressLines>
+                            <stl19:AddressLine id="4" type="O">
+                                <stl19:Text>TESTAGENCY</stl19:Text>
+                            </stl19:AddressLine>
+                            <stl19:AddressLine id="5" type="O">
+                                <stl19:Text>1234 MAIN TEST RD</stl19:Text>
+                            </stl19:AddressLine>
+                            <stl19:AddressLine id="6" type="O">
+                                <stl19:Text>TEST CITY CA 00000</stl19:Text>
+                            </stl19:AddressLine>
+                            <stl19:AddressLine id="7" type="O">
+                                <stl19:Text>US</stl19:Text>
+                            </stl19:AddressLine>
+                        </stl19:AddressLines>
+                    </stl19:Address>
+                </stl19:Addresses>
+                <stl19:PhoneNumbers>
+                    <stl19:PhoneNumber id="16" index="1" elementId="pnr-16">
+                        <stl19:CityCode>SJC</stl19:CityCode>
+                        <stl19:Number>800-555-0100-A</stl19:Number>
+                    </stl19:PhoneNumber>
+                    <stl19:PhoneNumber id="21" index="2" elementId="pnr-21">
+                        <stl19:CityCode>SJC</stl19:CityCode>
+                        <stl19:Number>5555550100-C-1.1</stl19:Number>
+                    </stl19:PhoneNumber>
+                </stl19:PhoneNumbers>
+                <stl19:Remarks>
+                    <stl19:Remark index="1" id="10" type="INVOICE" elementId="pnr-10">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>S*HU</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="2" id="13" type="INVOICE" elementId="pnr-13">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>CN/010226</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="3" id="14" type="CLIADR" elementId="pnr-14">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>TESTCORP ADVENTURES</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="4" id="27" type="INVOICE" elementId="pnr-27">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>GUID¥00000000-0000-0000-0000-000000000000</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="5" id="28" type="INVOICE" elementId="pnr-28">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>GUID¥0000000000000000000000000000000000000000000000000000000000000000
+                                </stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="6" id="29" type="INVOICE" elementId="pnr-29">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>65-LIQUID FOP</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="7" id="30" type="CODED" code="S" elementId="pnr-30">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>JDOEAB¤TESTCORP.COM -B</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="8" id="31" type="CODED" code="S" elementId="pnr-31">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>TESTUSER01¤GMAIL.COM -T</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="9" id="32" type="CODED" code="S" elementId="pnr-32">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>W</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="10" id="36" type="HS" elementId="pnr-36">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>CC APVL/S00000/TKT/DL/VI0000/USD388.90 - USED</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="11" id="42" type="ITINSEGASSOC" segmentNumber="1" elementId="pnr-42">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>DELTA AIR LINES CONFIRMATION NUMBER TESTCC</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="12" id="45" type="CODED" code="Q" elementId="pnr-45">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>20FEB/0919 AM/SENT TO AUTOTICKET</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="13" id="46" type="CODED" code="Q" elementId="pnr-46">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>IQCX 20FEB/0919 AM RECORD PROCESSED - QC/PNR OK</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="14" id="48" type="CODED" code="Q" elementId="pnr-48">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>TK-SENT TO TICKETING</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="15" id="49" type="REG" elementId="pnr-49">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>XXAUTH/S00000 *Z/VI0000</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="16" id="53" type="REG" elementId="pnr-53">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>XXTAW/</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="17" id="33" type="FOP" elementId="pnr-33">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>*VI4XXXXXXXXXXX0000¥01/26-XN</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                </stl19:Remarks>
+                <stl19:EmailAddresses>
+                    <stl19:EmailAddress id="8">
+                        <stl19:Address>SUPPLIER-CONTACT@TESTAGENCY.COM</stl19:Address>
+                        <stl19:Comment/>
+                    </stl19:EmailAddress>
+                </stl19:EmailAddresses>
+                <stl19:GenericSpecialRequests id="9" type="G" msgType="O">
+                    <stl19:FreeText>DTID.US3165CC</stl19:FreeText>
+                    <stl19:AirlineCode>BA</stl19:AirlineCode>
+                    <stl19:FullText>BA DTID.US3165CC</stl19:FullText>
+                </stl19:GenericSpecialRequests>
+                <stl19:GenericSpecialRequests id="24" type="G" msgType="O">
+                    <stl19:FreeText>99633763</stl19:FreeText>
+                    <stl19:AirlineCode>WN</stl19:AirlineCode>
+                    <stl19:FullText>WN 99633763</stl19:FullText>
+                </stl19:GenericSpecialRequests>
+                <stl19:GenericSpecialRequests id="25" type="G" msgType="O">
+                    <stl19:FreeText>C360620</stl19:FreeText>
+                    <stl19:AirlineCode>YY</stl19:AirlineCode>
+                    <stl19:FullText>YY C360620</stl19:FullText>
+                </stl19:GenericSpecialRequests>
+                <stl19:Profiles>
+                    <stl19:Profile id="11">
+                        <stl19:ProfileID>111111111</stl19:ProfileID>
+                        <stl19:ProfileType>AGY</stl19:ProfileType>
+                    </stl19:Profile>
+                    <stl19:Profile id="15">
+                        <stl19:ProfileID>222222222</stl19:ProfileID>
+                        <stl19:ProfileType>CRP</stl19:ProfileType>
+                    </stl19:Profile>
+                </stl19:Profiles>
+                <stl19:AssociationMatrices>
+                    <stl19:AssociationMatrix>
+                        <stl19:Name>PersonIDType</stl19:Name>
+                        <stl19:Parent ref="pnr-17.1"/>
+                        <stl19:Child ref="pnr-52">
+                            <stl19:AssociationRule name="MoveOnDivide" value="ON"/>
+                        </stl19:Child>
+                    </stl19:AssociationMatrix>
+                </stl19:AssociationMatrices>
+                <stl19:History>
+                    <stl19:HistoryTransaction>
+                        <stl19:Signature SequenceNbr="1">
+                            <stl19:HistoryTimestamp>2023-02-20T11:16:00</stl19:HistoryTimestamp>
+                            <stl19:DutyCode>*</stl19:DutyCode>
+                            <stl19:AgentSine>AWX</stl19:AgentSine>
+                            <stl19:HomePCC>3ZFI</stl19:HomePCC>
+                            <stl19:AgencyPCC>3ZFI</stl19:AgencyPCC>
+                            <stl19:HistoryFrom>1481736</stl19:HistoryFrom>
+                        </stl19:Signature>
+                        <stl19:OpenReservationElementHistory OpenReservationElementId="4" id="4" type="FP"
+                                                             displayIndex="1"
+                                                             elementId="pnr-or-4">
+                            <or114:FormOfPayment migrated="false">
+                                <or114:PaymentCard>
+                                    <or114:PaymentType>CC</or114:PaymentType>
+                                    <or114:CardCode>VI</or114:CardCode>
+                                    <or114:CardNumber tokenized="true" masked="true">4XXXXXXXXXXX0000</or114:CardNumber>
+                                    <or114:ExpiryMonth>--01</or114:ExpiryMonth>
+                                    <or114:ExpiryYear>2026</or114:ExpiryYear>
+                                    <or114:SuppressFromInvoice>true</or114:SuppressFromInvoice>
+                                    <or114:GenerateApprovalAtTicketing>true</or114:GenerateApprovalAtTicketing>
+                                </or114:PaymentCard>
+                            </or114:FormOfPayment>
+                            <stl19:HistoryAction>AFP</stl19:HistoryAction>
+                            <stl19:HistoryTimestamp>2023-02-20T11:16:58</stl19:HistoryTimestamp>
+                        </stl19:OpenReservationElementHistory>
+                    </stl19:HistoryTransaction>
+                </stl19:History>
+                <stl19:OpenReservationElements>
+                    <or114:OpenReservationElement id="4" type="FP" displayIndex="1" elementId="pnr-or-4">
+                        <or114:FormOfPayment migrated="false">
+                            <or114:PaymentCard>
+                                <or114:PaymentType>CC</or114:PaymentType>
+                                <or114:CardCode>VI</or114:CardCode>
+                                <or114:CardNumber tokenized="true" masked="true">4XXXXXXXXXXX0000</or114:CardNumber>
+                                <or114:ExpiryMonth>--01</or114:ExpiryMonth>
+                                <or114:ExpiryYear>2026</or114:ExpiryYear>
+                                <or114:SuppressFromInvoice>true</or114:SuppressFromInvoice>
+                                <or114:GenerateApprovalAtTicketing>true</or114:GenerateApprovalAtTicketing>
+                            </or114:PaymentCard>
+                        </or114:FormOfPayment>
+                    </or114:OpenReservationElement>
+                    <or114:OpenReservationElement id="11" type="PROFILE" elementId="pnr-11">
+                        <or114:Profile>
+                            <or114:ID>111111111</or114:ID>
+                            <or114:Type>TAGENCY</or114:Type>
+                            <or114:ShortType>AGY</or114:ShortType>
+                            <or114:OwningAgency>3ZFI</or114:OwningAgency>
+                        </or114:Profile>
+                    </or114:OpenReservationElement>
+                    <or114:OpenReservationElement id="15" type="PROFILE" elementId="pnr-15">
+                        <or114:Profile>
+                            <or114:ID>222222222</or114:ID>
+                            <or114:Type>CORPID</or114:Type>
+                            <or114:ShortType>CRP</or114:ShortType>
+                            <or114:OwningAgency>3ZFI</or114:OwningAgency>
+                        </or114:Profile>
+                    </or114:OpenReservationElement>
+                    <or114:OpenReservationElement id="22" type="FF" elementId="pnr-or-22">
+                        <or114:Loyalty>
+                            <or114:FrequentFlyer>
+                                <or114:ActionCode>HK</or114:ActionCode>
+                                <or114:PreviousActionCode>NN</or114:PreviousActionCode>
+                                <or114:Vendor>DL</or114:Vendor>
+                                <or114:ReceivingCarrierCode>DL</or114:ReceivingCarrierCode>
+                                <or114:VitType>0</or114:VitType>
+                                <or114:FrequentFlyerNumber>0000000000</or114:FrequentFlyerNumber>
+                            </or114:FrequentFlyer>
+                        </or114:Loyalty>
+                        <or114:NameAssociation>
+                            <or114:LastName>MR</or114:LastName>
+                            <or114:FirstName>MR</or114:FirstName>
+                            <or114:NameRefNumber>01.01</or114:NameRefNumber>
+                            <or114:Id>1</or114:Id>
+                            <or114:ReferenceId>1</or114:ReferenceId>
+                        </or114:NameAssociation>
+                    </or114:OpenReservationElement>
+                    <or114:OpenReservationElement id="9" type="SRVC" elementId="pnr-9">
+                        <or114:ServiceRequest airlineCode="BA" serviceType="OSI" ssrType="GFX">
+                            <or114:FreeText>DTID.US3165CC</or114:FreeText>
+                            <or114:FullText>BA DTID.US3165CC</or114:FullText>
+                        </or114:ServiceRequest>
+                    </or114:OpenReservationElement>
+                    <or114:OpenReservationElement id="23" type="SRVC" elementId="pnr-23">
+                        <or114:ServiceRequest actionCode="HK" airlineCode="DL" code="DOCS" serviceCount="1"
+                                              serviceType="SSR" ssrType="GFX">
+                            <or114:FreeText>/DB/01JAN1990/M/MR/MR</or114:FreeText>
+                            <or114:FullText>DOCS DL HK1/DB/01JAN1990/M/MR/MR</or114:FullText>
+                            <or114:TravelDocument>
+                                <or114:Type>DB</or114:Type>
+                                <or114:DateOfBirth>01JAN1990</or114:DateOfBirth>
+                                <or114:Gender>M</or114:Gender>
+                                <or114:LastName>MR</or114:LastName>
+                                <or114:FirstName>MR</or114:FirstName>
+                                <or114:Infant>false</or114:Infant>
+                                <or114:HasDocumentData>false</or114:HasDocumentData>
+                            </or114:TravelDocument>
+                        </or114:ServiceRequest>
+                        <or114:NameAssociation>
+                            <or114:LastName>MR</or114:LastName>
+                            <or114:FirstName>MR</or114:FirstName>
+                            <or114:NameRefNumber>01.01</or114:NameRefNumber>
+                            <or114:ReferenceId>1</or114:ReferenceId>
+                        </or114:NameAssociation>
+                    </or114:OpenReservationElement>
+                    <or114:OpenReservationElement id="24" type="SRVC" elementId="pnr-24">
+                        <or114:ServiceRequest airlineCode="WN" serviceType="OSI" ssrType="GFX">
+                            <or114:FreeText>99633763</or114:FreeText>
+                            <or114:FullText>WN 99633763</or114:FullText>
+                        </or114:ServiceRequest>
+                    </or114:OpenReservationElement>
+                    <or114:OpenReservationElement id="25" type="SRVC" elementId="pnr-25">
+                        <or114:ServiceRequest airlineCode="YY" serviceType="OSI" ssrType="GFX">
+                            <or114:FreeText>C360620</or114:FreeText>
+                            <or114:FullText>YY C360620</or114:FullText>
+                        </or114:ServiceRequest>
+                    </or114:OpenReservationElement>
+                    <or114:OpenReservationElement id="26" type="SRVC" elementId="pnr-26">
+                        <or114:ServiceRequest actionCode="HK" airlineCode="DL" code="CTCR" serviceCount="1"
+                                              serviceType="SSR" ssrType="GFX">
+                            <or114:FreeText>/REFUSED TO PROVIDE</or114:FreeText>
+                            <or114:FullText>CTCR DL HK1/REFUSED TO PROVIDE</or114:FullText>
+                        </or114:ServiceRequest>
+                        <or114:NameAssociation>
+                            <or114:LastName>MR</or114:LastName>
+                            <or114:FirstName>MR</or114:FirstName>
+                            <or114:NameRefNumber>01.01</or114:NameRefNumber>
+                            <or114:ReferenceId>1</or114:ReferenceId>
+                        </or114:NameAssociation>
+                    </or114:OpenReservationElement>
+                    <or114:OpenReservationElement id="35" type="SRVC" elementId="pnr-35">
+                        <or114:ServiceRequest actionCode="HK" airlineCode="DL" code="DOCO" serviceCount="1"
+                                              serviceType="SSR" ssrType="GFX">
+                            <or114:FreeText>//K/TT00TEST0///US</or114:FreeText>
+                            <or114:FullText>DOCO DL HK1//K/TT00TEST0///US</or114:FullText>
+                            <or114:OtherSupplementaryInformation>
+                                <or114:Type>K</or114:Type>
+                                <or114:DocumentNumber>TT00TEST0</or114:DocumentNumber>
+                                <or114:ApplicableCountry>US</or114:ApplicableCountry>
+                                <or114:Infant>false</or114:Infant>
+                                <or114:HasDocumentData>false</or114:HasDocumentData>
+                            </or114:OtherSupplementaryInformation>
+                        </or114:ServiceRequest>
+                        <or114:NameAssociation>
+                            <or114:LastName>MR</or114:LastName>
+                            <or114:FirstName>MR</or114:FirstName>
+                            <or114:NameRefNumber>01.01</or114:NameRefNumber>
+                            <or114:ReferenceId>1</or114:ReferenceId>
+                        </or114:NameAssociation>
+                    </or114:OpenReservationElement>
+                    <or114:OpenReservationElement id="55" type="SRVC" elementId="pnr-55">
+                        <or114:ServiceRequest actionCode="HK" airlineCode="DL" code="TKNE" serviceCount="1"
+                                              serviceType="SSR" ssrType="GFX">
+                            <or114:FreeText>/0067890261595C1</or114:FreeText>
+                            <or114:FullText>TKNE DL HK1 ATLSEA0697K09APR/0067890261595C1</or114:FullText>
+                        </or114:ServiceRequest>
+                        <or114:SegmentAssociation Id="3" SegmentAssociationId="2">
+                            <or114:AirSegment>
+                                <or114:CarrierCode>DL</or114:CarrierCode>
+                                <or114:FlightNumber>0697</or114:FlightNumber>
+                                <or114:DepartureDate>2023-04-09</or114:DepartureDate>
+                                <or114:BoardPoint>ATL</or114:BoardPoint>
+                                <or114:OffPoint>SEA</or114:OffPoint>
+                                <or114:ClassOfService>K</or114:ClassOfService>
+                                <or114:BookingStatus>HK</or114:BookingStatus>
+                            </or114:AirSegment>
+                        </or114:SegmentAssociation>
+                        <or114:NameAssociation>
+                            <or114:LastName>MR</or114:LastName>
+                            <or114:FirstName>MR</or114:FirstName>
+                            <or114:NameRefNumber>01.01</or114:NameRefNumber>
+                            <or114:ReferenceId>1</or114:ReferenceId>
+                        </or114:NameAssociation>
+                    </or114:OpenReservationElement>
+                    <or114:OpenReservationElement id="8" type="PSG_DETAILS_MAIL" elementId="pnr-8">
+                        <or114:Email comment="">
+                            <or114:Address>SUPPLIER-CONTACT@TESTAGENCY.COM</or114:Address>
+                        </or114:Email>
+                    </or114:OpenReservationElement>
+                    <or114:OpenReservationElement id="20" type="PSG_DETAILS_MAIL" elementId="pnr-20">
+                        <or114:Email comment="">
+                            <or114:Address>SUPPLIER-CONTACT@ACMEX.COM</or114:Address>
+                        </or114:Email>
+                        <or114:NameAssociation>
+                            <or114:LastName>MR</or114:LastName>
+                            <or114:FirstName>MR</or114:FirstName>
+                            <or114:NameRefNumber>01.01</or114:NameRefNumber>
+                            <or114:ReferenceId>1</or114:ReferenceId>
+                        </or114:NameAssociation>
+                    </or114:OpenReservationElement>
+                </stl19:OpenReservationElements>
+            </stl19:Reservation>
+            <or114:PriceQuote>
+                <PriceQuoteInfo xmlns="http://www.sabre.com/ns/Ticketing/pqs/1.0">
+                    <Reservation updateToken="eNc:::QXEnTwlVmAgjI7+YL6TRXw=="/>
+                    <Summary>
+                        <NoNameAssociation>
+                            <PriceQuote number="1" pricingType="S" status="D" type="PQ">
+                                <Indicators isExpired="true" segmentSelect="true" ticketed="true"/>
+                                <Passenger passengerTypeCount="1" requestedType="ADT" type="ADT"/>
+                                <ItineraryType>D</ItineraryType>
+                                <ValidatingCarrier>DL</ValidatingCarrier>
+                                <Amounts>
+                                    <Total currencyCode="USD" decimalPlace="2">388.90</Total>
+                                </Amounts>
+                                <LocalCreateDateTime>2023-02-20T09:16:00</LocalCreateDateTime>
+                            </PriceQuote>
+                            <PriceQuote number="2" pricingType="S" status="A" type="PQ">
+                                <Indicators isExpired="true" segmentSelect="true" ticketed="true"/>
+                                <Passenger passengerTypeCount="1" requestedType="ADT" type="ADT"/>
+                                <ItineraryType>D</ItineraryType>
+                                <ValidatingCarrier>DL</ValidatingCarrier>
+                                <Amounts>
+                                    <Total currencyCode="USD" decimalPlace="2">388.90</Total>
+                                </Amounts>
+                                <LocalCreateDateTime>2023-02-20T09:16:00</LocalCreateDateTime>
+                            </PriceQuote>
+                        </NoNameAssociation>
+                    </Summary>
+                    <Details number="1" passengerType="ADT" pricingType="S" status="D" type="PQ">
+                        <AgentInfo duty="*" sine="AWX">
+                            <HomeLocation>3ZFI</HomeLocation>
+                            <WorkLocation>3ZFI</WorkLocation>
+                        </AgentInfo>
+                        <TransactionInfo>
+                            <CreateDateTime>2023-02-20T11:16:00</CreateDateTime>
+                            <UpdateDateTime>2023-02-20T11:16:00</UpdateDateTime>
+                            <LastDateToPurchase>2023-02-21T23:59:00</LastDateToPurchase>
+                            <LocalCreateDateTime>2023-02-20T09:16:00</LocalCreateDateTime>
+                            <LocalUpdateDateTime>2023-02-20T09:16:00</LocalUpdateDateTime>
+                            <InputEntry>WPUN*US0134825$XFF$NCB$S1*BRMAINCABIN$MP-I$RQ</InputEntry>
+                        </TransactionInfo>
+                        <SegmentInfo number="1" segID="2" segNumber="1" segmentStatus="SS">
+                            <Flight connectionIndicator="O">
+                                <MarketingFlight number="697">DL</MarketingFlight>
+                                <ClassOfService>K</ClassOfService>
+                                <Departure>
+                                    <DateTime>2023-04-09T09:54:00</DateTime>
+                                    <CityCode name="ATLANTA">ATL</CityCode>
+                                </Departure>
+                                <Arrival>
+                                    <DateTime>2023-04-09T12:35:00</DateTime>
+                                    <CityCode name="SEATTLE TACOMA">SEA</CityCode>
+                                </Arrival>
+                            </Flight>
+                            <FareBasis>KAVOA0MQ</FareBasis>
+                            <NotValidAfter>2024-04-09</NotValidAfter>
+                            <Baggage allowance="NIL" type="N"/>
+                            <BrandedFare code="MAINCABIN" description="MAIN CABIN" programCode="CFFDL"
+                                         programDescription="DL US CA DOMESTIC"/>
+                        </SegmentInfo>
+                        <FareInfo source="ATPC">
+                            <FareIndicators/>
+                            <BaseFare currencyCode="USD" decimalPlace="2">347.91</BaseFare>
+                            <TotalTax currencyCode="USD" decimalPlace="2">40.99</TotalTax>
+                            <TotalFare currencyCode="USD" decimalPlace="2">388.90</TotalFare>
+                            <TaxInfo>
+                                <CombinedTax code="US">
+                                    <Amount currencyCode="USD" decimalPlace="2">26.09</Amount>
+                                </CombinedTax>
+                                <CombinedTax code="ZP">
+                                    <Amount currencyCode="USD" decimalPlace="2">4.80</Amount>
+                                </CombinedTax>
+                                <CombinedTax code="XT">
+                                    <Amount currencyCode="USD" decimalPlace="2">10.10</Amount>
+                                </CombinedTax>
+                                <Tax code="US">
+                                    <Amount currencyCode="USD" decimalPlace="2">26.09</Amount>
+                                </Tax>
+                                <Tax code="ZP">
+                                    <Amount currencyCode="USD" decimalPlace="2">4.80</Amount>
+                                </Tax>
+                                <Tax code="AY">
+                                    <Amount currencyCode="USD" decimalPlace="2">5.60</Amount>
+                                </Tax>
+                                <Tax code="XF">
+                                    <Amount currencyCode="USD" decimalPlace="2">4.50</Amount>
+                                </Tax>
+                            </TaxInfo>
+                            <FareCalculation rateOfExchange="1.00000000">ATL DL SEA347.91USD347.91END ZPATL XFATL4.5
+                            </FareCalculation>
+                            <FareComponent fareBasisCode="KAVOA0MQ" number="1" type="ENF" typeBitmap="00">
+                                <FlightSegmentNumbers>
+                                    <SegmentNumber>1</SegmentNumber>
+                                </FlightSegmentNumbers>
+                                <FareDirectionality oneWay="true"/>
+                                <Departure>
+                                    <DateTime>2023-04-09T09:54:00</DateTime>
+                                    <CityCode name="ATLANTA">ATL</CityCode>
+                                </Departure>
+                                <Arrival>
+                                    <DateTime>2023-04-09T12:35:00</DateTime>
+                                    <CityCode name="SEATTLE TACOMA">SEA</CityCode>
+                                </Arrival>
+                                <Amount currencyCode="USD" decimalPlace="2">347.91</Amount>
+                                <GoverningCarrier>DL</GoverningCarrier>
+                                <BrandInfo brandCode="MAINCABIN" brandDescription="MAIN CABIN" programCode="CFFDL"
+                                           programDescription="DL US CA DOMESTIC"/>
+                                <Rules carrier="DL" rule="9M03" tariff="0" vendor="ATP"/>
+                            </FareComponent>
+                        </FareInfo>
+                        <AdditionalFareInfo/>
+                        <FeeInfo/>
+                        <MiscellaneousInfo>
+                            <ValidatingCarrier>DL</ValidatingCarrier>
+                            <TourNumber>US0134825</TourNumber>
+                            <ItineraryType>D</ItineraryType>
+                        </MiscellaneousInfo>
+                        <MessageInfo>
+                            <Message number="201" type="WARNING">Fare not guaranteed until ticketed</Message>
+                            <Message type="WARNING">VALIDATING CARRIER - DL</Message>
+                            <Message type="WARNING">CHG BEF DEP UP TO USD0.00/NON-CHG AFT DEP/NON-REF BEF DEP/</Message>
+                            <Message type="WARNING">NON-REF AFT DEP/SEE RULES</Message>
+                            <Remarks type="ENS">NONREF/CHANGES PERMITTED</Remarks>
+                            <PricingParameters>WPUN*US0134825$XFF$NCB$S1*BRMAINCABIN$MP-I$RQ</PricingParameters>
+                            <BaggageDisclosure>BAG ALLOWANCE -ATLSEA-NIL/DL</BaggageDisclosure>
+                            <BaggageDisclosure>1STCHECKED BAG FEE-ATLSEA-USD30.00/DL/UP TO 50 POUNDS/23 KILOGR
+                            </BaggageDisclosure>
+                            <BaggageDisclosure>AMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS</BaggageDisclosure>
+                            <BaggageDisclosure>2NDCHECKED BAG FEE-ATLSEA-USD40.00/DL/UP TO 50 POUNDS/23 KILOGR
+                            </BaggageDisclosure>
+                            <BaggageDisclosure>AMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS</BaggageDisclosure>
+                            <BaggageDisclosure>CARRY ON ALLOWANCE</BaggageDisclosure>
+                            <BaggageDisclosure>ATLSEA-01P/DL</BaggageDisclosure>
+                            <BaggageDisclosure>01/UP TO 45 LINEAR INCHES/115 LINEAR CENTIMETERS</BaggageDisclosure>
+                            <BaggageDisclosure>CARRY ON CHARGES</BaggageDisclosure>
+                            <BaggageDisclosure>ATLSEA-DL-CARRY ON FEES UNKNOWN-CONTACT CARRIER</BaggageDisclosure>
+                            <BaggageDisclosure>ADDITIONAL ALLOWANCES AND/OR DISCOUNTS MAY APPLY DEPENDING ON
+                            </BaggageDisclosure>
+                            <BaggageDisclosure>FLYER-SPECIFIC FACTORS /E.G. FREQUENT FLYER STATUS/MILITARY/
+                            </BaggageDisclosure>
+                            <BaggageDisclosure>CREDIT CARD FORM OF PAYMENT/EARLY PURCHASE OVER INTERNET,ETC./
+                            </BaggageDisclosure>
+                            <BaggageDisclosure>EMBARGOES-APPLY TO EACH PASSENGER</BaggageDisclosure>
+                            <BaggageDisclosure>ATLSEA-DL</BaggageDisclosure>
+                            <BaggageDisclosure>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED</BaggageDisclosure>
+                            <BaggageDisclosure>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</BaggageDisclosure>
+                        </MessageInfo>
+                        <HistoryInfo>
+                            <AgentInfo sine="AWX">
+                                <HomeLocation>3ZFI</HomeLocation>
+                            </AgentInfo>
+                            <TransactionInfo>
+                                <LocalDateTime>2023-02-20T09:16:00</LocalDateTime>
+                                <InputEntry>WPUN*US0134825$XFF$NCB$S1*BRMAINCABIN$MP-I$RQ</InputEntry>
+                            </TransactionInfo>
+                        </HistoryInfo>
+                        <HistoryInfo type="Delete">
+                            <AgentInfo duty="*" sine="AW4">
+                                <HomeLocation>M6BK</HomeLocation>
+                                <WorkLocation>3ZFI</WorkLocation>
+                            </AgentInfo>
+                            <TransactionInfo>
+                                <SystemDateTime>2023-02-20T11:23:00</SystemDateTime>
+                                <LocalDateTime>2023-02-20T09:23:00</LocalDateTime>
+                            </TransactionInfo>
+                        </HistoryInfo>
+                    </Details>
+                    <Details number="2" passengerType="ADT" pricingType="S" status="D" type="PQ">
+                        <AgentInfo duty="*" sine="AWX">
+                            <HomeLocation>3ZFI</HomeLocation>
+                            <WorkLocation>3ZFI</WorkLocation>
+                        </AgentInfo>
+                        <TransactionInfo>
+                            <CreateDateTime>2023-02-20T11:16:00</CreateDateTime>
+                            <UpdateDateTime>2023-02-20T11:16:00</UpdateDateTime>
+                            <LastDateToPurchase>2023-02-21T23:59:00</LastDateToPurchase>
+                            <LocalCreateDateTime>2023-02-20T09:16:00</LocalCreateDateTime>
+                            <LocalUpdateDateTime>2023-02-20T09:16:00</LocalUpdateDateTime>
+                            <InputEntry>WPUN*US0134825$XFF$NCB$S1*BRMAINCABIN$MP-I$RQ</InputEntry>
+                        </TransactionInfo>
+                        <SegmentInfo number="1" segID="2" segNumber="1" segmentStatus="SS">
+                            <Flight connectionIndicator="O">
+                                <MarketingFlight number="697">DL</MarketingFlight>
+                                <ClassOfService>K</ClassOfService>
+                                <Departure>
+                                    <DateTime>2023-04-09T09:54:00</DateTime>
+                                    <CityCode name="ATLANTA">ATL</CityCode>
+                                </Departure>
+                                <Arrival>
+                                    <DateTime>2023-04-09T12:35:00</DateTime>
+                                    <CityCode name="SEATTLE TACOMA">SEA</CityCode>
+                                </Arrival>
+                            </Flight>
+                            <FareBasis>KAVOA0MQ</FareBasis>
+                            <NotValidAfter>2024-04-09</NotValidAfter>
+                            <Baggage allowance="NIL" type="N"/>
+                            <BrandedFare code="MAINCABIN" description="MAIN CABIN" programCode="CFFDL"
+                                         programDescription="DL US CA DOMESTIC"/>
+                        </SegmentInfo>
+                        <FareInfo source="ATPC">
+                            <FareIndicators/>
+                            <BaseFare currencyCode="USD" decimalPlace="2">347.91</BaseFare>
+                            <TotalTax currencyCode="USD" decimalPlace="2">40.99</TotalTax>
+                            <TotalFare currencyCode="USD" decimalPlace="2">388.90</TotalFare>
+                            <TaxInfo>
+                                <CombinedTax code="US">
+                                    <Amount currencyCode="USD" decimalPlace="2">26.09</Amount>
+                                </CombinedTax>
+                                <CombinedTax code="ZP">
+                                    <Amount currencyCode="USD" decimalPlace="2">4.80</Amount>
+                                </CombinedTax>
+                                <CombinedTax code="XT">
+                                    <Amount currencyCode="USD" decimalPlace="2">10.10</Amount>
+                                </CombinedTax>
+                                <Tax code="US">
+                                    <Amount currencyCode="USD" decimalPlace="2">26.09</Amount>
+                                </Tax>
+                                <Tax code="ZP">
+                                    <Amount currencyCode="USD" decimalPlace="2">4.80</Amount>
+                                </Tax>
+                                <Tax code="AY">
+                                    <Amount currencyCode="USD" decimalPlace="2">5.60</Amount>
+                                </Tax>
+                                <Tax code="XF">
+                                    <Amount currencyCode="USD" decimalPlace="2">4.50</Amount>
+                                </Tax>
+                            </TaxInfo>
+                            <FareCalculation rateOfExchange="1.00000000">ATL DL SEA347.91USD347.91END ZPATL XFATL4.5
+                            </FareCalculation>
+                            <FareComponent fareBasisCode="KAVOA0MQ" number="1" type="ENF" typeBitmap="00">
+                                <FlightSegmentNumbers>
+                                    <SegmentNumber>1</SegmentNumber>
+                                </FlightSegmentNumbers>
+                                <FareDirectionality oneWay="true"/>
+                                <Departure>
+                                    <DateTime>2023-04-09T09:54:00</DateTime>
+                                    <CityCode name="ATLANTA">ATL</CityCode>
+                                </Departure>
+                                <Arrival>
+                                    <DateTime>2023-04-09T12:35:00</DateTime>
+                                    <CityCode name="SEATTLE TACOMA">SEA</CityCode>
+                                </Arrival>
+                                <Amount currencyCode="USD" decimalPlace="2">347.91</Amount>
+                                <GoverningCarrier>DL</GoverningCarrier>
+                                <BrandInfo brandCode="MAINCABIN" brandDescription="MAIN CABIN" programCode="CFFDL"
+                                           programDescription="DL US CA DOMESTIC"/>
+                                <Rules carrier="DL" rule="9M03" tariff="0" vendor="ATP"/>
+                            </FareComponent>
+                        </FareInfo>
+                        <AdditionalFareInfo/>
+                        <FeeInfo/>
+                        <MiscellaneousInfo>
+                            <ValidatingCarrier>DL</ValidatingCarrier>
+                            <TourNumber>US0134825</TourNumber>
+                            <ItineraryType>D</ItineraryType>
+                        </MiscellaneousInfo>
+                        <MessageInfo>
+                            <Message number="201" type="WARNING">Fare not guaranteed until ticketed</Message>
+                            <Message type="WARNING">VALIDATING CARRIER - DL</Message>
+                            <Message type="WARNING">CHG BEF DEP UP TO USD0.00/NON-CHG AFT DEP/NON-REF BEF DEP/</Message>
+                            <Message type="WARNING">NON-REF AFT DEP/SEE RULES</Message>
+                            <Remarks type="ENS">NONREF/CHANGES PERMITTED</Remarks>
+                            <PricingParameters>WPUN*US0134825$XFF$NCB$S1*BRMAINCABIN$MP-I$RQ</PricingParameters>
+                            <BaggageDisclosure>BAG ALLOWANCE -ATLSEA-NIL/DL</BaggageDisclosure>
+                            <BaggageDisclosure>1STCHECKED BAG FEE-ATLSEA-USD30.00/DL/UP TO 50 POUNDS/23 KILOGR
+                            </BaggageDisclosure>
+                            <BaggageDisclosure>AMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS</BaggageDisclosure>
+                            <BaggageDisclosure>2NDCHECKED BAG FEE-ATLSEA-USD40.00/DL/UP TO 50 POUNDS/23 KILOGR
+                            </BaggageDisclosure>
+                            <BaggageDisclosure>AMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS</BaggageDisclosure>
+                            <BaggageDisclosure>CARRY ON ALLOWANCE</BaggageDisclosure>
+                            <BaggageDisclosure>ATLSEA-01P/DL</BaggageDisclosure>
+                            <BaggageDisclosure>01/UP TO 45 LINEAR INCHES/115 LINEAR CENTIMETERS</BaggageDisclosure>
+                            <BaggageDisclosure>CARRY ON CHARGES</BaggageDisclosure>
+                            <BaggageDisclosure>ATLSEA-DL-CARRY ON FEES UNKNOWN-CONTACT CARRIER</BaggageDisclosure>
+                            <BaggageDisclosure>ADDITIONAL ALLOWANCES AND/OR DISCOUNTS MAY APPLY DEPENDING ON
+                            </BaggageDisclosure>
+                            <BaggageDisclosure>FLYER-SPECIFIC FACTORS /E.G. FREQUENT FLYER STATUS/MILITARY/
+                            </BaggageDisclosure>
+                            <BaggageDisclosure>CREDIT CARD FORM OF PAYMENT/EARLY PURCHASE OVER INTERNET,ETC./
+                            </BaggageDisclosure>
+                            <BaggageDisclosure>EMBARGOES-APPLY TO EACH PASSENGER</BaggageDisclosure>
+                            <BaggageDisclosure>ATLSEA-DL</BaggageDisclosure>
+                            <BaggageDisclosure>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED</BaggageDisclosure>
+                            <BaggageDisclosure>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</BaggageDisclosure>
+                        </MessageInfo>
+                        <HistoryInfo>
+                            <AgentInfo sine="AWX">
+                                <HomeLocation>3ZFI</HomeLocation>
+                            </AgentInfo>
+                            <TransactionInfo>
+                                <LocalDateTime>2023-02-20T09:16:00</LocalDateTime>
+                                <InputEntry>WPUN*US0134825$XFF$NCB$S1*BRMAINCABIN$MP-I$RQ</InputEntry>
+                            </TransactionInfo>
+                        </HistoryInfo>
+                        <HistoryInfo type="Delete">
+                            <AgentInfo duty="*" sine="AW4">
+                                <HomeLocation>M6BK</HomeLocation>
+                                <WorkLocation>3ZFI</WorkLocation>
+                            </AgentInfo>
+                            <TransactionInfo>
+                                <SystemDateTime>2023-02-20T11:23:00</SystemDateTime>
+                                <LocalDateTime>2023-02-20T09:23:00</LocalDateTime>
+                            </TransactionInfo>
+                        </HistoryInfo>
+                    </Details>
+                    <MiscellaneousData>
+                        <Value type="sorSource">PSS</Value>
+                    </MiscellaneousData>
+                </PriceQuoteInfo>
+            </or114:PriceQuote>
+        </stl19:GetReservationRS>
+    </soap-env:Body>
+</soap-env:Envelope>

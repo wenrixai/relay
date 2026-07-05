@@ -1,0 +1,255 @@
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap-env:Header>
+        <eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0" soap-env:mustUnderstand="1">
+            <eb:From>
+                <eb:PartyId eb:type="URI">123123</eb:PartyId>
+            </eb:From>
+            <eb:To>
+                <eb:PartyId eb:type="URI">999999</eb:PartyId>
+            </eb:To>
+            <eb:CPAId>0HAH</eb:CPAId>
+            <eb:ConversationId>V1@6f197aa7-521a-4cfd-af96-fe4bab656dc4@871d64ff-f5e3-42b4-9384-6e3c3e762452@</eb:ConversationId>
+            <eb:Service>PriceQuoteServicesRQ</eb:Service>
+            <eb:Action>PriceQuoteServicesRS</eb:Action>
+            <eb:MessageData>
+                <eb:MessageId>1575875571232880611</eb:MessageId>
+                <eb:Timestamp>2019-05-29T15:52:03</eb:Timestamp>
+                <eb:RefToMessageId>68738488979</eb:RefToMessageId>
+            </eb:MessageData>
+        </eb:MessageHeader>
+        <wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+            <wsse:BinarySecurityToken valueType="String" EncodingType="wsse:Base64Binary">Shared/IDL:IceSess/SessMgr:1.0.IDL/Common/!ICESMS/SANITIZED!0!0</wsse:BinarySecurityToken>
+        </wsse:Security>
+    </soap-env:Header>
+    <soap-env:Body>
+        <GetPriceQuoteRS xmlns="http://www.sabre.com/ns/Ticketing/pqs/1.0" version="4.0.0">
+            <Header messageID="TKTVLC750-12902-112024443-1559145123363-3542067-pqs" timeStamp="2019-05-29T10:52:00">
+                <TTL:OrchestrationID xmlns:TTL="http://www.sabre.com/ns/Ticketing/TTL/1.0" seq="0">TKTVLC750-12902-112024443-1559145123363-3542067-pqs</TTL:OrchestrationID>
+                <TTL:Results xmlns:TTL="http://www.sabre.com/ns/Ticketing/TTL/1.0">
+                    <TTL:Success>
+                        <TTL:System>TKT-WS</TTL:System>
+                        <TTL:Source>PQS WS</TTL:Source>
+                    </TTL:Success>
+                </TTL:Results>
+            </Header>
+            <PriceQuoteInfo>
+                <Reservation updateToken="eNc:::P6OQunuQ/gNR0gxOaRLZAg=="/>
+                <Summary>
+                    <NameAssociation firstName="TESTMSTR" lastName="TEST" nameId="1" nameNumber="1.1">
+                        <PriceQuote latestPQFlag="true" number="2" pricingType="S" status="A" type="PQ">
+                            <Indicators/>
+                            <Passenger passengerTypeCount="1" requestedType="CNN" type="CNN"/>
+                            <ItineraryType>I</ItineraryType>
+                            <TicketDesignator>CH25</TicketDesignator>
+                            <ValidatingCarrier>KL</ValidatingCarrier>
+                            <Amounts>
+                                <Total currencyCode="USD" decimalPlace="2">813.21</Total>
+                            </Amounts>
+                            <LocalCreateDateTime>2019-05-29T18:12:00</LocalCreateDateTime>
+                        </PriceQuote>
+                    </NameAssociation>
+                    <NameAssociation firstName="MARY" lastName="TEST" nameId="2" nameNumber="2.1">
+                        <PriceQuote latestPQFlag="true" number="1" pricingType="S" status="A" type="PQ">
+                            <Indicators/>
+                            <Passenger passengerTypeCount="1" requestedType="ADT" type="ADT"/>
+                            <ItineraryType>I</ItineraryType>
+                            <ValidatingCarrier>KL</ValidatingCarrier>
+                            <Amounts>
+                                <Total currencyCode="USD" decimalPlace="2">1070.21</Total>
+                            </Amounts>
+                            <LocalCreateDateTime>2019-05-29T18:12:00</LocalCreateDateTime>
+                        </PriceQuote>
+                    </NameAssociation>
+                </Summary>
+                <Details number="1" passengerType="ADT" pricingType="S" status="A" type="PQ">
+                    <AgentInfo duty="*" sine="AWS">
+                        <HomeLocation>0HAH</HomeLocation>
+                        <WorkLocation>0HAH</WorkLocation>
+                    </AgentInfo>
+                    <TransactionInfo>
+                        <CreateDateTime>2019-05-29T10:12:00</CreateDateTime>
+                        <UpdateDateTime>2019-05-29T10:12:00</UpdateDateTime>
+                        <LocalCreateDateTime>2019-05-29T18:12:00</LocalCreateDateTime>
+                        <LocalUpdateDateTime>2019-05-29T18:12:00</LocalUpdateDateTime>
+                        <InputEntry>WPRQ$KP5</InputEntry>
+                    </TransactionInfo>
+                    <NameAssociationInfo firstName="MARY" lastName="TEST" nameId="2" nameNumber="2.1"/>
+                    <SegmentInfo number="1" segmentStatus="OK">
+                        <Flight connectionIndicator="O">
+                            <MarketingFlight number="462">KL</MarketingFlight>
+                            <ClassOfService>Y</ClassOfService>
+                            <Departure>
+                                <DateTime>2019-06-15T04:45:00</DateTime>
+                                <CityCode name="TEL AVIV      TLV">TLV</CityCode>
+                            </Departure>
+                            <Arrival>
+                                <DateTime>2019-06-15T08:45:00</DateTime>
+                                <CityCode name="AMSTERDAM">AMS</CityCode>
+                            </Arrival>
+                        </Flight>
+                        <FareBasis>YFFWIL</FareBasis>
+                        <NotValidAfter>2020-06-15</NotValidAfter>
+                        <Baggage allowance="01" type="P"/>
+                        <BrandedFare/>
+                    </SegmentInfo>
+                    <FareInfo source="ATPC">
+                        <FareIndicators/>
+                        <BaseFare currencyCode="USD" decimalPlace="2">1030.00</BaseFare>
+                        <TotalTax currencyCode="USD" decimalPlace="2">40.21</TotalTax>
+                        <TotalFare currencyCode="USD" decimalPlace="2">1070.21</TotalFare>
+                        <TaxInfo>
+                            <CombinedTax code="YQ">
+                                <Amount currencyCode="USD" decimalPlace="2">13.40</Amount>
+                            </CombinedTax>
+                            <CombinedTax code="IL">
+                                <Amount currencyCode="USD" decimalPlace="2">26.81</Amount>
+                            </CombinedTax>
+                            <Tax code="YQ">
+                                <Amount currencyCode="USD" decimalPlace="2">13.40</Amount>
+                            </Tax>
+                            <Tax code="IL">
+                                <Amount currencyCode="USD" decimalPlace="2">26.81</Amount>
+                            </Tax>
+                        </TaxInfo>
+                        <FareCalculation rateOfExchange="1">TLV KL AMS1030.00NUC1030.00END ROE1.00</FareCalculation>
+                        <Commission>
+                            <Percentage>5</Percentage>
+                        </Commission>
+                        <FareComponent fareBasisCode="YFFWIL" number="1" type="00" typeBitmap="EU">
+                            <FlightSegmentNumbers>
+                                <SegmentNumber>1</SegmentNumber>
+                            </FlightSegmentNumbers>
+                            <FareDirectionality oneWay="true"/>
+                            <Departure>
+                                <DateTime>2019-06-15T04:45:00</DateTime>
+                                <CityCode name="TEL AVIV      TLV">TLV</CityCode>
+                            </Departure>
+                            <Arrival>
+                                <DateTime>2019-06-15T08:45:00</DateTime>
+                                <CityCode name="AMSTERDAM">AMS</CityCode>
+                            </Arrival>
+                            <Amount currencyCode="NUC" decimalPlace="2">1030.00</Amount>
+                            <GoverningCarrier>KL</GoverningCarrier>
+                            <Rules carrier="KL" rule="ILFX" tariff="22" vendor="ATP"/>
+                        </FareComponent>
+                    </FareInfo>
+                    <FeeInfo/>
+                    <MiscellaneousInfo>
+                        <ValidatingCarrier>KL</ValidatingCarrier>
+                        <ItineraryType>I</ItineraryType>
+                    </MiscellaneousInfo>
+                    <MessageInfo>
+                        <Message number="201" type="WARNING">Fare not guaranteed until ticketed</Message>
+                        <Message type="WARNING">VALIDATING CARRIER - KL</Message>
+                        <Remarks type="ENS">NONENDORSABLE</Remarks>
+                        <PricingParameters>WPRQ$KP5</PricingParameters>
+                    </MessageInfo>
+                    <HistoryInfo>
+                        <AgentInfo sine="AWS">
+                            <HomeLocation>0HAH</HomeLocation>
+                        </AgentInfo>
+                        <TransactionInfo>
+                            <LocalDateTime>2019-05-29T18:12:00</LocalDateTime>
+                            <InputEntry>WPRQ$KP5</InputEntry>
+                        </TransactionInfo>
+                    </HistoryInfo>
+                </Details>
+                <Details number="2" passengerType="CNN" pricingType="S" status="A" type="PQ">
+                    <AgentInfo duty="*" sine="AWS">
+                        <HomeLocation>0HAH</HomeLocation>
+                        <WorkLocation>0HAH</WorkLocation>
+                    </AgentInfo>
+                    <TransactionInfo>
+                        <CreateDateTime>2019-05-29T10:12:00</CreateDateTime>
+                        <UpdateDateTime>2019-05-29T10:12:00</UpdateDateTime>
+                        <LocalCreateDateTime>2019-05-29T18:12:00</LocalCreateDateTime>
+                        <LocalUpdateDateTime>2019-05-29T18:12:00</LocalUpdateDateTime>
+                        <InputEntry>WPRQ$KP5</InputEntry>
+                    </TransactionInfo>
+                    <NameAssociationInfo firstName="TESTMSTR" lastName="TEST" nameId="1" nameNumber="1.1"/>
+                    <SegmentInfo number="1" segmentStatus="OK">
+                        <Flight connectionIndicator="O">
+                            <MarketingFlight number="462">KL</MarketingFlight>
+                            <ClassOfService>Y</ClassOfService>
+                            <Departure>
+                                <DateTime>2019-06-15T04:45:00</DateTime>
+                                <CityCode name="TEL AVIV      TLV">TLV</CityCode>
+                            </Departure>
+                            <Arrival>
+                                <DateTime>2019-06-15T08:45:00</DateTime>
+                                <CityCode name="AMSTERDAM">AMS</CityCode>
+                            </Arrival>
+                        </Flight>
+                        <FareBasis>YFFWIL/CH25</FareBasis>
+                        <NotValidAfter>2020-06-15</NotValidAfter>
+                        <Baggage allowance="01" type="P"/>
+                        <BrandedFare/>
+                    </SegmentInfo>
+                    <FareInfo source="ATPC">
+                        <FareIndicators/>
+                        <BaseFare currencyCode="USD" decimalPlace="2">773.00</BaseFare>
+                        <TotalTax currencyCode="USD" decimalPlace="2">40.21</TotalTax>
+                        <TotalFare currencyCode="USD" decimalPlace="2">813.21</TotalFare>
+                        <TaxInfo>
+                            <CombinedTax code="YQ">
+                                <Amount currencyCode="USD" decimalPlace="2">13.40</Amount>
+                            </CombinedTax>
+                            <CombinedTax code="IL">
+                                <Amount currencyCode="USD" decimalPlace="2">26.81</Amount>
+                            </CombinedTax>
+                            <Tax code="YQ">
+                                <Amount currencyCode="USD" decimalPlace="2">13.40</Amount>
+                            </Tax>
+                            <Tax code="IL">
+                                <Amount currencyCode="USD" decimalPlace="2">26.81</Amount>
+                            </Tax>
+                        </TaxInfo>
+                        <FareCalculation rateOfExchange="1">TLV KL AMS772.50NUC772.50END ROE1.00</FareCalculation>
+                        <Commission>
+                            <Percentage>5</Percentage>
+                        </Commission>
+                        <FareComponent fareBasisCode="YFFWIL/CH25" number="1" type="01" typeBitmap="EU">
+                            <FlightSegmentNumbers>
+                                <SegmentNumber>1</SegmentNumber>
+                            </FlightSegmentNumbers>
+                            <FareDirectionality oneWay="true"/>
+                            <Departure>
+                                <DateTime>2019-06-15T04:45:00</DateTime>
+                                <CityCode name="TEL AVIV      TLV">TLV</CityCode>
+                            </Departure>
+                            <Arrival>
+                                <DateTime>2019-06-15T08:45:00</DateTime>
+                                <CityCode name="AMSTERDAM">AMS</CityCode>
+                            </Arrival>
+                            <Amount currencyCode="NUC" decimalPlace="2">772.50</Amount>
+                            <GoverningCarrier>KL</GoverningCarrier>
+                            <TicketDesignator>CH25</TicketDesignator>
+                            <Rules carrier="KL" rule="ILFX" tariff="22" vendor="ATP"/>
+                        </FareComponent>
+                    </FareInfo>
+                    <FeeInfo/>
+                    <MiscellaneousInfo>
+                        <ValidatingCarrier>KL</ValidatingCarrier>
+                        <ItineraryType>I</ItineraryType>
+                    </MiscellaneousInfo>
+                    <MessageInfo>
+                        <Message number="201" type="WARNING">Fare not guaranteed until ticketed</Message>
+                        <Message type="WARNING">EACH CNN REQUIRES ACCOMPANYING SAME CABIN ADT</Message>
+                        <Message type="WARNING">VALIDATING CARRIER - KL</Message>
+                        <Remarks type="ENS">NONENDORSABLE</Remarks>
+                        <PricingParameters>WPRQ$KP5</PricingParameters>
+                    </MessageInfo>
+                    <HistoryInfo>
+                        <AgentInfo sine="AWS">
+                            <HomeLocation>0HAH</HomeLocation>
+                        </AgentInfo>
+                        <TransactionInfo>
+                            <LocalDateTime>2019-05-29T18:12:00</LocalDateTime>
+                            <InputEntry>WPRQ$KP5</InputEntry>
+                        </TransactionInfo>
+                    </HistoryInfo>
+                </Details>
+            </PriceQuoteInfo>
+        </GetPriceQuoteRS>
+    </soap-env:Body>
+</soap-env:Envelope>

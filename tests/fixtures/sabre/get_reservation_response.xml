@@ -1,0 +1,700 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap-env:Header>
+        <eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0"
+            soap-env:mustUnderstand="1">
+            <eb:From>
+                <eb:PartyId eb:type="URI">123123</eb:PartyId>
+            </eb:From>
+            <eb:To>
+                <eb:PartyId eb:type="URI">999999</eb:PartyId>
+            </eb:To>
+            <eb:CPAId>0HAH</eb:CPAId>
+            <eb:ConversationId>V1@f5d1220a-8581-43c8-8d72-34195708dbab@53c3872e-865d-41a2-9428-9f61100763d2@</eb:ConversationId>
+            <eb:Service>GetReservationRQ</eb:Service>
+            <eb:Action>GetReservationRQ</eb:Action>
+            <eb:MessageData>
+                <eb:MessageId>1214392546220670610</eb:MessageId>
+                <eb:Timestamp>2019-02-12T15:10:23</eb:Timestamp>
+                <eb:RefToMessageId>26350783709</eb:RefToMessageId>
+            </eb:MessageData>
+        </eb:MessageHeader>
+        <wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+            <wsse:BinarySecurityToken valueType="String" EncodingType="wsse:Base64Binary">Shared/IDL:IceSess/SessMgr:1.0.IDL/Common/!ICESMS/SANITIZED!0!0</wsse:BinarySecurityToken>
+        </wsse:Security>
+    </soap-env:Header>
+    <soap-env:Body>
+        <stl19:GetReservationRS xmlns:stl19="http://webservices.sabre.com/pnrbuilder/v1_19" xmlns:or114="http://services.sabre.com/res/or/v1_14"
+            xmlns:ns5="http://services.sabre.com/res/orr/v0" xmlns:raw="http://tds.sabre.com/itinerary" xmlns:ns4="http://webservices.sabre.com/pnrconn/ReaccSearch"
+            Version="1.19.0">
+            <stl19:Reservation numberInParty="2" numberOfInfants="0" NumberInSegment="2">
+                <stl19:BookingDetails>
+                    <stl19:RecordLocator>TESTAA</stl19:RecordLocator>
+                    <stl19:CreationTimestamp>2019-02-12T09:08:00</stl19:CreationTimestamp>
+                    <stl19:SystemCreationTimestamp>2019-02-12T09:08:00</stl19:SystemCreationTimestamp>
+                    <stl19:CreationAgentID>AWS</stl19:CreationAgentID>
+                    <stl19:UpdateTimestamp>2019-02-12T09:08:23</stl19:UpdateTimestamp>
+                    <stl19:PNRSequence>3</stl19:PNRSequence>
+                    <stl19:FlightsRange Start="2019-06-22T16:10:00" End="2019-07-05T17:35:00" />
+                    <stl19:DivideSplitDetails />
+                    <stl19:EstimatedPurgeTimestamp>2019-07-05T00:00:00</stl19:EstimatedPurgeTimestamp>
+                    <stl19:UpdateToken>-204f87cf672cda777ecbaf039fae554aca6cae61815e69be</stl19:UpdateToken>
+                </stl19:BookingDetails>
+                <stl19:POS AirExtras="false" InhibitCode="U">
+                    <stl19:Source BookingSource="0HAH" AgentSine="AWS" PseudoCityCode="0HAH" ISOCountry="IL"
+                        AgentDutyCode="*" AirlineVendorID="AA" HomePseudoCityCode="0HAH" PrimeHostID="1S" />
+                </stl19:POS>
+                <stl19:PassengerReservation>
+                    <stl19:Passengers>
+                        <stl19:Passenger id="7" nameType="S" passengerType="ADT" nameId="01.01" nameAssocId="1"
+                            elementId="pnr-7.1">
+                            <stl19:LastName>BROWN</stl19:LastName>
+                            <stl19:FirstName>DANA MS</stl19:FirstName>
+                            <stl19:Seats />
+                        </stl19:Passenger>
+                        <stl19:Passenger id="9" nameType="S" passengerType="ADT" nameId="02.01" nameAssocId="2"
+                            elementId="pnr-9.2">
+                            <stl19:LastName>BROWN</stl19:LastName>
+                            <stl19:FirstName>DAN MR</stl19:FirstName>
+                            <stl19:Seats />
+                        </stl19:Passenger>
+                    </stl19:Passengers>
+                    <stl19:Segments>
+                        <stl19:Poc>
+                            <stl19:Airport>TLV</stl19:Airport>
+                            <stl19:Departure>2019-06-22T16:10:00</stl19:Departure>
+                        </stl19:Poc>
+                        <stl19:Segment sequence="1" id="3">
+                            <stl19:Air id="3" sequence="1" segmentAssociationId="2" isPast="false" DayOfWeekInd="6"
+                                CodeShare="false" SpecialMeal="false" StopQuantity="00" SmokingAllowed="false"
+                                ResBookDesigCode="Y" Code="OS">
+                                <stl19:DepartureAirport>TLV</stl19:DepartureAirport>
+                                <stl19:DepartureAirportCodeContext>IATA</stl19:DepartureAirportCodeContext>
+                                <stl19:DepartureTerminalName>T3</stl19:DepartureTerminalName>
+                                <stl19:DepartureTerminalCode>3</stl19:DepartureTerminalCode>
+                                <stl19:ArrivalAirport>VIE</stl19:ArrivalAirport>
+                                <stl19:ArrivalAirportCodeContext>IATA</stl19:ArrivalAirportCodeContext>
+                                <stl19:OperatingAirlineCode>OS</stl19:OperatingAirlineCode>
+                                <stl19:OperatingAirlineShortName>AUSTRIAN</stl19:OperatingAirlineShortName>
+                                <stl19:OperatingFlightNumber>0858</stl19:OperatingFlightNumber>
+                                <stl19:EquipmentType>321</stl19:EquipmentType>
+                                <stl19:MarketingAirlineCode>OS</stl19:MarketingAirlineCode>
+                                <stl19:MarketingFlightNumber>0858</stl19:MarketingFlightNumber>
+                                <stl19:OperatingClassOfService>Y</stl19:OperatingClassOfService>
+                                <stl19:MarketingClassOfService>Y</stl19:MarketingClassOfService>
+                                <stl19:MarriageGrp>
+                                    <stl19:Ind>0</stl19:Ind>
+                                    <stl19:Group>1</stl19:Group>
+                                    <stl19:Sequence>1</stl19:Sequence>
+                                </stl19:MarriageGrp>
+                                <stl19:Meal Code="M" />
+                                <stl19:Seats />
+                                <stl19:AirlineRefId>DCOS*TESTDD</stl19:AirlineRefId>
+                                <stl19:Eticket>true</stl19:Eticket>
+                                <stl19:DepartureDateTime>2019-06-22T16:10:00</stl19:DepartureDateTime>
+                                <stl19:ArrivalDateTime>2019-06-22T19:00:00</stl19:ArrivalDateTime>
+                                <stl19:FlightNumber>0858</stl19:FlightNumber>
+                                <stl19:ClassOfService>Y</stl19:ClassOfService>
+                                <stl19:ActionCode>HK</stl19:ActionCode>
+                                <stl19:NumberInParty>2</stl19:NumberInParty>
+                                <stl19:SegmentSpecialRequests />
+                                <stl19:inboundConnection>false</stl19:inboundConnection>
+                                <stl19:outboundConnection>true</stl19:outboundConnection>
+                                <stl19:ScheduleChangeIndicator>false</stl19:ScheduleChangeIndicator>
+                                <stl19:SegmentBookedDate>2019-02-12T09:08:00</stl19:SegmentBookedDate>
+                                <stl19:ElapsedTime>03.50</stl19:ElapsedTime>
+                                <stl19:AirMilesFlown>1467</stl19:AirMilesFlown>
+                                <stl19:FunnelFlight>false</stl19:FunnelFlight>
+                                <stl19:ChangeOfGauge>false</stl19:ChangeOfGauge>
+                                <stl19:Cabin Code="Y" SabreCode="Y" Name="ECONOMY" ShortName="ECONOMY" Lang="EN" />
+                                <stl19:Banner>MARKETED BY AUSTRIAN</stl19:Banner>
+                                <stl19:Informational>false</stl19:Informational>
+                            </stl19:Air>
+                            <stl19:Product id="3">
+                                <or114:ProductDetails productCategory="AIR">
+                                    <or114:ProductName type="AIR" />
+                                    <or114:Air sequence="1">
+                                        <or114:DepartureAirport>TLV</or114:DepartureAirport>
+                                        <or114:DepartureTerminalName>T3</or114:DepartureTerminalName>
+                                        <or114:DepartureTerminalCode>3</or114:DepartureTerminalCode>
+                                        <or114:ArrivalAirport>VIE</or114:ArrivalAirport>
+                                        <or114:EquipmentType>321</or114:EquipmentType>
+                                        <or114:MarketingAirlineCode>OS</or114:MarketingAirlineCode>
+                                        <or114:MarketingFlightNumber>858</or114:MarketingFlightNumber>
+                                        <or114:MarketingClassOfService>Y</or114:MarketingClassOfService>
+                                        <or114:Cabin code="Y" sabreCode="Y" name="ECONOMY" shortName="ECONOMY" lang="EN" />
+                                        <or114:MealCode>M</or114:MealCode>
+                                        <or114:ElapsedTime>230</or114:ElapsedTime>
+                                        <or114:AirMilesFlown>1467</or114:AirMilesFlown>
+                                        <or114:FunnelFlight>false</or114:FunnelFlight>
+                                        <or114:ChangeOfGauge>false</or114:ChangeOfGauge>
+                                        <or114:DisclosureCarrier Code="OS" DOT="false">
+                                            <or114:Banner>AUSTRIAN</or114:Banner>
+                                        </or114:DisclosureCarrier>
+                                        <or114:AirlineRefId>DCOS*TESTDD</or114:AirlineRefId>
+                                        <or114:Eticket>true</or114:Eticket>
+                                        <or114:DepartureDateTime>2019-06-22T16:10:00</or114:DepartureDateTime>
+                                        <or114:ArrivalDateTime>2019-06-22T19:00:00</or114:ArrivalDateTime>
+                                        <or114:FlightNumber>858</or114:FlightNumber>
+                                        <or114:ClassOfService>Y</or114:ClassOfService>
+                                        <or114:ActionCode>HK</or114:ActionCode>
+                                        <or114:NumberInParty>2</or114:NumberInParty>
+                                        <or114:SegmentBookedDate>2019-02-12T09:08:00</or114:SegmentBookedDate>
+                                    </or114:Air>
+                                </or114:ProductDetails>
+                            </stl19:Product>
+                        </stl19:Segment>
+                        <stl19:Segment sequence="2" id="4">
+                            <stl19:Air id="4" sequence="2" segmentAssociationId="3" isPast="false" DayOfWeekInd="6"
+                                CodeShare="false" SpecialMeal="false" StopQuantity="00" SmokingAllowed="false"
+                                ResBookDesigCode="Y" Code="OS">
+                                <stl19:DepartureAirport>VIE</stl19:DepartureAirport>
+                                <stl19:DepartureAirportCodeContext>IATA</stl19:DepartureAirportCodeContext>
+                                <stl19:ArrivalAirport>LHR</stl19:ArrivalAirport>
+                                <stl19:ArrivalAirportCodeContext>IATA</stl19:ArrivalAirportCodeContext>
+                                <stl19:ArrivalTerminalName>TERMINAL 2</stl19:ArrivalTerminalName>
+                                <stl19:ArrivalTerminalCode>2</stl19:ArrivalTerminalCode>
+                                <stl19:OperatingAirlineCode>OS</stl19:OperatingAirlineCode>
+                                <stl19:OperatingAirlineShortName>AUSTRIAN</stl19:OperatingAirlineShortName>
+                                <stl19:OperatingFlightNumber>0457</stl19:OperatingFlightNumber>
+                                <stl19:EquipmentType>321</stl19:EquipmentType>
+                                <stl19:MarketingAirlineCode>OS</stl19:MarketingAirlineCode>
+                                <stl19:MarketingFlightNumber>0457</stl19:MarketingFlightNumber>
+                                <stl19:OperatingClassOfService>Y</stl19:OperatingClassOfService>
+                                <stl19:MarketingClassOfService>Y</stl19:MarketingClassOfService>
+                                <stl19:MarriageGrp>
+                                    <stl19:Ind>0</stl19:Ind>
+                                    <stl19:Group>1</stl19:Group>
+                                    <stl19:Sequence>2</stl19:Sequence>
+                                </stl19:MarriageGrp>
+                                <stl19:Meal Code="S" />
+                                <stl19:Seats />
+                                <stl19:AirlineRefId>DCOS*TESTDD</stl19:AirlineRefId>
+                                <stl19:Eticket>true</stl19:Eticket>
+                                <stl19:DepartureDateTime>2019-06-22T20:05:00</stl19:DepartureDateTime>
+                                <stl19:ArrivalDateTime>2019-06-22T21:30:00</stl19:ArrivalDateTime>
+                                <stl19:FlightNumber>0457</stl19:FlightNumber>
+                                <stl19:ClassOfService>Y</stl19:ClassOfService>
+                                <stl19:ActionCode>HK</stl19:ActionCode>
+                                <stl19:NumberInParty>2</stl19:NumberInParty>
+                                <stl19:SegmentSpecialRequests />
+                                <stl19:inboundConnection>true</stl19:inboundConnection>
+                                <stl19:outboundConnection>false</stl19:outboundConnection>
+                                <stl19:ScheduleChangeIndicator>false</stl19:ScheduleChangeIndicator>
+                                <stl19:SegmentBookedDate>2019-02-12T09:08:00</stl19:SegmentBookedDate>
+                                <stl19:ElapsedTime>02.25</stl19:ElapsedTime>
+                                <stl19:AirMilesFlown>0794</stl19:AirMilesFlown>
+                                <stl19:FunnelFlight>false</stl19:FunnelFlight>
+                                <stl19:ChangeOfGauge>false</stl19:ChangeOfGauge>
+                                <stl19:Cabin Code="Y" SabreCode="Y" Name="ECONOMY" ShortName="ECONOMY" Lang="EN" />
+                                <stl19:Banner>MARKETED BY AUSTRIAN</stl19:Banner>
+                                <stl19:Informational>false</stl19:Informational>
+                            </stl19:Air>
+                            <stl19:Product id="4">
+                                <or114:ProductDetails productCategory="AIR">
+                                    <or114:ProductName type="AIR" />
+                                    <or114:Air sequence="2">
+                                        <or114:DepartureAirport>VIE</or114:DepartureAirport>
+                                        <or114:ArrivalAirport>LHR</or114:ArrivalAirport>
+                                        <or114:ArrivalTerminalName>TERMINAL 2</or114:ArrivalTerminalName>
+                                        <or114:ArrivalTerminalCode>2</or114:ArrivalTerminalCode>
+                                        <or114:EquipmentType>321</or114:EquipmentType>
+                                        <or114:MarketingAirlineCode>OS</or114:MarketingAirlineCode>
+                                        <or114:MarketingFlightNumber>457</or114:MarketingFlightNumber>
+                                        <or114:MarketingClassOfService>Y</or114:MarketingClassOfService>
+                                        <or114:Cabin code="Y" sabreCode="Y" name="ECONOMY" shortName="ECONOMY" lang="EN" />
+                                        <or114:MealCode>S</or114:MealCode>
+                                        <or114:ElapsedTime>145</or114:ElapsedTime>
+                                        <or114:AirMilesFlown>794</or114:AirMilesFlown>
+                                        <or114:FunnelFlight>false</or114:FunnelFlight>
+                                        <or114:ChangeOfGauge>false</or114:ChangeOfGauge>
+                                        <or114:DisclosureCarrier Code="OS" DOT="false">
+                                            <or114:Banner>AUSTRIAN</or114:Banner>
+                                        </or114:DisclosureCarrier>
+                                        <or114:AirlineRefId>DCOS*TESTDD</or114:AirlineRefId>
+                                        <or114:Eticket>true</or114:Eticket>
+                                        <or114:DepartureDateTime>2019-06-22T20:05:00</or114:DepartureDateTime>
+                                        <or114:ArrivalDateTime>2019-06-22T21:30:00</or114:ArrivalDateTime>
+                                        <or114:FlightNumber>457</or114:FlightNumber>
+                                        <or114:ClassOfService>Y</or114:ClassOfService>
+                                        <or114:ActionCode>HK</or114:ActionCode>
+                                        <or114:NumberInParty>2</or114:NumberInParty>
+                                        <or114:SegmentBookedDate>2019-02-12T09:08:00</or114:SegmentBookedDate>
+                                    </or114:Air>
+                                </or114:ProductDetails>
+                            </stl19:Product>
+                        </stl19:Segment>
+                        <stl19:Segment sequence="3" id="5">
+                            <stl19:Air id="5" sequence="3" segmentAssociationId="4" isPast="false" DayOfWeekInd="5"
+                                CodeShare="false" SpecialMeal="false" StopQuantity="00" SmokingAllowed="false"
+                                ResBookDesigCode="Y" Code="OS">
+                                <stl19:DepartureAirport>LHR</stl19:DepartureAirport>
+                                <stl19:DepartureAirportCodeContext>IATA</stl19:DepartureAirportCodeContext>
+                                <stl19:DepartureTerminalName>TERMINAL 2</stl19:DepartureTerminalName>
+                                <stl19:DepartureTerminalCode>2</stl19:DepartureTerminalCode>
+                                <stl19:ArrivalAirport>VIE</stl19:ArrivalAirport>
+                                <stl19:ArrivalAirportCodeContext>IATA</stl19:ArrivalAirportCodeContext>
+                                <stl19:OperatingAirlineCode>OS</stl19:OperatingAirlineCode>
+                                <stl19:OperatingAirlineShortName>AUSTRIAN</stl19:OperatingAirlineShortName>
+                                <stl19:OperatingFlightNumber>0452</stl19:OperatingFlightNumber>
+                                <stl19:EquipmentType>321</stl19:EquipmentType>
+                                <stl19:MarketingAirlineCode>OS</stl19:MarketingAirlineCode>
+                                <stl19:MarketingFlightNumber>0452</stl19:MarketingFlightNumber>
+                                <stl19:OperatingClassOfService>Y</stl19:OperatingClassOfService>
+                                <stl19:MarketingClassOfService>Y</stl19:MarketingClassOfService>
+                                <stl19:MarriageGrp>
+                                    <stl19:Ind>0</stl19:Ind>
+                                    <stl19:Group>2</stl19:Group>
+                                    <stl19:Sequence>1</stl19:Sequence>
+                                </stl19:MarriageGrp>
+                                <stl19:Meal Code="S" />
+                                <stl19:Seats />
+                                <stl19:AirlineRefId>DCOS*TESTDD</stl19:AirlineRefId>
+                                <stl19:Eticket>true</stl19:Eticket>
+                                <stl19:DepartureDateTime>2019-07-05T09:05:00</stl19:DepartureDateTime>
+                                <stl19:ArrivalDateTime>2019-07-05T12:25:00</stl19:ArrivalDateTime>
+                                <stl19:FlightNumber>0452</stl19:FlightNumber>
+                                <stl19:ClassOfService>Y</stl19:ClassOfService>
+                                <stl19:ActionCode>HK</stl19:ActionCode>
+                                <stl19:NumberInParty>2</stl19:NumberInParty>
+                                <stl19:SegmentSpecialRequests />
+                                <stl19:inboundConnection>false</stl19:inboundConnection>
+                                <stl19:outboundConnection>true</stl19:outboundConnection>
+                                <stl19:ScheduleChangeIndicator>false</stl19:ScheduleChangeIndicator>
+                                <stl19:SegmentBookedDate>2019-02-12T09:08:00</stl19:SegmentBookedDate>
+                                <stl19:ElapsedTime>02.20</stl19:ElapsedTime>
+                                <stl19:AirMilesFlown>0794</stl19:AirMilesFlown>
+                                <stl19:FunnelFlight>false</stl19:FunnelFlight>
+                                <stl19:ChangeOfGauge>false</stl19:ChangeOfGauge>
+                                <stl19:Cabin Code="Y" SabreCode="Y" Name="ECONOMY" ShortName="ECONOMY" Lang="EN" />
+                                <stl19:Banner>MARKETED BY AUSTRIAN</stl19:Banner>
+                                <stl19:Informational>false</stl19:Informational>
+                            </stl19:Air>
+                            <stl19:Product id="5">
+                                <or114:ProductDetails productCategory="AIR">
+                                    <or114:ProductName type="AIR" />
+                                    <or114:Air sequence="3">
+                                        <or114:DepartureAirport>LHR</or114:DepartureAirport>
+                                        <or114:DepartureTerminalName>TERMINAL 2</or114:DepartureTerminalName>
+                                        <or114:DepartureTerminalCode>2</or114:DepartureTerminalCode>
+                                        <or114:ArrivalAirport>VIE</or114:ArrivalAirport>
+                                        <or114:EquipmentType>321</or114:EquipmentType>
+                                        <or114:MarketingAirlineCode>OS</or114:MarketingAirlineCode>
+                                        <or114:MarketingFlightNumber>452</or114:MarketingFlightNumber>
+                                        <or114:MarketingClassOfService>Y</or114:MarketingClassOfService>
+                                        <or114:Cabin code="Y" sabreCode="Y" name="ECONOMY" shortName="ECONOMY" lang="EN" />
+                                        <or114:MealCode>S</or114:MealCode>
+                                        <or114:ElapsedTime>140</or114:ElapsedTime>
+                                        <or114:AirMilesFlown>794</or114:AirMilesFlown>
+                                        <or114:FunnelFlight>false</or114:FunnelFlight>
+                                        <or114:ChangeOfGauge>false</or114:ChangeOfGauge>
+                                        <or114:DisclosureCarrier Code="OS" DOT="false">
+                                            <or114:Banner>AUSTRIAN</or114:Banner>
+                                        </or114:DisclosureCarrier>
+                                        <or114:AirlineRefId>DCOS*TESTDD</or114:AirlineRefId>
+                                        <or114:Eticket>true</or114:Eticket>
+                                        <or114:DepartureDateTime>2019-07-05T09:05:00</or114:DepartureDateTime>
+                                        <or114:ArrivalDateTime>2019-07-05T12:25:00</or114:ArrivalDateTime>
+                                        <or114:FlightNumber>452</or114:FlightNumber>
+                                        <or114:ClassOfService>Y</or114:ClassOfService>
+                                        <or114:ActionCode>HK</or114:ActionCode>
+                                        <or114:NumberInParty>2</or114:NumberInParty>
+                                        <or114:SegmentBookedDate>2019-02-12T09:08:00</or114:SegmentBookedDate>
+                                    </or114:Air>
+                                </or114:ProductDetails>
+                            </stl19:Product>
+                        </stl19:Segment>
+                        <stl19:Segment sequence="4" id="6">
+                            <stl19:Air id="6" sequence="4" segmentAssociationId="5" isPast="false" DayOfWeekInd="5"
+                                CodeShare="false" SpecialMeal="false" StopQuantity="00" SmokingAllowed="false"
+                                ResBookDesigCode="Y" Code="OS">
+                                <stl19:DepartureAirport>VIE</stl19:DepartureAirport>
+                                <stl19:DepartureAirportCodeContext>IATA</stl19:DepartureAirportCodeContext>
+                                <stl19:ArrivalAirport>TLV</stl19:ArrivalAirport>
+                                <stl19:ArrivalAirportCodeContext>IATA</stl19:ArrivalAirportCodeContext>
+                                <stl19:ArrivalTerminalName>T3</stl19:ArrivalTerminalName>
+                                <stl19:ArrivalTerminalCode>3</stl19:ArrivalTerminalCode>
+                                <stl19:OperatingAirlineCode>OS</stl19:OperatingAirlineCode>
+                                <stl19:OperatingAirlineShortName>AUSTRIAN</stl19:OperatingAirlineShortName>
+                                <stl19:OperatingFlightNumber>0861</stl19:OperatingFlightNumber>
+                                <stl19:EquipmentType>320</stl19:EquipmentType>
+                                <stl19:MarketingAirlineCode>OS</stl19:MarketingAirlineCode>
+                                <stl19:MarketingFlightNumber>0861</stl19:MarketingFlightNumber>
+                                <stl19:OperatingClassOfService>Y</stl19:OperatingClassOfService>
+                                <stl19:MarketingClassOfService>Y</stl19:MarketingClassOfService>
+                                <stl19:MarriageGrp>
+                                    <stl19:Ind>0</stl19:Ind>
+                                    <stl19:Group>2</stl19:Group>
+                                    <stl19:Sequence>2</stl19:Sequence>
+                                </stl19:MarriageGrp>
+                                <stl19:Meal Code="M" />
+                                <stl19:Seats />
+                                <stl19:AirlineRefId>DCOS*TESTDD</stl19:AirlineRefId>
+                                <stl19:Eticket>true</stl19:Eticket>
+                                <stl19:DepartureDateTime>2019-07-05T13:10:00</stl19:DepartureDateTime>
+                                <stl19:ArrivalDateTime>2019-07-05T17:35:00</stl19:ArrivalDateTime>
+                                <stl19:FlightNumber>0861</stl19:FlightNumber>
+                                <stl19:ClassOfService>Y</stl19:ClassOfService>
+                                <stl19:ActionCode>HK</stl19:ActionCode>
+                                <stl19:NumberInParty>2</stl19:NumberInParty>
+                                <stl19:SegmentSpecialRequests />
+                                <stl19:inboundConnection>true</stl19:inboundConnection>
+                                <stl19:outboundConnection>false</stl19:outboundConnection>
+                                <stl19:ScheduleChangeIndicator>false</stl19:ScheduleChangeIndicator>
+                                <stl19:SegmentBookedDate>2019-02-12T09:08:00</stl19:SegmentBookedDate>
+                                <stl19:ElapsedTime>03.25</stl19:ElapsedTime>
+                                <stl19:AirMilesFlown>1467</stl19:AirMilesFlown>
+                                <stl19:FunnelFlight>false</stl19:FunnelFlight>
+                                <stl19:ChangeOfGauge>false</stl19:ChangeOfGauge>
+                                <stl19:Cabin Code="Y" SabreCode="Y" Name="ECONOMY" ShortName="ECONOMY" Lang="EN" />
+                                <stl19:Banner>MARKETED BY AUSTRIAN</stl19:Banner>
+                                <stl19:Informational>false</stl19:Informational>
+                            </stl19:Air>
+                            <stl19:Product id="6">
+                                <or114:ProductDetails productCategory="AIR">
+                                    <or114:ProductName type="AIR" />
+                                    <or114:Air sequence="4">
+                                        <or114:DepartureAirport>VIE</or114:DepartureAirport>
+                                        <or114:ArrivalAirport>TLV</or114:ArrivalAirport>
+                                        <or114:ArrivalTerminalName>T3</or114:ArrivalTerminalName>
+                                        <or114:ArrivalTerminalCode>3</or114:ArrivalTerminalCode>
+                                        <or114:EquipmentType>320</or114:EquipmentType>
+                                        <or114:MarketingAirlineCode>OS</or114:MarketingAirlineCode>
+                                        <or114:MarketingFlightNumber>861</or114:MarketingFlightNumber>
+                                        <or114:MarketingClassOfService>Y</or114:MarketingClassOfService>
+                                        <or114:Cabin code="Y" sabreCode="Y" name="ECONOMY" shortName="ECONOMY" lang="EN" />
+                                        <or114:MealCode>M</or114:MealCode>
+                                        <or114:ElapsedTime>205</or114:ElapsedTime>
+                                        <or114:AirMilesFlown>1467</or114:AirMilesFlown>
+                                        <or114:FunnelFlight>false</or114:FunnelFlight>
+                                        <or114:ChangeOfGauge>false</or114:ChangeOfGauge>
+                                        <or114:DisclosureCarrier Code="OS" DOT="false">
+                                            <or114:Banner>AUSTRIAN</or114:Banner>
+                                        </or114:DisclosureCarrier>
+                                        <or114:AirlineRefId>DCOS*TESTDD</or114:AirlineRefId>
+                                        <or114:Eticket>true</or114:Eticket>
+                                        <or114:DepartureDateTime>2019-07-05T13:10:00</or114:DepartureDateTime>
+                                        <or114:ArrivalDateTime>2019-07-05T17:35:00</or114:ArrivalDateTime>
+                                        <or114:FlightNumber>861</or114:FlightNumber>
+                                        <or114:ClassOfService>Y</or114:ClassOfService>
+                                        <or114:ActionCode>HK</or114:ActionCode>
+                                        <or114:NumberInParty>2</or114:NumberInParty>
+                                        <or114:SegmentBookedDate>2019-02-12T09:08:00</or114:SegmentBookedDate>
+                                    </or114:Air>
+                                </or114:ProductDetails>
+                            </stl19:Product>
+                        </stl19:Segment>
+                    </stl19:Segments>
+                    <stl19:TicketingInfo>
+                        <stl19:AlreadyTicketed id="12" index="1" elementId="pnr-12">
+                            <stl19:Code>T-OK</stl19:Code>
+                        </stl19:AlreadyTicketed>
+                    </stl19:TicketingInfo>
+                    <stl19:ItineraryPricing />
+                </stl19:PassengerReservation>
+                <stl19:ReceivedFrom>
+                    <stl19:Name>AGT</stl19:Name>
+                </stl19:ReceivedFrom>
+                <stl19:PhoneNumbers>
+                    <stl19:PhoneNumber id="13" index="1" elementId="pnr-13">
+                        <stl19:CityCode>TLV</stl19:CityCode>
+                        <stl19:Number> TESTA ISB</stl19:Number>
+                    </stl19:PhoneNumber>
+                </stl19:PhoneNumbers>
+                <stl19:EmailAddresses />
+                <stl19:GenericSpecialRequests id="16" type="A" msgType="S" RPH="1">
+                    <stl19:Code>OTHS</stl19:Code>
+                    <stl19:FreeText>PLS ADV TKT NBR BY 12JUN19/2359Z OR OS OPTG/MKTG FLTS WILL BE CANX / APPLIC FARE
+                        RULE APPLIES IF IT DEMANDS EARLIER TKTG</stl19:FreeText>
+                    <stl19:AirlineCode>1S</stl19:AirlineCode>
+                    <stl19:FullText>OTHS 1S PLS ADV TKT NBR BY 12JUN19/2359Z OR OS OPTG/MKTG FLTS WILL BE CANX / APPLIC
+                        FARE RULE APPLIES IF IT DEMANDS EARLIER TKTG</stl19:FullText>
+                </stl19:GenericSpecialRequests>
+                <stl19:OpenReservationElements>
+                    <or114:OpenReservationElement id="16" type="SRVC" elementId="pnr-16">
+                        <or114:ServiceRequest airlineCode="1S" code="OTHS" serviceType="SSR" ssrType="AFX">
+                            <or114:FreeText>PLS ADV TKT NBR BY 12JUN19/2359Z OR OS OPTG/MKTG FLTS WILL BE CANX / APPLIC
+                                FARE RULE APPLIES IF IT DEMANDS EARLIER TKTG</or114:FreeText>
+                            <or114:FullText>OTHS 1S PLS ADV TKT NBR BY 12JUN19/2359Z OR OS OPTG/MKTG FLTS WILL BE CANX
+                                / APPLIC FARE RULE APPLIES IF IT DEMANDS EARLIER TKTG</or114:FullText>
+                        </or114:ServiceRequest>
+                    </or114:OpenReservationElement>
+                </stl19:OpenReservationElements>
+            </stl19:Reservation>
+            <or114:PriceQuote>
+                <PriceQuoteInfo xmlns="http://www.sabre.com/ns/Ticketing/pqs/1.0">
+                    <Reservation updateToken="eNc:::Gnf6bGX5G4uNzM0qQqWSvQ==" />
+                    <Summary>
+                        <NameAssociation firstName="DANA MS" lastName="BROWN" nameId="1" nameNumber="1.1">
+                            <PriceQuote latestPQFlag="true" number="1" pricingType="S" status="A" type="PQ">
+                                <Passenger passengerTypeCount="2" requestedType="ADT" type="ADT" />
+                                <ItineraryType>I</ItineraryType>
+                                <ValidatingCarrier>OS</ValidatingCarrier>
+                                <Amounts>
+                                    <Total currencyCode="USD" decimalPlace="2">1594.81</Total>
+                                </Amounts>
+                                <LocalCreateDateTime>2019-02-12T17:07:00</LocalCreateDateTime>
+                            </PriceQuote>
+                        </NameAssociation>
+                        <NameAssociation firstName="DAN MR" lastName="BROWN" nameId="2" nameNumber="2.1">
+                            <PriceQuote latestPQFlag="true" number="1" pricingType="S" status="A" type="PQ">
+                                <Passenger passengerTypeCount="2" requestedType="ADT" type="ADT" />
+                                <ItineraryType>I</ItineraryType>
+                                <ValidatingCarrier>OS</ValidatingCarrier>
+                                <Amounts>
+                                    <Total currencyCode="USD" decimalPlace="2">1594.81</Total>
+                                </Amounts>
+                                <LocalCreateDateTime>2019-02-12T17:07:00</LocalCreateDateTime>
+                            </PriceQuote>
+                        </NameAssociation>
+                    </Summary>
+                    <Details number="1" passengerType="ADT" pricingType="S" status="A" type="PQ">
+                        <AgentInfo duty="*" sine="AWS">
+                            <HomeLocation>0HAH</HomeLocation>
+                            <WorkLocation>0HAH</WorkLocation>
+                        </AgentInfo>
+                        <TransactionInfo>
+                            <CreateDateTime>2019-02-12T09:07:00</CreateDateTime>
+                            <UpdateDateTime>2019-02-12T09:07:00</UpdateDateTime>
+                            <LocalCreateDateTime>2019-02-12T17:07:00</LocalCreateDateTime>
+                            <LocalUpdateDateTime>2019-02-12T17:07:00</LocalUpdateDateTime>
+                            <InputEntry>WP</InputEntry>
+                        </TransactionInfo>
+                        <NameAssociationInfo firstName="DANA MS" lastName="BROWN" nameId="1" nameNumber="1.1" />
+                        <NameAssociationInfo firstName="DAN MR" lastName="BROWN" nameId="2" nameNumber="2.1" />
+                        <SegmentInfo number="1" segmentStatus="OK">
+                            <Flight connectionIndicator="O">
+                                <MarketingFlight number="858">OS</MarketingFlight>
+                                <ClassOfService>Y</ClassOfService>
+                                <Departure>
+                                    <DateTime>2019-06-22T16:10:00</DateTime>
+                                    <CityCode name="TEL AVIV      TLV">TLV</CityCode>
+                                </Departure>
+                                <Arrival>
+                                    <DateTime>2019-06-22T19:00:00</DateTime>
+                                    <CityCode name="VIENNA">VIE</CityCode>
+                                </Arrival>
+                            </Flight>
+                            <FareBasis>YFFIL</FareBasis>
+                            <NotValidAfter>2020-06-22</NotValidAfter>
+                            <Baggage allowance="01" type="P" />
+                        </SegmentInfo>
+                        <SegmentInfo number="2" segmentStatus="OK">
+                            <Flight connectionIndicator="X">
+                                <MarketingFlight number="457">OS</MarketingFlight>
+                                <ClassOfService>Y</ClassOfService>
+                                <Departure>
+                                    <DateTime>2019-06-22T20:05:00</DateTime>
+                                    <CityCode name="VIENNA">VIE</CityCode>
+                                </Departure>
+                                <Arrival>
+                                    <DateTime>2019-06-22T21:30:00</DateTime>
+                                    <CityCode name="LONDON         UK">LHR</CityCode>
+                                </Arrival>
+                            </Flight>
+                            <FareBasis>YFFIL</FareBasis>
+                            <NotValidAfter>2020-06-22</NotValidAfter>
+                            <Baggage allowance="01" type="P" />
+                        </SegmentInfo>
+                        <SegmentInfo number="3" segmentStatus="OK">
+                            <Flight connectionIndicator="O">
+                                <MarketingFlight number="452">OS</MarketingFlight>
+                                <ClassOfService>Y</ClassOfService>
+                                <Departure>
+                                    <DateTime>2019-07-05T09:05:00</DateTime>
+                                    <CityCode name="LONDON         UK">LHR</CityCode>
+                                </Departure>
+                                <Arrival>
+                                    <DateTime>2019-07-05T12:25:00</DateTime>
+                                    <CityCode name="VIENNA">VIE</CityCode>
+                                </Arrival>
+                            </Flight>
+                            <FareBasis>YFFIL</FareBasis>
+                            <NotValidAfter>2020-06-22</NotValidAfter>
+                            <Baggage allowance="01" type="P" />
+                        </SegmentInfo>
+                        <SegmentInfo number="4" segmentStatus="OK">
+                            <Flight connectionIndicator="X">
+                                <MarketingFlight number="861">OS</MarketingFlight>
+                                <ClassOfService>Y</ClassOfService>
+                                <Departure>
+                                    <DateTime>2019-07-05T13:10:00</DateTime>
+                                    <CityCode name="VIENNA">VIE</CityCode>
+                                </Departure>
+                                <Arrival>
+                                    <DateTime>2019-07-05T17:35:00</DateTime>
+                                    <CityCode name="TEL AVIV      TLV">TLV</CityCode>
+                                </Arrival>
+                            </Flight>
+                            <FareBasis>YFFIL</FareBasis>
+                            <NotValidAfter>2020-06-22</NotValidAfter>
+                            <Baggage allowance="01" type="P" />
+                        </SegmentInfo>
+                        <FareInfo source="ATPC">
+                            <FareIndicators />
+                            <BaseFare currencyCode="USD" decimalPlace="2">1180.00</BaseFare>
+                            <TotalTax currencyCode="USD" decimalPlace="2">414.81</TotalTax>
+                            <TotalFare currencyCode="USD" decimalPlace="2">1594.81</TotalFare>
+                            <TaxInfo>
+                                <CombinedTax code="YQ">
+                                    <Amount currencyCode="USD" decimalPlace="2">1180.00</Amount>
+                                </CombinedTax>
+                                <CombinedTax code="YR">
+                                    <Amount currencyCode="USD" decimalPlace="2">1180.00</Amount>
+                                </CombinedTax>
+                                <CombinedTax code="XT">
+                                    <Amount currencyCode="USD" decimalPlace="2">1180.00</Amount>
+                                </CombinedTax>
+                                <Tax code="YQ">
+                                    <Amount currencyCode="USD" decimalPlace="2">181.20</Amount>
+                                </Tax>
+                                <Tax code="YR">
+                                    <Amount currencyCode="USD" decimalPlace="2">17.50</Amount>
+                                </Tax>
+                                <Tax code="IL">
+                                    <Amount currencyCode="USD" decimalPlace="2">26.81</Amount>
+                                </Tax>
+                                <Tax code="AT">
+                                    <Amount currencyCode="USD" decimalPlace="2">19.20</Amount>
+                                </Tax>
+                                <Tax code="ZY">
+                                    <Amount currencyCode="USD" decimalPlace="2">42.60</Amount>
+                                </Tax>
+                                <Tax code="GB">
+                                    <Amount currencyCode="USD" decimalPlace="2">101.00</Amount>
+                                </Tax>
+                                <Tax code="UB">
+                                    <Amount currencyCode="USD" decimalPlace="2">26.50</Amount>
+                                </Tax>
+                            </TaxInfo>
+                            <FareCalculation>TLV OS X/VIE OS LON590.00OS X/VIE OS TLV590.00NUC1180.00END ROE1.00</FareCalculation>
+                            <FareComponent fareBasisCode="YFFIL" number="1">
+                                <FlightSegmentNumbers>
+                                    <SegmentNumber>1</SegmentNumber>
+                                    <SegmentNumber>2</SegmentNumber>
+                                </FlightSegmentNumbers>
+                                <FareDirectionality roundTrip="true" />
+                                <Departure>
+                                    <DateTime>2019-06-22T16:10:00</DateTime>
+                                    <CityCode name="TEL AVIV      TLV">TLV</CityCode>
+                                </Departure>
+                                <Arrival>
+                                    <DateTime>2019-06-22T21:30:00</DateTime>
+                                    <CityCode name="LONDON         UK">LON</CityCode>
+                                </Arrival>
+                                <Amount currencyCode="NUC" decimalPlace="2">590.00</Amount>
+                                <GoverningCarrier>OS</GoverningCarrier>
+                            </FareComponent>
+                            <FareComponent fareBasisCode="YFFIL" number="2">
+                                <FlightSegmentNumbers>
+                                    <SegmentNumber>3</SegmentNumber>
+                                    <SegmentNumber>4</SegmentNumber>
+                                </FlightSegmentNumbers>
+                                <FareDirectionality inbound="true" roundTrip="true" />
+                                <Departure>
+                                    <DateTime>2019-07-05T09:05:00</DateTime>
+                                    <CityCode name="LONDON         UK">LON</CityCode>
+                                </Departure>
+                                <Arrival>
+                                    <DateTime>2019-07-05T17:35:00</DateTime>
+                                    <CityCode name="TEL AVIV      TLV">TLV</CityCode>
+                                </Arrival>
+                                <Amount currencyCode="NUC" decimalPlace="2">590.00</Amount>
+                                <GoverningCarrier>OS</GoverningCarrier>
+                            </FareComponent>
+                        </FareInfo>
+                        <FeeInfo>
+                            <OBFee code="FCA" noChargeIndicator="X" type="OB">
+                                <Amount currencyCode="USD" decimalPlace="2">0.00</Amount>
+                                <Total currencyCode="USD" decimalPlace="2">1594.81</Total>
+                                <Description>CC NBR BEGINS WITH 122088</Description>
+                                <BankIdentificationNumber>122088</BankIdentificationNumber>
+                            </OBFee>
+                            <OBFee code="FCA" noChargeIndicator="X" type="OB">
+                                <Amount currencyCode="USD" decimalPlace="2">0.00</Amount>
+                                <Total currencyCode="USD" decimalPlace="2">1594.81</Total>
+                                <Description>CC NBR BEGINS WITH 192088</Description>
+                                <BankIdentificationNumber>192088</BankIdentificationNumber>
+                            </OBFee>
+                            <OBFee code="FCA" noChargeIndicator="X" type="OB">
+                                <Amount currencyCode="USD" decimalPlace="2">0.00</Amount>
+                                <Total currencyCode="USD" decimalPlace="2">1594.81</Total>
+                                <Description>CC NBR BEGINS WITH 14121</Description>
+                                <BankIdentificationNumber>14121</BankIdentificationNumber>
+                            </OBFee>
+                            <OBFee code="FCA" noChargeIndicator="X" type="OB">
+                                <Amount currencyCode="USD" decimalPlace="2">0.00</Amount>
+                                <Total currencyCode="USD" decimalPlace="2">1594.81</Total>
+                                <Description>CC NBR BEGINS WITH 14122</Description>
+                                <BankIdentificationNumber>14122</BankIdentificationNumber>
+                            </OBFee>
+                            <OBFee code="FCA" noChargeIndicator="X" type="OB">
+                                <Amount currencyCode="USD" decimalPlace="2">0.00</Amount>
+                                <Total currencyCode="USD" decimalPlace="2">1594.81</Total>
+                                <Description>CC NBR BEGINS WITH 14123</Description>
+                                <BankIdentificationNumber>14123</BankIdentificationNumber>
+                            </OBFee>
+                            <OBFee code="FCA" noChargeIndicator="X" type="OB">
+                                <Amount currencyCode="USD" decimalPlace="2">0.00</Amount>
+                                <Total currencyCode="USD" decimalPlace="2">1594.81</Total>
+                                <Description>CC NBR BEGINS WITH 528159</Description>
+                                <BankIdentificationNumber>528159</BankIdentificationNumber>
+                            </OBFee>
+                            <OBFee code="FDA" noChargeIndicator="X" type="OB">
+                                <Amount currencyCode="USD" decimalPlace="2">0.00</Amount>
+                                <Total currencyCode="USD" decimalPlace="2">1594.81</Total>
+                                <Description>CC NBR BEGINS WITH 122088</Description>
+                                <BankIdentificationNumber>122088</BankIdentificationNumber>
+                            </OBFee>
+                            <OBFee code="FDA" noChargeIndicator="X" type="OB">
+                                <Amount currencyCode="USD" decimalPlace="2">0.00</Amount>
+                                <Total currencyCode="USD" decimalPlace="2">1594.81</Total>
+                                <Description>CC NBR BEGINS WITH 192088</Description>
+                                <BankIdentificationNumber>192088</BankIdentificationNumber>
+                            </OBFee>
+                            <OBFee code="FDA" noChargeIndicator="X" type="OB">
+                                <Amount currencyCode="USD" decimalPlace="2">0.00</Amount>
+                                <Total currencyCode="USD" decimalPlace="2">1594.81</Total>
+                                <Description>CC NBR BEGINS WITH 528159</Description>
+                                <BankIdentificationNumber>528159</BankIdentificationNumber>
+                            </OBFee>
+                            <OBFee code="FDA" noChargeIndicator="X" type="OB">
+                                <Amount currencyCode="USD" decimalPlace="2">0.00</Amount>
+                                <Total currencyCode="USD" decimalPlace="2">1594.81</Total>
+                                <Description>CC NBR BEGINS WITH 14121</Description>
+                                <BankIdentificationNumber>14121</BankIdentificationNumber>
+                            </OBFee>
+                            <OBFee code="FDA" noChargeIndicator="X" type="OB">
+                                <Amount currencyCode="USD" decimalPlace="2">0.00</Amount>
+                                <Total currencyCode="USD" decimalPlace="2">1594.81</Total>
+                                <Description>CC NBR BEGINS WITH 14123</Description>
+                                <BankIdentificationNumber>14123</BankIdentificationNumber>
+                            </OBFee>
+                        </FeeInfo>
+                        <MiscellaneousInfo>
+                            <ValidatingCarrier>OS</ValidatingCarrier>
+                            <ItineraryType>I</ItineraryType>
+                        </MiscellaneousInfo>
+                        <MessageInfo>
+                            <Message number="301" type="INFO">One or more form of payment fees may apply</Message>
+                            <Message number="302" type="INFO">Actual total will be based on form of payment used</Message>
+                            <Message number="201" type="WARNING">Fare not guaranteed until ticketed</Message>
+                            <Message type="WARNING">VALIDATING CARRIER - OS</Message>
+                            <Remarks type="ENS">FARE RESTRICTION MAY APPLY</Remarks>
+                            <PricingParameters>WP</PricingParameters>
+                        </MessageInfo>
+                        <HistoryInfo>
+                            <AgentInfo sine="AWS">
+                                <HomeLocation>0HAH</HomeLocation>
+                            </AgentInfo>
+                            <TransactionInfo>
+                                <LocalDateTime>2019-02-12T17:07:00</LocalDateTime>
+                                <InputEntry>PQ</InputEntry>
+                            </TransactionInfo>
+                        </HistoryInfo>
+                    </Details>
+                </PriceQuoteInfo>
+            </or114:PriceQuote>
+        </stl19:GetReservationRS>
+    </soap-env:Body>
+</soap-env:Envelope>

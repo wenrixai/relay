@@ -1,0 +1,50 @@
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap-env:Header>
+        <eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0"
+                          soap-env:mustUnderstand="1">
+            <eb:From>
+                <eb:PartyId eb:type="URI">123123</eb:PartyId>
+            </eb:From>
+            <eb:To>
+                <eb:PartyId eb:type="URI">999999</eb:PartyId>
+            </eb:To>
+            <eb:CPAId>0HAH</eb:CPAId>
+            <eb:ConversationId>V1@2bbaa81b-95f5-46a0-b061-d34b68fe52cd@48d01e57-9829-4d45-829d-82ddacdb9131@
+            </eb:ConversationId>
+            <eb:Service>AirTicketRQ</eb:Service>
+            <eb:Action>AirTicketRS</eb:Action>
+            <eb:MessageData>
+                <eb:MessageId>1es7fmb7j</eb:MessageId>
+                <eb:Timestamp>2018-12-10T10:34:35</eb:Timestamp>
+                <eb:RefToMessageId>48942074749</eb:RefToMessageId>
+            </eb:MessageData>
+        </eb:MessageHeader>
+        <wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+            <wsse:BinarySecurityToken valueType="String" EncodingType="wsse:Base64Binary">
+                SANITIZED-SESSION-TOKEN-T1RLAQ
+            </wsse:BinarySecurityToken>
+        </wsse:Security>
+    </soap-env:Header>
+    <soap-env:Body>
+        <AirTicketRS xmlns="http://services.sabre.com/sp/air/ticket/v1">
+            <ApplicationResults xmlns="http://services.sabre.com/STL_Payload/v02_01" status="Complete">
+                <Success timeStamp="2018-12-10T04:34:35.562-06:00"/>
+                <Warning type="BusinessLogic" timeStamp="2018-12-10T04:34:35.098-06:00">
+                    <SystemSpecificResults>
+                        <Message code="WARN.SWS.HOST.WARNING_RESPONSE">EndTransactionLLSRQ: TTY REQ PEND</Message>
+                    </SystemSpecificResults>
+                </Warning>
+            </ApplicationResults>
+            <Summary committed="true">
+                <DocumentNumber>1142837817060</DocumentNumber>
+                <LocalIssueDateTime>2018-12-10T00:00:00</LocalIssueDateTime>
+                <DocumentType>EMD</DocumentType>
+                <IssuingLocation>0HAH</IssuingLocation>
+                <Reservation>TESTBB</Reservation>
+                <FirstName>JOHN</FirstName>
+                <LastName>DOE</LastName>
+                <TotalAmount currencyCode="USD" decimalPlace="2">356.81</TotalAmount>
+            </Summary>
+        </AirTicketRS>
+    </soap-env:Body>
+</soap-env:Envelope>

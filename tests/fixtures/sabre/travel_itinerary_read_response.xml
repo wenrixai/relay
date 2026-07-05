@@ -1,0 +1,1212 @@
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap-env:Header>
+        <eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0"
+                          soap-env:mustUnderstand="1">
+            <eb:From>
+                <eb:PartyId eb:type="URI">123123</eb:PartyId>
+            </eb:From>
+            <eb:To>
+                <eb:PartyId eb:type="URI">999999</eb:PartyId>
+            </eb:To>
+            <eb:CPAId>YR8J</eb:CPAId>
+            <eb:ConversationId>V1@27bb8742-d0c9-43ff-9dae-a5aacef341d4@eb24cc50-d185-4c99-b5ff-9c3042939168@
+            </eb:ConversationId>
+            <eb:Service>TravelItineraryReadRQ</eb:Service>
+            <eb:Action>TravelItineraryReadRQ</eb:Action>
+            <eb:MessageData>
+                <eb:MessageId>868262429441860203</eb:MessageId>
+                <eb:Timestamp>2020-06-04T11:55:44</eb:Timestamp>
+                <eb:RefToMessageId>55901004810</eb:RefToMessageId>
+            </eb:MessageData>
+        </eb:MessageHeader>
+        <wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+            <wsse:BinarySecurityToken valueType="String" EncodingType="wsse:Base64Binary">
+                SANITIZED-SESSION-TOKEN
+            </wsse:BinarySecurityToken>
+        </wsse:Security>
+    </soap-env:Header>
+    <soap-env:Body>
+        <tir310:TravelItineraryReadRS xmlns:tir310="http://services.sabre.com/res/tir/v3_10"
+                                      xmlns:stl="http://services.sabre.com/STL/v01"
+                                      xmlns:or110="http://services.sabre.com/res/or/v1_11" Version="3.10.0">
+            <stl:ApplicationResults status="Complete">
+                <stl:Success timeStamp="2020-06-04T06:55:44.465-05:00"/>
+            </stl:ApplicationResults>
+            <tir310:TravelItinerary>
+                <tir310:ItineraryInfo>
+                    <tir310:ItineraryPricing>
+                        <tir310:FuturePriceInfo RPH="001">
+                            <tir310:Text>WN1.1IGEC01KP0PADTUN*GENELECADL</tir310:Text>
+                        </tir310:FuturePriceInfo>
+                        <tir310:PriceQuote RPH="1">
+                            <tir310:MiscInformation>
+                                <tir310:BaggageFees>
+                                    <tir310:Text>BAG ALLOWANCE -ILMZRH-01P/DL/EACH PIECE UP TO 50 POUNDS/23
+                                    </tir310:Text>
+                                    <tir310:Text>KILOGRAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS
+                                    </tir310:Text>
+                                    <tir310:Text>2NDCHECKED BAG FEE-ILMZRH-USD100.00/DL/UP TO 50 POUNDS/23 KILOG
+                                    </tir310:Text>
+                                    <tir310:Text>RAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS</tir310:Text>
+                                    <tir310:Text>BAG ALLOWANCE -ZRHILM-01P/DL/EACH PIECE UP TO 50 POUNDS/23
+                                    </tir310:Text>
+                                    <tir310:Text>KILOGRAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS
+                                    </tir310:Text>
+                                    <tir310:Text>2NDCHECKED BAG FEE-ZRHILM-USD100.00/DL/UP TO 50 POUNDS/23 KILOG
+                                    </tir310:Text>
+                                    <tir310:Text>RAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS</tir310:Text>
+                                    <tir310:Text>CARRY ON ALLOWANCE</tir310:Text>
+                                    <tir310:Text>ILMATL ATLAMS ZRHJFK JFKATL ATLILM-01P/DL</tir310:Text>
+                                    <tir310:Text>01/CARRY ON HAND BAGGAGE</tir310:Text>
+                                    <tir310:Text>01/UP TO 45 LINEAR INCHES/115 LINEAR CENTIMETERS</tir310:Text>
+                                    <tir310:Text>AMSZRH-01P/KL</tir310:Text>
+                                    <tir310:Text>01/UP TO 26 POUNDS/12 KILOGRAMS AND UP TO 45 LINEAR INCHES/115
+                                    </tir310:Text>
+                                    <tir310:Text>LINEAR CENTIMETERS</tir310:Text>
+                                    <tir310:Text>CARRY ON CHARGES</tir310:Text>
+                                    <tir310:Text>ILMATL ATLAMS ZRHJFK JFKATL ATLILM-DL-CARRY ON FEES UNKNOWN-CON
+                                    </tir310:Text>
+                                    <tir310:Text>TACT CARRIER</tir310:Text>
+                                    <tir310:Text>AMSZRH-KL-CARRY ON FEES UNKNOWN-CONTACT CARRIER</tir310:Text>
+                                    <tir310:Text>ADDITIONAL ALLOWANCES AND/OR DISCOUNTS MAY APPLY DEPENDING ON
+                                    </tir310:Text>
+                                    <tir310:Text>FLYER-SPECIFIC FACTORS /E.G. FREQUENT FLYER STATUS/MILITARY/
+                                    </tir310:Text>
+                                    <tir310:Text>CREDIT CARD FORM OF PAYMENT/EARLY PURCHASE OVER INTERNET,ETC./
+                                    </tir310:Text>
+                                    <tir310:Text>EMBARGOES-APPLY TO EACH PASSENGER</tir310:Text>
+                                    <tir310:Text>ILMATL JFKATL ATLILM-DL</tir310:Text>
+                                    <tir310:Text>PET IN HOLD NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>ATLAMS ZRHJFK-DL</tir310:Text>
+                                    <tir310:Text>PET IN HOLD NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>OVER 70 POUNDS/32 KILOGRAMS NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</tir310:Text>
+                                </tir310:BaggageFees>
+                                <tir310:GlobalNetRemit>
+                                    <tir310:SellingFare>
+                                        <tir310:BaseFare/>
+                                        <tir310:EquivFare/>
+                                        <tir310:Taxes/>
+                                        <tir310:TotalFare Amount="0.00"/>
+                                    </tir310:SellingFare>
+                                </tir310:GlobalNetRemit>
+                                <tir310:SignatureLine CommissionAmount="0" CommissionID="P" ExpirationDateTime="00:00"
+                                                      Source="SYS" Status="ACTIVE">
+                                    <tir310:Text>34D1 U5SC*A45 0827/30MAY20</tir310:Text>
+                                </tir310:SignatureLine>
+                            </tir310:MiscInformation>
+                            <tir310:PricedItinerary DisplayOnly="false" InputMessage="WPADL¥IGEC01¥KP0¥UN*GENELEC"
+                                                    RPH="1" StatusCode="A" TaxExempt="false" ValidatingCarrier="DL"
+                                                    StoredDateTime="2020-05-30T08:27">
+                                <tir310:AirItineraryPricingInfo>
+                                    <tir310:ItinTotalFare>
+                                        <tir310:BaseFare Amount="1736.00" CurrencyCode="USD"/>
+                                        <tir310:Taxes>
+                                            <tir310:Tax Amount="535.55" TaxCode="XT"/>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">37.80YQ</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">400.00YR</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">5.89YC</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">7.00XY</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">3.96XA</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">11.20AY</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">7.80CJ</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">7.70RN</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">36.20CH</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">18.00XF</tir310:TaxBreakdownCode>
+                                        </tir310:Taxes>
+                                        <tir310:TotalFare Amount="2271.55" CurrencyCode="USD"/>
+                                        <tir310:Totals>
+                                            <tir310:BaseFare Amount="1736.00"/>
+                                            <tir310:Taxes>
+                                                <tir310:Tax Amount="535.55"/>
+                                            </tir310:Taxes>
+                                            <tir310:TotalFare Amount="2271.55"/>
+                                        </tir310:Totals>
+                                    </tir310:ItinTotalFare>
+                                    <tir310:PassengerTypeQuantity Code="ADT" Quantity="01"/>
+                                    <tir310:PrivateFareInformation PrivateFareType="*">
+                                        <tir310:Text>*</tir310:Text>
+                                    </tir310:PrivateFareInformation>
+                                    <tir310:PTC_FareBreakdown>
+                                        <tir310:Endorsements>
+                                            <tir310:Endorsement type="PRICING_PARAMETER">
+                                                <tir310:Text>WPADL$IGEC01$KP0$UN*GENELEC</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="WARNING">
+                                                <tir310:Text>PRIVATE FARE APPLIED - CHECK RULES FOR CORRECT TICKETING
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="WARNING">
+                                                <tir310:Text>VALIDATING CARRIER SPECIFIED - DL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="WARNING">
+                                                <tir310:Text>CORP ID/ACCNT CODE USED: GEC01</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="SYSTEM_ENDORSEMENT">
+                                                <tir310:Text>CORPORATE/NON ENDO/RFNDISU AGT</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="PRIVATE_FARE">
+                                                <tir310:Text>CORPID *</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>BAG ALLOWANCE -ILMZRH-01P/DL/EACH PIECE UP TO 50
+                                                    POUNDS/23
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>KILOGRAMS AND UP TO 62 LINEAR INCHES/158 LINEAR
+                                                    CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>2NDCHECKED BAG FEE-ILMZRH-USD100.00/DL/UP TO 50 POUNDS/23
+                                                    KILOG
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>RAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>BAG ALLOWANCE -ZRHILM-01P/DL/EACH PIECE UP TO 50
+                                                    POUNDS/23
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>KILOGRAMS AND UP TO 62 LINEAR INCHES/158 LINEAR
+                                                    CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>2NDCHECKED BAG FEE-ZRHILM-USD100.00/DL/UP TO 50 POUNDS/23
+                                                    KILOG
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>RAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>CARRY ON ALLOWANCE</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ILMATL ATLAMS ZRHJFK JFKATL ATLILM-01P/DL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>01/CARRY ON HAND BAGGAGE</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>01/UP TO 45 LINEAR INCHES/115 LINEAR CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>AMSZRH-01P/KL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>01/UP TO 26 POUNDS/12 KILOGRAMS AND UP TO 45 LINEAR
+                                                    INCHES/115
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>LINEAR CENTIMETERS</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>CARRY ON CHARGES</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ILMATL ATLAMS ZRHJFK JFKATL ATLILM-DL-CARRY ON FEES
+                                                    UNKNOWN-CON
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>TACT CARRIER</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>AMSZRH-KL-CARRY ON FEES UNKNOWN-CONTACT CARRIER
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ADDITIONAL ALLOWANCES AND/OR DISCOUNTS MAY APPLY DEPENDING
+                                                    ON
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>FLYER-SPECIFIC FACTORS /E.G. FREQUENT FLYER
+                                                    STATUS/MILITARY/
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>CREDIT CARD FORM OF PAYMENT/EARLY PURCHASE OVER
+                                                    INTERNET,ETC./
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>EMBARGOES-APPLY TO EACH PASSENGER</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ILMATL JFKATL ATLILM-DL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>PET IN HOLD NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ATLAMS ZRHJFK-DL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>PET IN HOLD NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>OVER 70 POUNDS/32 KILOGRAMS NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                        </tir310:Endorsements>
+                                        <tir310:FareBasis
+                                                Code="BFM0US/XZ43/BFM0US/XZ43/BFM0US/XZ43/UFM0US/XZ43/UFM0US/XZ43/UFM0US/XZ43"/>
+                                        <tir310:FareCalculation>
+                                            <tir310:Text>ILM DL X/ATL DL X/AMS DL ZRH Q ILMZRH6.50 1177.28DL X/NYC DL X/ATL DL ILM551.85NUC1735.63END ROE1.00 XFILM4.5ATL4.5JFK4.5ATL4.5</tir310:Text>
+                                        </tir310:FareCalculation>
+                                        <tir310:FareSource>ATPC</tir310:FareSource>
+                                        <tir310:FlightSegment ConnectionInd="O" DepartureDateTime="06-16T12:40"
+                                                              FlightNumber="4818" ResBookDesigCode="B" SegmentNumber="1"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="BFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="4818"/>
+                                            <tir310:OriginLocation LocationCode="ILM"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="X" DepartureDateTime="06-16T17:35"
+                                                              FlightNumber="72" ResBookDesigCode="B" SegmentNumber="2"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="BFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="72"/>
+                                            <tir310:OriginLocation LocationCode="ATL"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="X" DepartureDateTime="06-17T09:40"
+                                                              FlightNumber="9620" ResBookDesigCode="B" SegmentNumber="3"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="BFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="9620"/>
+                                            <tir310:OriginLocation LocationCode="AMS"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="O" DepartureDateTime="08-04T13:40"
+                                                              FlightNumber="53" ResBookDesigCode="U" SegmentNumber="4"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="UFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="53"/>
+                                            <tir310:OriginLocation LocationCode="ZRH"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="X" DepartureDateTime="08-04T18:50"
+                                                              FlightNumber="2515" ResBookDesigCode="U" SegmentNumber="5"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="UFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="2515"/>
+                                            <tir310:OriginLocation LocationCode="JFK"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="X" DepartureDateTime="08-04T22:26"
+                                                              FlightNumber="6040" ResBookDesigCode="U" SegmentNumber="6"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="UFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="6040"/>
+                                            <tir310:OriginLocation LocationCode="ATL"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment>
+                                            <tir310:OriginLocation LocationCode="ILM"/>
+                                        </tir310:FlightSegment>
+                                        <tir310:FareComponent FareBasisCode="BFM0US/XZ43" FareDirectionality="FROM"
+                                                              Amount="117728" TicketDesignator="XZ43"
+                                                              GoverningCarrier="DL" FareComponentNumber="1"
+                                                              CorporateId="GEC01">
+                                            <tir310:Location Origin="ILM" Destination="ZRH"/>
+                                            <tir310:Dates DepartureDateTime="06-16T12:40"
+                                                          ArrivalDateTime="06-17T11:05"/>
+                                            <tir310:FlightSegmentNumbers>
+                                                <tir310:FlightSegmentNumber>1</tir310:FlightSegmentNumber>
+                                                <tir310:FlightSegmentNumber>2</tir310:FlightSegmentNumber>
+                                                <tir310:FlightSegmentNumber>3</tir310:FlightSegmentNumber>
+                                            </tir310:FlightSegmentNumbers>
+                                        </tir310:FareComponent>
+                                        <tir310:FareComponent FareBasisCode="UFM0US/XZ43" FareDirectionality="TO"
+                                                              Amount="55185" TicketDesignator="XZ43"
+                                                              GoverningCarrier="DL" FareComponentNumber="2"
+                                                              CorporateId="GEC01">
+                                            <tir310:Location Origin="ZRH" Destination="ILM"/>
+                                            <tir310:Dates DepartureDateTime="08-04T13:40"
+                                                          ArrivalDateTime="08-04T23:55"/>
+                                            <tir310:FlightSegmentNumbers>
+                                                <tir310:FlightSegmentNumber>4</tir310:FlightSegmentNumber>
+                                                <tir310:FlightSegmentNumber>5</tir310:FlightSegmentNumber>
+                                                <tir310:FlightSegmentNumber>6</tir310:FlightSegmentNumber>
+                                            </tir310:FlightSegmentNumbers>
+                                        </tir310:FareComponent>
+                                        <tir310:TourCode>
+                                            <tir310:Text>GENELEC</tir310:Text>
+                                        </tir310:TourCode>
+                                    </tir310:PTC_FareBreakdown>
+                                </tir310:AirItineraryPricingInfo>
+                                <tir310:NetTicketingInfo CorporateId="GEC01">
+                                    <tir310:SellingFareDetails>
+                                        <tir310:BaseFare Amount="1736.00" CurrencyCode="USD"/>
+                                        <tir310:TotalTax Amount="535.55" CurrencyCode="USD"/>
+                                        <tir310:TotalFare Amount="2271.55" CurrencyCode="USD"/>
+                                        <tir310:Commission Amount="0.00" CurrencyCode="USD">
+                                            <tir310:Percent Type="GROSS">0</tir310:Percent>
+                                        </tir310:Commission>
+                                        <tir310:FareCalc>ILM DL X/ATL DL X/AMS DL ZRH Q ILMZRH6.50 1177.28DL X/NYC DL X/ATL DL ILM551.85NUC1735.63END ROE1.00 XFILM4.5ATL4.5JFK4.5ATL4.5</tir310:FareCalc>
+                                        <tir310:Taxes>
+                                            <tir310:Tax Amount="37.80" TaxCode="YQ" Exempt="false"/>
+                                            <tir310:Tax Amount="400.00" TaxCode="YR" Exempt="false"/>
+                                            <tir310:Tax Amount="5.89" TaxCode="YC" Exempt="false"/>
+                                            <tir310:Tax Amount="7.00" TaxCode="XY" Exempt="false"/>
+                                            <tir310:Tax Amount="3.96" TaxCode="XA" Exempt="false"/>
+                                            <tir310:Tax Amount="11.20" TaxCode="AY" Exempt="false"/>
+                                            <tir310:Tax Amount="7.80" TaxCode="CJ" Exempt="false"/>
+                                            <tir310:Tax Amount="7.70" TaxCode="RN" Exempt="false"/>
+                                            <tir310:Tax Amount="36.20" TaxCode="CH" Exempt="false"/>
+                                            <tir310:Tax Amount="18.00" TaxCode="XF" Exempt="false"/>
+                                        </tir310:Taxes>
+                                    </tir310:SellingFareDetails>
+                                </tir310:NetTicketingInfo>
+                            </tir310:PricedItinerary>
+                            <tir310:ResponseHeader>
+                                <tir310:Text>FARE - PRICE RETAINED</tir310:Text>
+                                <tir310:Text>FARE NOT GUARANTEED UNTIL TICKETED</tir310:Text>
+                            </tir310:ResponseHeader>
+                            <tir310:PriceQuotePlus DomesticIntlInd="I" PricingStatus="S" VerifyFareCalc="false"
+                                                   ItineraryChanged="false" ManualFare="false" NegotiatedFare="true"
+                                                   SystemIndicator="S" NUCSuppresion="false" SubjToGovtApproval="false"
+                                                   IT_BT_Fare="BT" DisplayOnly="false" TourCode="GENELEC"
+                                                   DiscountAmount="0">
+                                <tir310:PassengerInfo PassengerType="ADT">
+                                    <tir310:PassengerData NameNumber="01.01">XXXXXX/XXXXXX MR</tir310:PassengerData>
+                                </tir310:PassengerInfo>
+                                <tir310:TicketingInstructionsInfo/>
+                            </tir310:PriceQuotePlus>
+                        </tir310:PriceQuote>
+                        <tir310:PriceQuote RPH="2">
+                            <tir310:MiscInformation>
+                                <tir310:BaggageFees>
+                                    <tir310:Text>BAG ALLOWANCE -ILMZRH-01P/DL/EACH PIECE UP TO 50 POUNDS/23
+                                    </tir310:Text>
+                                    <tir310:Text>KILOGRAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS
+                                    </tir310:Text>
+                                    <tir310:Text>2NDCHECKED BAG FEE-ILMZRH-USD100.00/DL/UP TO 50 POUNDS/23 KILOG
+                                    </tir310:Text>
+                                    <tir310:Text>RAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS</tir310:Text>
+                                    <tir310:Text>BAG ALLOWANCE -ZRHILM-01P/DL/EACH PIECE UP TO 50 POUNDS/23
+                                    </tir310:Text>
+                                    <tir310:Text>KILOGRAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS
+                                    </tir310:Text>
+                                    <tir310:Text>2NDCHECKED BAG FEE-ZRHILM-USD100.00/DL/UP TO 50 POUNDS/23 KILOG
+                                    </tir310:Text>
+                                    <tir310:Text>RAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS</tir310:Text>
+                                    <tir310:Text>CARRY ON ALLOWANCE</tir310:Text>
+                                    <tir310:Text>ILMATL ATLAMS ZRHJFK JFKATL ATLILM-01P/DL</tir310:Text>
+                                    <tir310:Text>01/CARRY ON HAND BAGGAGE</tir310:Text>
+                                    <tir310:Text>01/UP TO 45 LINEAR INCHES/115 LINEAR CENTIMETERS</tir310:Text>
+                                    <tir310:Text>AMSZRH-01P/KL</tir310:Text>
+                                    <tir310:Text>01/UP TO 26 POUNDS/12 KILOGRAMS AND UP TO 45 LINEAR INCHES/115
+                                    </tir310:Text>
+                                    <tir310:Text>LINEAR CENTIMETERS</tir310:Text>
+                                    <tir310:Text>CARRY ON CHARGES</tir310:Text>
+                                    <tir310:Text>ILMATL ATLAMS ZRHJFK JFKATL ATLILM-DL-CARRY ON FEES UNKNOWN-CON
+                                    </tir310:Text>
+                                    <tir310:Text>TACT CARRIER</tir310:Text>
+                                    <tir310:Text>AMSZRH-KL-CARRY ON FEES UNKNOWN-CONTACT CARRIER</tir310:Text>
+                                    <tir310:Text>ADDITIONAL ALLOWANCES AND/OR DISCOUNTS MAY APPLY DEPENDING ON
+                                    </tir310:Text>
+                                    <tir310:Text>FLYER-SPECIFIC FACTORS /E.G. FREQUENT FLYER STATUS/MILITARY/
+                                    </tir310:Text>
+                                    <tir310:Text>CREDIT CARD FORM OF PAYMENT/EARLY PURCHASE OVER INTERNET,ETC./
+                                    </tir310:Text>
+                                    <tir310:Text>EMBARGOES-APPLY TO EACH PASSENGER</tir310:Text>
+                                    <tir310:Text>ILMATL JFKATL ATLILM-DL</tir310:Text>
+                                    <tir310:Text>PET IN HOLD NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>ATLAMS ZRHJFK-DL</tir310:Text>
+                                    <tir310:Text>PET IN HOLD NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>OVER 70 POUNDS/32 KILOGRAMS NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</tir310:Text>
+                                </tir310:BaggageFees>
+                                <tir310:GlobalNetRemit>
+                                    <tir310:SellingFare>
+                                        <tir310:BaseFare/>
+                                        <tir310:EquivFare/>
+                                        <tir310:Taxes/>
+                                        <tir310:TotalFare Amount="0.00"/>
+                                    </tir310:SellingFare>
+                                </tir310:GlobalNetRemit>
+                                <tir310:SignatureLine CommissionAmount="0" CommissionID="P" ExpirationDateTime="00:00"
+                                                      Source="SYS" Status="ACTIVE">
+                                    <tir310:Text>PL2F PL2F*AH1 1032/30MAY20</tir310:Text>
+                                </tir310:SignatureLine>
+                            </tir310:MiscInformation>
+                            <tir310:PricedItinerary DisplayOnly="false"
+                                                    InputMessage="WPN1.1¥IGEC01¥KP0¥PADT¥UN*GENELEC¥ADL¥RQ" RPH="2"
+                                                    StatusCode="A" TaxExempt="false" ValidatingCarrier="DL"
+                                                    StoredDateTime="2020-05-30T08:27">
+                                <tir310:AirItineraryPricingInfo>
+                                    <tir310:ItinTotalFare>
+                                        <tir310:BaseFare Amount="1736.00" CurrencyCode="USD"/>
+                                        <tir310:Taxes>
+                                            <tir310:Tax Amount="535.55" TaxCode="XT"/>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">37.80YQ</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">400.00YR</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">5.89YC</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">7.00XY</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">3.96XA</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">11.20AY</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">7.80CJ</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">7.70RN</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">36.20CH</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">18.00XF</tir310:TaxBreakdownCode>
+                                        </tir310:Taxes>
+                                        <tir310:TotalFare Amount="2271.55" CurrencyCode="USD"/>
+                                        <tir310:Totals>
+                                            <tir310:BaseFare Amount="1736.00"/>
+                                            <tir310:Taxes>
+                                                <tir310:Tax Amount="535.55"/>
+                                            </tir310:Taxes>
+                                            <tir310:TotalFare Amount="2271.55"/>
+                                        </tir310:Totals>
+                                    </tir310:ItinTotalFare>
+                                    <tir310:PassengerTypeQuantity Code="ADT" Quantity="01"/>
+                                    <tir310:PrivateFareInformation PrivateFareType="*">
+                                        <tir310:Text>*</tir310:Text>
+                                    </tir310:PrivateFareInformation>
+                                    <tir310:PTC_FareBreakdown>
+                                        <tir310:Endorsements>
+                                            <tir310:Endorsement type="PRICING_PARAMETER">
+                                                <tir310:Text>WPN1.1$IGEC01$KP0$PADT$UN*GENELEC$ADL$RQ</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="WARNING">
+                                                <tir310:Text>PRIVATE FARE APPLIED - CHECK RULES FOR CORRECT TICKETING
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="WARNING">
+                                                <tir310:Text>VALIDATING CARRIER SPECIFIED - DL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="WARNING">
+                                                <tir310:Text>CORP ID/ACCNT CODE USED: GEC01</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="SYSTEM_ENDORSEMENT">
+                                                <tir310:Text>CORPORATE/NON ENDO/RFNDISU AGT</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="PRIVATE_FARE">
+                                                <tir310:Text>CORPID *</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>BAG ALLOWANCE -ILMZRH-01P/DL/EACH PIECE UP TO 50
+                                                    POUNDS/23
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>KILOGRAMS AND UP TO 62 LINEAR INCHES/158 LINEAR
+                                                    CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>2NDCHECKED BAG FEE-ILMZRH-USD100.00/DL/UP TO 50 POUNDS/23
+                                                    KILOG
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>RAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>BAG ALLOWANCE -ZRHILM-01P/DL/EACH PIECE UP TO 50
+                                                    POUNDS/23
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>KILOGRAMS AND UP TO 62 LINEAR INCHES/158 LINEAR
+                                                    CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>2NDCHECKED BAG FEE-ZRHILM-USD100.00/DL/UP TO 50 POUNDS/23
+                                                    KILOG
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>RAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>CARRY ON ALLOWANCE</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ILMATL ATLAMS ZRHJFK JFKATL ATLILM-01P/DL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>01/CARRY ON HAND BAGGAGE</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>01/UP TO 45 LINEAR INCHES/115 LINEAR CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>AMSZRH-01P/KL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>01/UP TO 26 POUNDS/12 KILOGRAMS AND UP TO 45 LINEAR
+                                                    INCHES/115
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>LINEAR CENTIMETERS</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>CARRY ON CHARGES</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ILMATL ATLAMS ZRHJFK JFKATL ATLILM-DL-CARRY ON FEES
+                                                    UNKNOWN-CON
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>TACT CARRIER</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>AMSZRH-KL-CARRY ON FEES UNKNOWN-CONTACT CARRIER
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ADDITIONAL ALLOWANCES AND/OR DISCOUNTS MAY APPLY DEPENDING
+                                                    ON
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>FLYER-SPECIFIC FACTORS /E.G. FREQUENT FLYER
+                                                    STATUS/MILITARY/
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>CREDIT CARD FORM OF PAYMENT/EARLY PURCHASE OVER
+                                                    INTERNET,ETC./
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>EMBARGOES-APPLY TO EACH PASSENGER</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ILMATL JFKATL ATLILM-DL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>PET IN HOLD NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ATLAMS ZRHJFK-DL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>PET IN HOLD NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>OVER 70 POUNDS/32 KILOGRAMS NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                        </tir310:Endorsements>
+                                        <tir310:FareBasis
+                                                Code="BFM0US/XZ43/BFM0US/XZ43/BFM0US/XZ43/UFM0US/XZ43/UFM0US/XZ43/UFM0US/XZ43"/>
+                                        <tir310:FareCalculation>
+                                            <tir310:Text>ILM DL X/ATL DL X/AMS DL ZRH Q ILMZRH6.50 1177.28DL X/NYC DL X/ATL DL ILM551.85NUC1735.63END ROE1.00 XFILM4.5ATL4.5JFK4.5ATL4.5</tir310:Text>
+                                        </tir310:FareCalculation>
+                                        <tir310:FareSource>ATPC</tir310:FareSource>
+                                        <tir310:FlightSegment ConnectionInd="O" DepartureDateTime="06-16T12:40"
+                                                              FlightNumber="4818" ResBookDesigCode="B" SegmentNumber="1"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="BFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="4818"/>
+                                            <tir310:OriginLocation LocationCode="ILM"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="X" DepartureDateTime="06-16T17:35"
+                                                              FlightNumber="72" ResBookDesigCode="B" SegmentNumber="2"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="BFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="72"/>
+                                            <tir310:OriginLocation LocationCode="ATL"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="X" DepartureDateTime="06-17T09:40"
+                                                              FlightNumber="9620" ResBookDesigCode="B" SegmentNumber="3"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="BFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="9620"/>
+                                            <tir310:OriginLocation LocationCode="AMS"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="O" DepartureDateTime="08-04T13:40"
+                                                              FlightNumber="53" ResBookDesigCode="U" SegmentNumber="4"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="UFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="53"/>
+                                            <tir310:OriginLocation LocationCode="ZRH"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="X" DepartureDateTime="08-04T18:50"
+                                                              FlightNumber="2515" ResBookDesigCode="U" SegmentNumber="5"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="UFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="2515"/>
+                                            <tir310:OriginLocation LocationCode="JFK"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="X" DepartureDateTime="08-04T22:26"
+                                                              FlightNumber="6040" ResBookDesigCode="U" SegmentNumber="6"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="UFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="6040"/>
+                                            <tir310:OriginLocation LocationCode="ATL"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment>
+                                            <tir310:OriginLocation LocationCode="ILM"/>
+                                        </tir310:FlightSegment>
+                                        <tir310:FareComponent FareBasisCode="BFM0US/XZ43" FareDirectionality="FROM"
+                                                              Amount="117728" TicketDesignator="XZ43"
+                                                              GoverningCarrier="DL" FareComponentNumber="1"
+                                                              CorporateId="GEC01">
+                                            <tir310:Location Origin="ILM" Destination="ZRH"/>
+                                            <tir310:Dates DepartureDateTime="06-16T12:40"
+                                                          ArrivalDateTime="06-17T11:05"/>
+                                            <tir310:FlightSegmentNumbers>
+                                                <tir310:FlightSegmentNumber>1</tir310:FlightSegmentNumber>
+                                                <tir310:FlightSegmentNumber>2</tir310:FlightSegmentNumber>
+                                                <tir310:FlightSegmentNumber>3</tir310:FlightSegmentNumber>
+                                            </tir310:FlightSegmentNumbers>
+                                        </tir310:FareComponent>
+                                        <tir310:FareComponent FareBasisCode="UFM0US/XZ43" FareDirectionality="TO"
+                                                              Amount="55185" TicketDesignator="XZ43"
+                                                              GoverningCarrier="DL" FareComponentNumber="2"
+                                                              CorporateId="GEC01">
+                                            <tir310:Location Origin="ZRH" Destination="ILM"/>
+                                            <tir310:Dates DepartureDateTime="08-04T13:40"
+                                                          ArrivalDateTime="08-04T23:55"/>
+                                            <tir310:FlightSegmentNumbers>
+                                                <tir310:FlightSegmentNumber>4</tir310:FlightSegmentNumber>
+                                                <tir310:FlightSegmentNumber>5</tir310:FlightSegmentNumber>
+                                                <tir310:FlightSegmentNumber>6</tir310:FlightSegmentNumber>
+                                            </tir310:FlightSegmentNumbers>
+                                        </tir310:FareComponent>
+                                        <tir310:TourCode>
+                                            <tir310:Text>GENELEC</tir310:Text>
+                                        </tir310:TourCode>
+                                    </tir310:PTC_FareBreakdown>
+                                </tir310:AirItineraryPricingInfo>
+                                <tir310:NetTicketingInfo CorporateId="GEC01">
+                                    <tir310:SellingFareDetails>
+                                        <tir310:BaseFare Amount="1736.00" CurrencyCode="USD"/>
+                                        <tir310:TotalTax Amount="535.55" CurrencyCode="USD"/>
+                                        <tir310:TotalFare Amount="2271.55" CurrencyCode="USD"/>
+                                        <tir310:Commission Amount="0.00" CurrencyCode="USD">
+                                            <tir310:Percent Type="GROSS">0</tir310:Percent>
+                                        </tir310:Commission>
+                                        <tir310:FareCalc>ILM DL X/ATL DL X/AMS DL ZRH Q ILMZRH6.50 1177.28DL X/NYC DL X/ATL DL ILM551.85NUC1735.63END ROE1.00 XFILM4.5ATL4.5JFK4.5ATL4.5</tir310:FareCalc>
+                                        <tir310:Taxes>
+                                            <tir310:Tax Amount="37.80" TaxCode="YQ" Exempt="false"/>
+                                            <tir310:Tax Amount="400.00" TaxCode="YR" Exempt="false"/>
+                                            <tir310:Tax Amount="5.89" TaxCode="YC" Exempt="false"/>
+                                            <tir310:Tax Amount="7.00" TaxCode="XY" Exempt="false"/>
+                                            <tir310:Tax Amount="3.96" TaxCode="XA" Exempt="false"/>
+                                            <tir310:Tax Amount="11.20" TaxCode="AY" Exempt="false"/>
+                                            <tir310:Tax Amount="7.80" TaxCode="CJ" Exempt="false"/>
+                                            <tir310:Tax Amount="7.70" TaxCode="RN" Exempt="false"/>
+                                            <tir310:Tax Amount="36.20" TaxCode="CH" Exempt="false"/>
+                                            <tir310:Tax Amount="18.00" TaxCode="XF" Exempt="false"/>
+                                        </tir310:Taxes>
+                                    </tir310:SellingFareDetails>
+                                </tir310:NetTicketingInfo>
+                            </tir310:PricedItinerary>
+                            <tir310:ResponseHeader>
+                                <tir310:Text>FARE - PRICE RETAINED</tir310:Text>
+                                <tir310:Text>FARE NOT GUARANTEED UNTIL TICKETED</tir310:Text>
+                            </tir310:ResponseHeader>
+                            <tir310:PriceQuotePlus DomesticIntlInd="I" PricingStatus="S" VerifyFareCalc="false"
+                                                   ItineraryChanged="false" ManualFare="false" NegotiatedFare="true"
+                                                   SystemIndicator="S" NUCSuppresion="false" SubjToGovtApproval="false"
+                                                   IT_BT_Fare="BT" DisplayOnly="false" TourCode="GENELEC"
+                                                   DiscountAmount="0">
+                                <tir310:PassengerInfo PassengerType="ADT">
+                                    <tir310:PassengerData NameNumber="01.01">XXXXX/XXXX MR</tir310:PassengerData>
+                                </tir310:PassengerInfo>
+                                <tir310:TicketingInstructionsInfo/>
+                            </tir310:PriceQuotePlus>
+                        </tir310:PriceQuote>
+                        <tir310:PriceQuote RPH="3">
+                            <tir310:MiscInformation>
+                                <tir310:BaggageFees>
+                                    <tir310:Text>BAG ALLOWANCE -ILMZRH-01P/DL/EACH PIECE UP TO 50 POUNDS/23
+                                    </tir310:Text>
+                                    <tir310:Text>KILOGRAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS
+                                    </tir310:Text>
+                                    <tir310:Text>2NDCHECKED BAG FEE-ILMZRH-USD100.00/DL/UP TO 50 POUNDS/23 KILOG
+                                    </tir310:Text>
+                                    <tir310:Text>RAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS</tir310:Text>
+                                    <tir310:Text>BAG ALLOWANCE -ZRHILM-01P/DL/EACH PIECE UP TO 50 POUNDS/23
+                                    </tir310:Text>
+                                    <tir310:Text>KILOGRAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS
+                                    </tir310:Text>
+                                    <tir310:Text>2NDCHECKED BAG FEE-ZRHILM-USD100.00/DL/UP TO 50 POUNDS/23 KILOG
+                                    </tir310:Text>
+                                    <tir310:Text>RAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS</tir310:Text>
+                                    <tir310:Text>CARRY ON ALLOWANCE</tir310:Text>
+                                    <tir310:Text>ILMATL ATLAMS ZRHJFK JFKATL ATLILM-01P/DL</tir310:Text>
+                                    <tir310:Text>01/CARRY ON HAND BAGGAGE</tir310:Text>
+                                    <tir310:Text>01/UP TO 45 LINEAR INCHES/115 LINEAR CENTIMETERS</tir310:Text>
+                                    <tir310:Text>AMSZRH-01P/KL</tir310:Text>
+                                    <tir310:Text>01/UP TO 26 POUNDS/12 KILOGRAMS AND UP TO 45 LINEAR INCHES/115
+                                    </tir310:Text>
+                                    <tir310:Text>LINEAR CENTIMETERS</tir310:Text>
+                                    <tir310:Text>CARRY ON CHARGES</tir310:Text>
+                                    <tir310:Text>ILMATL ATLAMS ZRHJFK JFKATL ATLILM-DL-CARRY ON FEES UNKNOWN-CON
+                                    </tir310:Text>
+                                    <tir310:Text>TACT CARRIER</tir310:Text>
+                                    <tir310:Text>AMSZRH-KL-CARRY ON FEES UNKNOWN-CONTACT CARRIER</tir310:Text>
+                                    <tir310:Text>ADDITIONAL ALLOWANCES AND/OR DISCOUNTS MAY APPLY DEPENDING ON
+                                    </tir310:Text>
+                                    <tir310:Text>FLYER-SPECIFIC FACTORS /E.G. FREQUENT FLYER STATUS/MILITARY/
+                                    </tir310:Text>
+                                    <tir310:Text>CREDIT CARD FORM OF PAYMENT/EARLY PURCHASE OVER INTERNET,ETC./
+                                    </tir310:Text>
+                                    <tir310:Text>EMBARGOES-APPLY TO EACH PASSENGER</tir310:Text>
+                                    <tir310:Text>ILMATL JFKATL ATLILM-DL</tir310:Text>
+                                    <tir310:Text>PET IN HOLD NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>ATLAMS ZRHJFK-DL</tir310:Text>
+                                    <tir310:Text>PET IN HOLD NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>OVER 70 POUNDS/32 KILOGRAMS NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED</tir310:Text>
+                                    <tir310:Text>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</tir310:Text>
+                                </tir310:BaggageFees>
+                                <tir310:GlobalNetRemit>
+                                    <tir310:SellingFare>
+                                        <tir310:BaseFare/>
+                                        <tir310:EquivFare/>
+                                        <tir310:Taxes/>
+                                        <tir310:TotalFare Amount="0.00"/>
+                                    </tir310:SellingFare>
+                                </tir310:GlobalNetRemit>
+                                <tir310:SignatureLine CommissionAmount="0" CommissionID="P" ExpirationDateTime="00:00"
+                                                      Source="SYS" Status="ACTIVE">
+                                    <tir310:Text>PL2F PL2F*AH1 1530/02JUN20</tir310:Text>
+                                </tir310:SignatureLine>
+                            </tir310:MiscInformation>
+                            <tir310:PricedItinerary DisplayOnly="false"
+                                                    InputMessage="WPN1.1¥IGEC01¥KP0¥PADT¥UN*GENELEC¥ADL¥RQ" RPH="3"
+                                                    StatusCode="A" TaxExempt="false" ValidatingCarrier="DL"
+                                                    StoredDateTime="2020-05-30T08:27">
+                                <tir310:AirItineraryPricingInfo>
+                                    <tir310:ItinTotalFare>
+                                        <tir310:BaseFare Amount="1736.00" CurrencyCode="USD"/>
+                                        <tir310:Taxes>
+                                            <tir310:Tax Amount="535.75" TaxCode="XT"/>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">37.80YQ</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">400.00YR</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">5.89YC</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">7.00XY</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">3.96XA</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">11.20AY</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">7.80CJ</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">7.70RN</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">36.40CH</tir310:TaxBreakdownCode>
+                                            <tir310:TaxBreakdownCode TaxPaid="false">18.00XF</tir310:TaxBreakdownCode>
+                                        </tir310:Taxes>
+                                        <tir310:TotalFare Amount="2271.75" CurrencyCode="USD"/>
+                                        <tir310:Totals>
+                                            <tir310:BaseFare Amount="1736.00"/>
+                                            <tir310:Taxes>
+                                                <tir310:Tax Amount="535.75"/>
+                                            </tir310:Taxes>
+                                            <tir310:TotalFare Amount="2271.75"/>
+                                        </tir310:Totals>
+                                    </tir310:ItinTotalFare>
+                                    <tir310:PassengerTypeQuantity Code="ADT" Quantity="01"/>
+                                    <tir310:PrivateFareInformation PrivateFareType="*">
+                                        <tir310:Text>*</tir310:Text>
+                                    </tir310:PrivateFareInformation>
+                                    <tir310:PTC_FareBreakdown>
+                                        <tir310:Endorsements>
+                                            <tir310:Endorsement type="PRICING_PARAMETER">
+                                                <tir310:Text>WPN1.1$IGEC01$KP0$PADT$UN*GENELEC$ADL$RQ</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="WARNING">
+                                                <tir310:Text>PRIVATE FARE APPLIED - CHECK RULES FOR CORRECT TICKETING
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="WARNING">
+                                                <tir310:Text>VALIDATING CARRIER SPECIFIED - DL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="WARNING">
+                                                <tir310:Text>CORP ID/ACCNT CODE USED: GEC01</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="SYSTEM_ENDORSEMENT">
+                                                <tir310:Text>CORPORATE/NON ENDO/RFNDISU AGT</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="PRIVATE_FARE">
+                                                <tir310:Text>CORPID *</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>BAG ALLOWANCE -ILMZRH-01P/DL/EACH PIECE UP TO 50
+                                                    POUNDS/23
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>KILOGRAMS AND UP TO 62 LINEAR INCHES/158 LINEAR
+                                                    CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>2NDCHECKED BAG FEE-ILMZRH-USD100.00/DL/UP TO 50 POUNDS/23
+                                                    KILOG
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>RAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>BAG ALLOWANCE -ZRHILM-01P/DL/EACH PIECE UP TO 50
+                                                    POUNDS/23
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>KILOGRAMS AND UP TO 62 LINEAR INCHES/158 LINEAR
+                                                    CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>2NDCHECKED BAG FEE-ZRHILM-USD100.00/DL/UP TO 50 POUNDS/23
+                                                    KILOG
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>RAMS AND UP TO 62 LINEAR INCHES/158 LINEAR CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>CARRY ON ALLOWANCE</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ILMATL ATLAMS ZRHJFK JFKATL ATLILM-01P/DL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>01/CARRY ON HAND BAGGAGE</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>01/UP TO 45 LINEAR INCHES/115 LINEAR CENTIMETERS
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>AMSZRH-01P/KL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>01/UP TO 26 POUNDS/12 KILOGRAMS AND UP TO 45 LINEAR
+                                                    INCHES/115
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>LINEAR CENTIMETERS</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>CARRY ON CHARGES</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ILMATL ATLAMS ZRHJFK JFKATL ATLILM-DL-CARRY ON FEES
+                                                    UNKNOWN-CON
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>TACT CARRIER</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>AMSZRH-KL-CARRY ON FEES UNKNOWN-CONTACT CARRIER
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ADDITIONAL ALLOWANCES AND/OR DISCOUNTS MAY APPLY DEPENDING
+                                                    ON
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>FLYER-SPECIFIC FACTORS /E.G. FREQUENT FLYER
+                                                    STATUS/MILITARY/
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>CREDIT CARD FORM OF PAYMENT/EARLY PURCHASE OVER
+                                                    INTERNET,ETC./
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>EMBARGOES-APPLY TO EACH PASSENGER</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ILMATL JFKATL ATLILM-DL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>PET IN HOLD NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>ATLAMS ZRHJFK-DL</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>PET IN HOLD NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>OVER 70 POUNDS/32 KILOGRAMS NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>SPORTING EQUIPMENT/POLE VAULT EQUIPMENT NOT PERMITTED
+                                                </tir310:Text>
+                                            </tir310:Endorsement>
+                                            <tir310:Endorsement type="DOT_BAGGAGE">
+                                                <tir310:Text>SPORTING EQUIPMENT/CANOE/KAYAK NOT PERMITTED</tir310:Text>
+                                            </tir310:Endorsement>
+                                        </tir310:Endorsements>
+                                        <tir310:FareBasis
+                                                Code="BFM0US/XZ43/BFM0US/XZ43/BFM0US/XZ43/UFM0US/XZ43/UFM0US/XZ43/UFM0US/XZ43"/>
+                                        <tir310:FareCalculation>
+                                            <tir310:Text>ILM DL X/ATL DL X/AMS DL ZRH Q ILMZRH6.50 1177.28DL X/NYC DL X/ATL DL ILM551.85NUC1735.63END ROE1.00 XFILM4.5ATL4.5JFK4.5ATL4.5</tir310:Text>
+                                        </tir310:FareCalculation>
+                                        <tir310:FareSource>ATPC</tir310:FareSource>
+                                        <tir310:FlightSegment ConnectionInd="O" DepartureDateTime="06-16T12:40"
+                                                              FlightNumber="4818" ResBookDesigCode="B" SegmentNumber="1"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="BFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="4818"/>
+                                            <tir310:OriginLocation LocationCode="ILM"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="X" DepartureDateTime="06-16T17:35"
+                                                              FlightNumber="72" ResBookDesigCode="B" SegmentNumber="2"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="BFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="72"/>
+                                            <tir310:OriginLocation LocationCode="ATL"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="X" DepartureDateTime="06-17T09:40"
+                                                              FlightNumber="9620" ResBookDesigCode="B" SegmentNumber="3"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="BFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="9620"/>
+                                            <tir310:OriginLocation LocationCode="AMS"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="O" DepartureDateTime="08-04T13:40"
+                                                              FlightNumber="53" ResBookDesigCode="U" SegmentNumber="4"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="UFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="53"/>
+                                            <tir310:OriginLocation LocationCode="ZRH"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="X" DepartureDateTime="08-04T18:50"
+                                                              FlightNumber="2515" ResBookDesigCode="U" SegmentNumber="5"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="UFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="2515"/>
+                                            <tir310:OriginLocation LocationCode="JFK"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment ConnectionInd="X" DepartureDateTime="08-04T22:26"
+                                                              FlightNumber="6040" ResBookDesigCode="U" SegmentNumber="6"
+                                                              Status="OK">
+                                            <tir310:BaggageAllowance Number="01P"/>
+                                            <tir310:FareBasis Code="UFM0US/XZ43"/>
+                                            <tir310:MarketingAirline Code="DL" FlightNumber="6040"/>
+                                            <tir310:OriginLocation LocationCode="ATL"/>
+                                            <tir310:ValidityDates>
+                                                <tir310:NotValidAfter>2021-06-16</tir310:NotValidAfter>
+                                            </tir310:ValidityDates>
+                                        </tir310:FlightSegment>
+                                        <tir310:FlightSegment>
+                                            <tir310:OriginLocation LocationCode="ILM"/>
+                                        </tir310:FlightSegment>
+                                        <tir310:FareComponent FareBasisCode="BFM0US/XZ43" FareDirectionality="FROM"
+                                                              Amount="117728" TicketDesignator="XZ43"
+                                                              GoverningCarrier="DL" FareComponentNumber="1"
+                                                              CorporateId="GEC01">
+                                            <tir310:Location Origin="ILM" Destination="ZRH"/>
+                                            <tir310:Dates DepartureDateTime="06-16T12:40"
+                                                          ArrivalDateTime="06-17T11:05"/>
+                                            <tir310:FlightSegmentNumbers>
+                                                <tir310:FlightSegmentNumber>1</tir310:FlightSegmentNumber>
+                                                <tir310:FlightSegmentNumber>2</tir310:FlightSegmentNumber>
+                                                <tir310:FlightSegmentNumber>3</tir310:FlightSegmentNumber>
+                                            </tir310:FlightSegmentNumbers>
+                                        </tir310:FareComponent>
+                                        <tir310:FareComponent FareBasisCode="UFM0US/XZ43" FareDirectionality="TO"
+                                                              Amount="55185" TicketDesignator="XZ43"
+                                                              GoverningCarrier="DL" FareComponentNumber="2"
+                                                              CorporateId="GEC01">
+                                            <tir310:Location Origin="ZRH" Destination="ILM"/>
+                                            <tir310:Dates DepartureDateTime="08-04T13:40"
+                                                          ArrivalDateTime="08-04T23:55"/>
+                                            <tir310:FlightSegmentNumbers>
+                                                <tir310:FlightSegmentNumber>4</tir310:FlightSegmentNumber>
+                                                <tir310:FlightSegmentNumber>5</tir310:FlightSegmentNumber>
+                                                <tir310:FlightSegmentNumber>6</tir310:FlightSegmentNumber>
+                                            </tir310:FlightSegmentNumbers>
+                                        </tir310:FareComponent>
+                                        <tir310:TourCode>
+                                            <tir310:Text>GENELEC</tir310:Text>
+                                        </tir310:TourCode>
+                                    </tir310:PTC_FareBreakdown>
+                                </tir310:AirItineraryPricingInfo>
+                                <tir310:NetTicketingInfo CorporateId="GEC01">
+                                    <tir310:SellingFareDetails>
+                                        <tir310:BaseFare Amount="1736.00" CurrencyCode="USD"/>
+                                        <tir310:TotalTax Amount="535.75" CurrencyCode="USD"/>
+                                        <tir310:TotalFare Amount="2271.75" CurrencyCode="USD"/>
+                                        <tir310:Commission Amount="0.00" CurrencyCode="USD">
+                                            <tir310:Percent Type="GROSS">0</tir310:Percent>
+                                        </tir310:Commission>
+                                        <tir310:FareCalc>ILM DL X/ATL DL X/AMS DL ZRH Q ILMZRH6.50 1177.28DL X/NYC DL X/ATL DL ILM551.85NUC1735.63END ROE1.00 XFILM4.5ATL4.5JFK4.5ATL4.5</tir310:FareCalc>
+                                        <tir310:Taxes>
+                                            <tir310:Tax Amount="37.80" TaxCode="YQ" Exempt="false"/>
+                                            <tir310:Tax Amount="400.00" TaxCode="YR" Exempt="false"/>
+                                            <tir310:Tax Amount="5.89" TaxCode="YC" Exempt="false"/>
+                                            <tir310:Tax Amount="7.00" TaxCode="XY" Exempt="false"/>
+                                            <tir310:Tax Amount="3.96" TaxCode="XA" Exempt="false"/>
+                                            <tir310:Tax Amount="11.20" TaxCode="AY" Exempt="false"/>
+                                            <tir310:Tax Amount="7.80" TaxCode="CJ" Exempt="false"/>
+                                            <tir310:Tax Amount="7.70" TaxCode="RN" Exempt="false"/>
+                                            <tir310:Tax Amount="36.40" TaxCode="CH" Exempt="false"/>
+                                            <tir310:Tax Amount="18.00" TaxCode="XF" Exempt="false"/>
+                                        </tir310:Taxes>
+                                    </tir310:SellingFareDetails>
+                                </tir310:NetTicketingInfo>
+                            </tir310:PricedItinerary>
+                            <tir310:ResponseHeader>
+                                <tir310:Text>FARE - PRICE RETAINED</tir310:Text>
+                                <tir310:Text>FARE USED TO CALCULATE DISCOUNT</tir310:Text>
+                                <tir310:Text>FARE NOT GUARANTEED UNTIL TICKETED</tir310:Text>
+                            </tir310:ResponseHeader>
+                            <tir310:PriceQuotePlus DomesticIntlInd="I" PricingStatus="S" VerifyFareCalc="false"
+                                                   ItineraryChanged="false" ManualFare="false" NegotiatedFare="true"
+                                                   SystemIndicator="S" NUCSuppresion="false" SubjToGovtApproval="false"
+                                                   IT_BT_Fare="BT" DisplayOnly="false" TourCode="GENELEC"
+                                                   DiscountAmount="0">
+                                <tir310:PassengerInfo PassengerType="ADT">
+                                    <tir310:PassengerData NameNumber="01.01">XXXXXX/XXXXXX MR</tir310:PassengerData>
+                                </tir310:PassengerInfo>
+                                <tir310:TicketingInstructionsInfo/>
+                            </tir310:PriceQuotePlus>
+                        </tir310:PriceQuote>
+                        <tir310:PriceQuoteTotals>
+                            <tir310:BaseFare Amount="5208.00"/>
+                            <tir310:Taxes>
+                                <tir310:Tax Amount="1606.85"/>
+                            </tir310:Taxes>
+                            <tir310:TotalFare Amount="6814.85"/>
+                        </tir310:PriceQuoteTotals>
+                    </tir310:ItineraryPricing>
+                </tir310:ItineraryInfo>
+                <tir310:ItineraryRef AirExtras="false" ID="XXXXX" InhibitCode="U" PartitionID="AA" PrimeHostID="1S">
+                    <tir310:Header>PRICE QUOTE RECORD EXISTS - SYSTEM</tir310:Header>
+                    <tir310:Source AAA_PseudoCityCode="34D1" CreateDateTime="2020-05-30T10:19" CreationAgent="A45"
+                                   HomePseudoCityCode="U5SC" PseudoCityCode="34D1"
+                                   ReceivedFrom=""
+                                   LastUpdateDateTime="2020-06-03T07:26" SequenceNumber="44"/>
+                </tir310:ItineraryRef>
+            </tir310:TravelItinerary>
+        </tir310:TravelItineraryReadRS>
+    </soap-env:Body>
+</soap-env:Envelope>

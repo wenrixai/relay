@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"><soap-env:Header><eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0" soap-env:mustUnderstand="1"><eb:From><eb:PartyId eb:type="URI">123123</eb:PartyId></eb:From><eb:To><eb:PartyId eb:type="URI">999999</eb:PartyId></eb:To><eb:CPAId>YR8J</eb:CPAId><eb:ConversationId>V1@711ab4ed-bf48-4784-99fa-e603ebfd33db@a285c8be-a3ab-4f67-bf27-9b6078e412b1@</eb:ConversationId><eb:Service>DailySalesReportService</eb:Service><eb:Action>DailySalesReportLLSRS</eb:Action><eb:MessageData><eb:MessageId>898874448734110921</eb:MessageId><eb:Timestamp>2021-10-12T12:27:53</eb:Timestamp><eb:RefToMessageId>24343736892</eb:RefToMessageId></eb:MessageData></eb:MessageHeader><wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext"><wsse:BinarySecurityToken valueType="String" EncodingType="wsse:Base64Binary">Shared/IDL:IceSess/SessMgr:1.0.IDL/Common/!ICESMS/SANITIZED!0!0</wsse:BinarySecurityToken></wsse:Security></soap-env:Header><soap-env:Body>
+ <DailySalesReportRS xmlns="http://webservices.sabre.com/sabreXML/2011/10" xmlns:stl="http://services.sabre.com/STL/v01" Version="2.0.0">
+ <stl:ApplicationResults status="Complete">
+  <stl:Success timeStamp="2021-10-12T07:27:53-05:00"/>
+ </stl:ApplicationResults>
+ <SalesReport>
+  <CreationDetails>
+   <Source AgencyName="EXAMPLE TRAVEL AGENCY" CreateDateTime="2021-10-02" PseudoCityCode="34D1"/>
+  </CreationDetails>
+  <IssuanceData AgentSine="AB2" Commission=".00" DocumentType="T" DomesticInternational="D" IndicatorOne="A" IndicatorTwo="ET" IssueTime="2334" ItineraryRef="TESTAA" StockItemCount="1" TicketPrinter="1" TicketStock="AT">
+   <Payment>
+    <Form Amount="351.30" CurrencyCode="USD">EX</Form>
+   </Payment>
+   <PersonName>TESTONE/ALICE</PersonName>
+   <TicketingInfo>
+    <Ticketing Ind="ETR" InvoiceNumber="5140676" UsedCount="1" eTicketNumber="0067669041161"/>
+   </TicketingInfo>
+  </IssuanceData>
+  <IssuanceData AgentSine="AB2" Commission=".00" DocumentType="T" DomesticInternational="D" IndicatorOne="V" IndicatorTwo="ET" IssueTime="2334" ItineraryRef="TESTAA" StockItemCount="1" TicketPrinter="1" TicketStock="AT">
+   <Payment>
+    <Form Amount="442.94" CurrencyCode="USD">AX</Form>
+   </Payment>
+   <PersonName>TESTONE/ALICE</PersonName>
+   <TicketingInfo>
+    <Ticketing Ind="ETR" InvoiceNumber="5140676" UsedCount="1" eTicketNumber="0067669041160"/>
+   </TicketingInfo>
+  </IssuanceData>
+  <IssuanceData AgentSine="AAJ" Commission=".00" DocumentType="T" DomesticInternational="D" IndicatorTwo="ET" IssueTime="2219" ItineraryRef="TESTBB" StockItemCount="1" TicketPrinter="1" TicketStock="AT">
+   <Payment>
+    <Form Amount="375.29" CurrencyCode="USD">AX</Form>
+   </Payment>
+   <PersonName>TESTTWO/BOB MR</PersonName>
+   <TicketingInfo>
+    <Ticketing Ind="ETR" InvoiceNumber="5140674" UsedCount="1" eTicketNumber="0067669041159"/>
+   </TicketingInfo>
+  </IssuanceData>
+  <IssuanceData AgentSine="AQU" Commission=".00" DocumentType="T" DomesticInternational="D" IndicatorTwo="ET" IssueTime="2216" ItineraryRef="TESTCC" StockItemCount="1" TicketPrinter="1" TicketStock="AT">
+   <Payment>
+    <Form Amount="261.05" CurrencyCode="USD">AX</Form>
+   </Payment>
+   <PersonName>TESTTHREE/CAROL MRS</PersonName>
+   <TicketingInfo>
+    <Ticketing Ind="ETR" InvoiceNumber="5140673" UsedCount="1" eTicketNumber="0017669041158"/>
+   </TicketingInfo>
+  </IssuanceData>
+  <IssuanceData AgentSine="AQU" Commission=".00" DocumentType="T" DomesticInternational="D" IndicatorTwo="ET" IssueTime="2146" ItineraryRef="TESTDD" StockItemCount="1" TicketPrinter="1" TicketStock="AT">
+   <Payment>
+    <Form Amount="336.62" CurrencyCode="USD">AX</Form>
+   </Payment>
+   <PersonName>TESTFOUR/DAVID MR</PersonName>
+   <TicketingInfo>
+    <Ticketing Ind="ETR" InvoiceNumber="5140670" UsedCount="1" eTicketNumber="0167669041157"/>
+   </TicketingInfo>
+  </IssuanceData>
+  <IssuanceData AgentSine="AAJ" Commission="0.00" DocumentType="M" DomesticInternational="I" IssueTime="2041" ItineraryRef="TESTEE" StockItemCount="2" TicketPrinter="1" TicketStock="E">
+   <Payment>
+    <Form Amount="176.49" CurrencyCode="USD">CC</Form>
+   </Payment>
+   <PersonName>TESTFIVE/EVE</PersonName>
+   <TicketingInfo>
+    <Ticketing InvoiceNumber="5140664" eTicketNumber="0068990511842"/>
+   </TicketingInfo>
+  </IssuanceData>
+  </SalesReport>
+</DailySalesReportRS></soap-env:Body></soap-env:Envelope>

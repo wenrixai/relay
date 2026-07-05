@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap-env:Header>
+        <eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0"
+                          soap-env:mustUnderstand="1">
+            <eb:From>
+                <eb:PartyId eb:type="URI">123123</eb:PartyId>
+            </eb:From>
+            <eb:To>
+                <eb:PartyId eb:type="URI">999999</eb:PartyId>
+            </eb:To>
+            <eb:CPAId>NI2L</eb:CPAId>
+            <eb:ConversationId>1</eb:ConversationId>
+            <eb:Service>PriceQuoteServicesRQ</eb:Service>
+            <eb:Action>PriceQuoteServicesRS</eb:Action>
+            <eb:MessageData>
+                <eb:MessageId>6511042592034602190</eb:MessageId>
+                <eb:Timestamp>2026-01-20T16:26:43</eb:Timestamp>
+                <eb:RefToMessageId>4356</eb:RefToMessageId>
+            </eb:MessageData>
+        </eb:MessageHeader>
+        <wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+            <wsse:BinarySecurityToken valueType="String" EncodingType="wsse:Base64Binary">
+                SANITIZED-SESSION-TOKEN
+            </wsse:BinarySecurityToken>
+        </wsse:Security>
+    </soap-env:Header>
+    <soap-env:Body>
+        <GetPriceQuoteRS xmlns="http://www.sabre.com/ns/Ticketing/pqs/1.0" version="4.1.0">
+            <Header messageID="fdsfsd"
+                    timeStamp="2026-01-20T10:26:00">
+                <TTL:OrchestrationID xmlns:TTL="http://www.sabre.com/ns/Ticketing/TTL/1.0" seq="0">
+                    fdsfds
+                </TTL:OrchestrationID>
+                <TTL:Results xmlns:TTL="http://www.sabre.com/ns/Ticketing/TTL/1.0">
+                    <TTL:Success>
+                        <TTL:System>TKT-WS</TTL:System>
+                        <TTL:Source>PQS WS</TTL:Source>
+                    </TTL:Success>
+                </TTL:Results>
+            </Header>
+            <PriceQuoteInfo>
+                <Reservation updateToken="ZTofXFdDLC0k">ABCDEF</Reservation>
+                <Summary>
+                    <NameAssociation firstName="DOE JANE MS" lastName="DOE" nameId="1" nameNumber="1.1">
+                        <PriceQuote number="1" pricingType="S" status="A" type="PQ">
+                            <Indicators isExpired="true" itineraryChange="true" ticketed="true"/>
+                            <Passenger passengerTypeCount="1" requestedType="ADT" type="ADT"/>
+                            <ItineraryType>I</ItineraryType>
+                            <ValidatingCarrier>QR</ValidatingCarrier>
+                            <Amounts>
+                                <Total currencyCode="SEK">2420</Total>
+                            </Amounts>
+                            <LocalCreateDateTime>2025-12-26T15:38:00</LocalCreateDateTime>
+                        </PriceQuote>
+                        <PriceQuote latestPQFlag="true" number="2" pricingType="S" reissueType="REFUND" status="A"
+                                    type="PQR">
+                            <Indicators/>
+                            <Passenger passengerTypeCount="1" type="ADT"/>
+                            <ItineraryType>I</ItineraryType>
+                            <ValidatingCarrier>QR</ValidatingCarrier>
+                            <Amounts>
+                                <ReissueDifference currencyCode="SEK">-1045</ReissueDifference>
+                            </Amounts>
+                            <LocalCreateDateTime>2026-01-20T14:24:00</LocalCreateDateTime>
+                        </PriceQuote>
+                    </NameAssociation>
+                    <SummaryByPassengerType>
+                        <FareInfo passengerType="ADT" passengerTypeCount="1">
+                            <BaseFare currencyCode="OMR" decimalPlace="3">25.000</BaseFare>
+                            <EquivalentFare currencyCode="SEK">598</EquivalentFare>
+                            <TotalTax currencyCode="SEK">1822</TotalTax>
+                            <TotalFare currencyCode="SEK">2420</TotalFare>
+                        </FareInfo>
+                        <Total>
+                            <BaseFare currencyCode="OMR" decimalPlace="3">25.000</BaseFare>
+                            <EquivalentFare currencyCode="SEK">598</EquivalentFare>
+                            <TotalTax currencyCode="SEK">1822</TotalTax>
+                            <TotalFare currencyCode="SEK">2420</TotalFare>
+                        </Total>
+                    </SummaryByPassengerType>
+                </Summary>
+                <Details number="1" passengerType="ADT" pricingType="S" status="A" type="PQ">
+                    <AgentInfo duty="*" sine="AWS">
+                        <HomeLocation>IPCC</HomeLocation>
+                        <WorkLocation>IPCC</WorkLocation>
+                    </AgentInfo>
+                    <TransactionInfo>
+                        <CreateDateTime>2025-12-26T08:38:00</CreateDateTime>
+                        <UpdateDateTime>2025-12-26T08:38:00</UpdateDateTime>
+                        <LastDateToPurchase>2025-12-31T23:59:00</LastDateToPurchase>
+                        <LocalCreateDateTime>2025-12-26T15:38:00</LocalCreateDateTime>
+                        <LocalUpdateDateTime>2025-12-26T15:38:00</LocalUpdateDateTime>
+                        <InputEntry>fdsfds</InputEntry>
+                    </TransactionInfo>
+                    <NameAssociationInfo firstName="DOE JANE MS" lastName="DOE" nameId="1" nameNumber="1.1"/>
+                    <SegmentInfo number="1" segID="2" segNumber="1" segmentStatus="OK">
+                        <Flight connectionIndicator="O">
+                            <MarketingFlight number="1131">QR</MarketingFlight>
+                            <ClassOfService>O</ClassOfService>
+                            <Departure>
+                                <DateTime>2026-01-31T23:20:00</DateTime>
+                                <CityCode name="SALALAH">SLL</CityCode>
+                            </Departure>
+                            <Arrival>
+                                <DateTime>2026-02-01T00:35:00</DateTime>
+                                <CityCode name="DOHA HAMAD INTL">DOH</CityCode>
+                            </Arrival>
+                        </Flight>
+                        <FareBasis>OJOMP1RI</FareBasis>
+                        <NotValidBefore>2026-01-31</NotValidBefore>
+                        <NotValidAfter>2026-01-31</NotValidAfter>
+                        <Baggage allowance="25" type="K"/>
+                        <BrandedFare code="ECLASSIC" description="ECONOMY CLASSIC" programCode="AREA02AND0"
+                                     programDescription="QR BRANDING"/>
+                    </SegmentInfo>
+                    <SegmentInfo number="2" segID="3" segNumber="2" segmentStatus="OK">
+                        <Flight connectionIndicator="X">
+                            <MarketingFlight number="123">QR</MarketingFlight>
+                            <ClassOfService>O</ClassOfService>
+                            <Departure>
+                                <DateTime>2026-02-01T02:35:00</DateTime>
+                                <CityCode name="DOHA HAMAD INTL">DOH</CityCode>
+                            </Departure>
+                            <Arrival>
+                                <DateTime>2026-02-01T06:55:00</DateTime>
+                                <CityCode name="MILAN    MALPENSA">MXP</CityCode>
+                            </Arrival>
+                        </Flight>
+                        <FareBasis>OJOMP1RI</FareBasis>
+                        <NotValidBefore>2026-02-01</NotValidBefore>
+                        <NotValidAfter>2026-02-01</NotValidAfter>
+                        <Baggage allowance="25" type="K"/>
+                        <BrandedFare code="ECLASSIC" description="ECONOMY CLASSIC" programCode="AREA02AND0"
+                                     programDescription="QR BRANDING"/>
+                    </SegmentInfo>
+                    <FareInfo source="ATPC">
+                        <FareIndicators/>
+                        <BaseFare currencyCode="OMR" decimalPlace="3">25.000</BaseFare>
+                        <EquivalentFare currencyCode="SEK">598</EquivalentFare>
+                        <TotalTax currencyCode="SEK">1822</TotalTax>
+                        <TotalFare currencyCode="SEK">2420</TotalFare>
+                        <TaxInfo>
+                            <CombinedTax code="YQ">
+                                <Amount currencyCode="SEK">963</Amount>
+                            </CombinedTax>
+                            <CombinedTax code="YR">
+                                <Amount currencyCode="SEK">202</Amount>
+                            </CombinedTax>
+                            <CombinedTax code="XT">
+                                <Amount currencyCode="SEK">657</Amount>
+                            </CombinedTax>
+                            <Tax code="YQ">
+                                <Amount currencyCode="SEK">963</Amount>
+                            </Tax>
+                            <Tax code="YR">
+                                <Amount currencyCode="SEK">202</Amount>
+                            </Tax>
+                            <Tax code="I2">
+                                <Amount currencyCode="SEK">24</Amount>
+                            </Tax>
+                            <Tax code="OM">
+                                <Amount currencyCode="SEK">239</Amount>
+                            </Tax>
+                            <Tax code="QA">
+                                <Amount currencyCode="SEK">151</Amount>
+                            </Tax>
+                            <Tax code="PZ">
+                                <Amount currencyCode="SEK">14</Amount>
+                            </Tax>
+                            <Tax code="G4">
+                                <Amount currencyCode="SEK">151</Amount>
+                            </Tax>
+                            <Tax code="S6">
+                                <Amount currencyCode="SEK">53</Amount>
+                            </Tax>
+                            <Tax code="R9">
+                                <Amount currencyCode="SEK">25</Amount>
+                            </Tax>
+                        </TaxInfo>
+                        <FareCalculation rateOfExchange="0.38450000">SLL QR X/DOH QR MIL Q SLLMIL5.00 59.81NUC64.81END
+                            ROE0.3845
+                        </FareCalculation>
+                        <CurrencyConversion fromCurrency="OMR" rateOfExchange="23.9076118" toCurrency="SEK"/>
+                        <Commission type="P">
+                            <Percentage>0</Percentage>
+                        </Commission>
+                        <FareComponent fareBasisCode="OJOMP1RI" number="1" type="ER" typeBitmap="00">
+                            <FlightSegmentNumbers>
+                                <SegmentNumber>1</SegmentNumber>
+                                <SegmentNumber>2</SegmentNumber>
+                            </FlightSegmentNumbers>
+                            <FareDirectionality oneWay="true"/>
+                            <Departure>
+                                <DateTime>2026-01-31T23:20:00</DateTime>
+                                <CityCode name="SALALAH">SLL</CityCode>
+                            </Departure>
+                            <Arrival>
+                                <DateTime>2026-02-01T06:55:00</DateTime>
+                                <CityCode name="MILAN    MALPENSA">MIL</CityCode>
+                            </Arrival>
+                            <Amount currencyCode="NUC" decimalPlace="2">59.81</Amount>
+                            <GoverningCarrier>QR</GoverningCarrier>
+                            <BrandInfo brandCode="ECLASSIC" brandDescription="ECONOMY CLASSIC" programCode="AREA02AND0"
+                                       programDescription="QR BRANDING"/>
+                            <Rules carrier="QR" rule="RE04" tariff="22" vendor="ATP"/>
+                        </FareComponent>
+                    </FareInfo>
+                    <FeeInfo>
+                        <OBFee code="FCA" noChargeIndicator="X" type="OB">
+                            <Amount currencyCode="SEK">0</Amount>
+                            <Total currencyCode="SEK">2420</Total>
+                            <Description>CC NBR BEGINS WITH 411111</Description>
+                            <BankIdentificationNumber>411111</BankIdentificationNumber>
+                        </OBFee>
+                    </FeeInfo>
+                    <MiscellaneousInfo>
+                        <ValidatingCarrier>QR</ValidatingCarrier>
+                        <ItineraryType>I</ItineraryType>
+                    </MiscellaneousInfo>
+                    <MessageInfo>
+                        <Message number="301" type="INFO">One or more form of payment fees may apply</Message>
+                        <Message number="302" type="INFO">Actual total will be based on form of payment used</Message>
+                        <Message number="201" type="WARNING">Fare not guaranteed until ticketed</Message>
+                        <Message type="WARNING">VALIDATING CARRIER SPECIFIED - QR</Message>
+                        <Message type="WARNING">CAT 15 SALES RESTRICTIONS FREE TEXT FOUND - VERIFY RULES</Message>
+                        <Remarks type="ENS">NON END/VALID ON QR SERVICE</Remarks>
+                        <PricingParameters>FDSFDS</PricingParameters>
+                    </MessageInfo>
+                    <HistoryInfo>
+                        <AgentInfo sine="AWS">
+                            <HomeLocation>IPCC</HomeLocation>
+                        </AgentInfo>
+                        <TransactionInfo>
+                            <LocalDateTime>2025-12-26T15:38:00</LocalDateTime>
+                            <InputEntry>fdsfdsfds</InputEntry>
+                        </TransactionInfo>
+                    </HistoryInfo>
+                </Details>
+                <Details number="2" passengerType="ADT" pricingType="S" reissueTransactionType="RFND" status="A"
+                         type="PQR">
+                    <AgentInfo duty="*" sine="AWS">
+                        <HomeLocation>NI2L</HomeLocation>
+                        <WorkLocation>IPCC</WorkLocation>
+                    </AgentInfo>
+                    <TransactionInfo>
+                        <CreateDateTime>2026-01-20T07:24:00</CreateDateTime>
+                        <UpdateDateTime>2026-01-20T07:24:00</UpdateDateTime>
+                        <LocalCreateDateTime>2026-01-20T14:24:00</LocalCreateDateTime>
+                        <LocalUpdateDateTime>2026-01-20T14:24:00</LocalUpdateDateTime>
+                        <InputEntry>dsfdsfdsf</InputEntry>
+                        <ReissueMethod>RFND</ReissueMethod>
+                    </TransactionInfo>
+                    <NameAssociationInfo firstName="DOE JANE MS" lastName="DOE" nameId="1" nameNumber="1.1"/>
+                    <FeeInfo>
+                        <ChangeFee>
+                            <Amount currencyCode="SEK">100</Amount>
+                            <FeeTax code="K3">
+                                <Amount currencyCode="SEK" decimalPlace="2">12.34</Amount>
+                            </FeeTax>
+                        </ChangeFee>
+                    </FeeInfo>
+                    <MiscellaneousInfo>
+                        <ValidatingCarrier>QR</ValidatingCarrier>
+                        <ItineraryType>I</ItineraryType>
+                    </MiscellaneousInfo>
+                    <PaymentInfo type="CC">
+                        <Amount>1045</Amount>
+                        <Card number="XXXXXXXXXXXX0000" vendorCode="VI"/>
+                    </PaymentInfo>
+                    <FareComparisonSummary>
+                        <FareDifference>
+                            <BaseFare currencyCode="OMR" decimalPlace="3">0.000</BaseFare>
+                            <EquivalentFare currencyCode="SEK">0</EquivalentFare>
+                            <TotalTax currencyCode="SEK">-1045</TotalTax>
+                            <TotalFare currencyCode="SEK">-1045</TotalFare>
+                        </FareDifference>
+                    </FareComparisonSummary>
+                    <RefundInfo>
+                        <TotalRefund currencyCode="SEK">1045</TotalRefund>
+                        <BaseFare currencyCode="OMR" decimalPlace="3">0.000</BaseFare>
+                        <EquivalentFare currencyCode="SEK">0</EquivalentFare>
+                        <TotalTax currencyCode="SEK">1045</TotalTax>
+                        <Commission type="Refund">
+                            <Amount>0.00</Amount>
+                        </Commission>
+                        <TaxInfo>
+                            <Tax code="YQ" refundable="true">
+                                <Amount currencyCode="SEK">186</Amount>
+                            </Tax>
+                            <Tax code="YR" refundable="true">
+                                <Amount currencyCode="SEK">202</Amount>
+                            </Tax>
+                            <Tax code="I2" refundable="true">
+                                <Amount currencyCode="SEK">24</Amount>
+                            </Tax>
+                            <Tax code="OM" refundable="true">
+                                <Amount currencyCode="SEK">239</Amount>
+                            </Tax>
+                            <Tax code="QA" refundable="true">
+                                <Amount currencyCode="SEK">151</Amount>
+                            </Tax>
+                            <Tax code="PZ" refundable="true">
+                                <Amount currencyCode="SEK">14</Amount>
+                            </Tax>
+                            <Tax code="G4" refundable="true">
+                                <Amount currencyCode="SEK">151</Amount>
+                            </Tax>
+                            <Tax code="S6" refundable="true">
+                                <Amount currencyCode="SEK">53</Amount>
+                            </Tax>
+                            <Tax code="R9" refundable="true">
+                                <Amount currencyCode="SEK">25</Amount>
+                            </Tax>
+                        </TaxInfo>
+                        <FareCalculation>SLL QR X/DOH QR MIL Q SLLMIL5.00 59.81NUC64.81END ROE0.3845</FareCalculation>
+                    </RefundInfo>
+                    <ExchangeDocInfo nonFlightDoc="false" number="1575590599399">
+                        <PassengerName firstName="DOE JANE MS" lastName="DOE"/>
+                        <Base currencyCode="OMR" decimalPlace="3">0.000</Base>
+                        <Equivalent currencyCode="SEK">0</Equivalent>
+                        <TotalTax currencyCode="SEK">1045</TotalTax>
+                        <Total currencyCode="SEK">1045</Total>
+                    </ExchangeDocInfo>
+                    <MessageInfo>
+                        <PricingParameters>fdsfdsfds</PricingParameters>
+                    </MessageInfo>
+                </Details>
+                <MiscellaneousData>
+                    <Value type="retainedReissueExists">Y</Value>
+                    <Value type="sorSource">PSS</Value>
+                    <Value type="PQMMsg">ABCDEF-PSS-PQM-NotProcessed</Value>
+                </MiscellaneousData>
+            </PriceQuoteInfo>
+        </GetPriceQuoteRS>
+    </soap-env:Body>
+</soap-env:Envelope>

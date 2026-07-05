@@ -1,0 +1,36 @@
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap-env:Header>
+        <ns0:MessageHeader xmlns:ns0="http://www.ebxml.org/namespaces/messageHeader">
+            <ns0:From>
+                <ns0:PartyId>999999</ns0:PartyId>
+            </ns0:From>
+            <ns0:To>
+                <ns0:PartyId>123123</ns0:PartyId>
+            </ns0:To>
+            <ns0:CPAId>AAAA</ns0:CPAId>
+            <ns0:ConversationId>V1@987c322a-0359-493c-8319-364f7b0b53b6@f35de8d7-ecad-404c-a1c5-e5fc0a75d5d5@
+            </ns0:ConversationId>
+            <ns0:Service>SessionCreateRQ</ns0:Service>
+            <ns0:Action>SessionCreateRQ</ns0:Action>
+            <ns0:MessageData>
+                <ns0:MessageId>80182111601</ns0:MessageId>
+                <ns0:Timestamp>2018-09-14T13:52:00</ns0:Timestamp>
+            </ns0:MessageData>
+        </ns0:MessageHeader>
+        <ns1:Security xmlns:ns1="http://schemas.xmlsoap.org/ws/2002/12/secext">
+            <ns1:UsernameToken>
+                <ns1:Username>1000001</ns1:Username>
+                <ns1:Password>FAKEPASS1</ns1:Password>
+                <Organization>AAAA</Organization>
+                <Domain>DEFAULT</Domain>
+            </ns1:UsernameToken>
+        </ns1:Security>
+    </soap-env:Header>
+    <soap-env:Body>
+        <ns0:SessionCreateRQ xmlns:ns0="http://www.opentravel.org/OTA/2002/11">
+            <ns0:POS>
+                <ns0:Source PseudoCityCode="AAAA"/>
+            </ns0:POS>
+        </ns0:SessionCreateRQ>
+    </soap-env:Body>
+</soap-env:Envelope>
