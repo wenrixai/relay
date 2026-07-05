@@ -5,7 +5,6 @@
 Slices 1–3 deliver a safe, channel-aware relay but nothing yet packages it for production. Slice 5
 makes the relay deployable and releasable: a hardened Helm chart, create-if-absent PII key
 provisioning that survives upgrades, a tagged release pipeline, and a repeatable load/perf harness.
-This covers `docs/OpenSpec task lists` T5.1–T5.4 and `docs/PROJECT.md` §13.2, §13.4, §13.5, §14.
 
 ## What Changes
 

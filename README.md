@@ -7,7 +7,6 @@ observability — while staying invisible to the channel.
 ## Documentation
 - **[docs/PROJECT.md](docs/PROJECT.md)** — canonical spec (scope, architecture, security).
 - **[docs/the relay-configuration spec](docs/the relay-configuration spec)** — configuration reference and `WP_*` migration.
-- **[docs/OpenSpec task lists](docs/OpenSpec task lists)** — vertical-slice delivery plan.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — workflow, Definition of Done, TDD, OpenSpec.
 - **[docs/SECURITY.md](docs/SECURITY.md)** — threat model, disclosure, secret handling.
 

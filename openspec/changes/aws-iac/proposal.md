@@ -20,7 +20,6 @@ it adds tasks T5.5 and T5.6 to Slice 5.
   CloudFormation template with parameters, outputs, least-privilege IAM, Secrets Manager, and a
   `Retain` deletion policy on the secret.
 - Add `.dockerignore` to shrink the build context (exclude tests, docs, VCS, caches, IaC).
-- Add T5.5/T5.6 to `docs/OpenSpec task lists`.
 
 ## Impact
 
