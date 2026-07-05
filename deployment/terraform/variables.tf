@@ -9,20 +9,28 @@ variable "name" {
   default     = "wenrix-relay"
 }
 
-variable "vpc_cidr" {
-  description = "CIDR block for the VPC."
+variable "vpc_id" {
+  description = "Existing VPC ID to deploy into."
   type        = string
-  default     = "10.20.0.0/16"
 }
 
-variable "az_count" {
-  description = "Number of availability zones (>= 2 for HA)."
-  type        = number
-  default     = 2
+variable "public_subnet_ids" {
+  description = "Existing public subnet IDs for the ALB (>= 2 for HA)."
+  type        = list(string)
 
   validation {
-    condition     = var.az_count >= 2
-    error_message = "az_count must be at least 2 for high availability."
+    condition     = length(var.public_subnet_ids) >= 2
+    error_message = "Provide at least 2 public subnets across AZs for high availability."
+  }
+}
+
+variable "private_subnet_ids" {
+  description = "Existing private subnet IDs for the ECS tasks (>= 2 for HA)."
+  type        = list(string)
+
+  validation {
+    condition     = length(var.private_subnet_ids) >= 2
+    error_message = "Provide at least 2 private subnets across AZs for high availability."
   }
 }
 
@@ -38,7 +46,7 @@ variable "container_port" {
 }
 
 variable "task_cpu" {
-  description = "Fargate task CPU units (1024 = 1 vCPU). Baseline is 1 vCPU (PROJECT.md §13.4)."
+  description = "Fargate task CPU units (1024 = 1 vCPU). Baseline is 1 vCPU."
   type        = number
   default     = 1024
 }

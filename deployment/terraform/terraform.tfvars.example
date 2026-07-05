@@ -2,6 +2,11 @@ region  = "eu-west-1"
 name    = "wenrix-relay"
 image   = "ghcr.io/wenrixai/wenrix-relay:v0.1.0"
 
+# Existing VPC to deploy into (this module does not create a VPC).
+vpc_id              = "vpc-0123456789abcdef0"
+public_subnet_ids   = ["subnet-0aaa1111", "subnet-0bbb2222"]
+private_subnet_ids  = ["subnet-0ccc3333", "subnet-0ddd4444"]
+
 # Restrict ALB ingress to the Wenrix client source — never 0.0.0.0/0.
 wenrix_ingress_cidrs = ["203.0.113.0/24"]
 
@@ -17,7 +22,6 @@ pii_key_epoch_active = 0
 
 otlp_endpoint = "otel-collector.telemetry.internal:4317"
 
-az_count      = 2
 desired_count = 2
 min_capacity  = 2
 max_capacity  = 10

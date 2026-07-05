@@ -1,8 +1,12 @@
-# Terraform — Wenrix Relay on ECS Fargate (T5.5)
+# Terraform — Wenrix Relay on ECS Fargate
 
-Provisions a highly available ECS Fargate deployment of the relay on AWS: multi-AZ VPC, HTTPS ALB
+Deploys the relay app **into an existing VPC** (this does not create networking): HTTPS ALB
 (health check `/readiness`), ECS service (min 2 tasks across AZs) with CPU + request autoscaling,
 Secrets Manager for the PII keyring, least-privilege IAM/security groups, and CloudWatch logs.
+
+Bring your own VPC with >= 2 public subnets (for the ALB) and >= 2 private subnets with NAT egress
+(for the tasks) across at least 2 AZs, and pass their IDs in via `vpc_id` / `public_subnet_ids` /
+`private_subnet_ids`.
 
 ## Usage
 
@@ -39,6 +43,5 @@ terraform apply
 
 ## Notes
 
-- One NAT gateway is used for cost. For zero-egress-SPOF, add one NAT gateway per AZ.
 - `terraform validate` runs offline; `plan`/`apply` require AWS credentials.
 - Consider `tflint`/`checkov` in CI for deeper policy checks.

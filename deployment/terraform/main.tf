@@ -1,86 +1,5 @@
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
 locals {
-  azs             = slice(data.aws_availability_zones.available.names, 0, var.az_count)
-  public_subnets  = [for i in range(var.az_count) : cidrsubnet(var.vpc_cidr, 8, i)]
-  private_subnets = [for i in range(var.az_count) : cidrsubnet(var.vpc_cidr, 8, i + 100)]
-  image_tag       = var.image
-}
-
-# --- Networking -------------------------------------------------------------
-
-resource "aws_vpc" "this" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-  tags                 = { Name = var.name }
-}
-
-resource "aws_internet_gateway" "this" {
-  vpc_id = aws_vpc.this.id
-  tags   = { Name = var.name }
-}
-
-resource "aws_subnet" "public" {
-  count                   = var.az_count
-  vpc_id                  = aws_vpc.this.id
-  cidr_block              = local.public_subnets[count.index]
-  availability_zone       = local.azs[count.index]
-  map_public_ip_on_launch = true
-  tags                    = { Name = "${var.name}-public-${count.index}", Tier = "public" }
-}
-
-resource "aws_subnet" "private" {
-  count             = var.az_count
-  vpc_id            = aws_vpc.this.id
-  cidr_block        = local.private_subnets[count.index]
-  availability_zone = local.azs[count.index]
-  tags              = { Name = "${var.name}-private-${count.index}", Tier = "private" }
-}
-
-resource "aws_eip" "nat" {
-  domain = "vpc"
-  tags   = { Name = "${var.name}-nat" }
-}
-
-# Single NAT gateway for egress. For zero-egress-SPOF, deploy one per AZ (higher cost).
-resource "aws_nat_gateway" "this" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id
-  tags          = { Name = var.name }
-  depends_on    = [aws_internet_gateway.this]
-}
-
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.this.id
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.this.id
-  }
-  tags = { Name = "${var.name}-public" }
-}
-
-resource "aws_route_table_association" "public" {
-  count          = var.az_count
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
-}
-
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.this.id
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.this.id
-  }
-  tags = { Name = "${var.name}-private" }
-}
-
-resource "aws_route_table_association" "private" {
-  count          = var.az_count
-  subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private.id
+  image_tag = var.image
 }
 
 # --- Security groups --------------------------------------------------------
@@ -88,7 +7,7 @@ resource "aws_route_table_association" "private" {
 resource "aws_security_group" "alb" {
   name        = "${var.name}-alb"
   description = "ALB ingress from Wenrix client source only."
-  vpc_id      = aws_vpc.this.id
+  vpc_id      = var.vpc_id
 
   ingress {
     description = "HTTPS from Wenrix client"
@@ -112,7 +31,7 @@ resource "aws_security_group" "alb" {
 resource "aws_security_group" "task" {
   name        = "${var.name}-task"
   description = "Relay tasks accept traffic only from the ALB."
-  vpc_id      = aws_vpc.this.id
+  vpc_id      = var.vpc_id
 
   ingress {
     description     = "From ALB"
@@ -140,7 +59,7 @@ resource "aws_lb" "this" {
   load_balancer_type = "application"
   internal           = false
   security_groups    = [aws_security_group.alb.id]
-  subnets            = aws_subnet.public[*].id
+  subnets            = var.public_subnet_ids
 
   drop_invalid_header_fields = true
   enable_deletion_protection = false
@@ -150,7 +69,7 @@ resource "aws_lb_target_group" "this" {
   name        = var.name
   port        = var.container_port
   protocol    = "HTTP"
-  vpc_id      = aws_vpc.this.id
+  vpc_id      = var.vpc_id
   target_type = "ip"
 
   health_check {
@@ -315,7 +234,7 @@ resource "aws_ecs_service" "this" {
   availability_zone_rebalancing = "ENABLED"
 
   network_configuration {
-    subnets          = aws_subnet.private[*].id
+    subnets          = var.private_subnet_ids
     security_groups  = [aws_security_group.task.id]
     assign_public_ip = false
   }
@@ -369,7 +288,7 @@ resource "aws_appautoscaling_policy" "alb_requests" {
       predefined_metric_type = "ALBRequestCountPerTarget"
       resource_label         = "${aws_lb.this.arn_suffix}/${aws_lb_target_group.this.arn_suffix}"
     }
-    # ~50 rps/instance target (PROJECT.md §13.4).
+    # ~50 rps/instance target.
     target_value = 50 * 60
   }
 }
