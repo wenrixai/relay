@@ -1,0 +1,26 @@
+{{ include "wenrix-relay.fullname" . }} deployed.
+
+Image:     {{ include "wenrix-relay.image" . }}
+Replicas:  {{ if .Values.autoscaling.enabled }}HPA {{ .Values.autoscaling.minReplicas }}-{{ .Values.autoscaling.maxReplicas }}{{ else }}{{ .Values.replicaCount }}{{ end }}
+Service:   {{ include "wenrix-relay.fullname" . }}:{{ .Values.service.port }} ({{ .Values.service.type }})
+
+Health:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "wenrix-relay.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }}
+  curl -fsS http://127.0.0.1:{{ .Values.service.port }}/readiness
+
+{{- if .Values.piiKeyring.enabled }}
+
+PII keyring:
+  Secret {{ include "wenrix-relay.piiKeyringSecretName" . }} is created-if-absent and is NEVER
+  regenerated on `helm upgrade`. Active epoch: {{ .Values.piiKeyring.activeEpoch }}.
+  Rotate by adding a new epoch to the keyring JSON and bumping piiKeyring.activeEpoch; retain prior
+  epochs so existing tokens stay decryptable.
+{{- end }}
+
+{{- if not .Values.networkPolicy.ingressFromCIDRs }}
+{{- if not .Values.networkPolicy.ingressFromNamespaceSelectors }}
+
+WARNING: networkPolicy is enabled but no ingress source is configured — all ingress is denied.
+Set networkPolicy.ingressFromCIDRs or networkPolicy.ingressFromNamespaceSelectors.
+{{- end }}
+{{- end }}

@@ -58,6 +58,9 @@ committed to the repository.
   threat model below). Rotation is handled through the **1-byte key epoch** in the
   keyring: a new epoch is added, new data is encrypted under the new epoch, and existing
   tokens remain decryptable under their original epoch until retired.
+- Provisioning and step-by-step epoch rotation for the Helm deployment are documented in
+  `deployment/helm/chart/README.md` (create-if-absent Secret, `lookup` guard, mounted at
+  `RELAY_PII_KEYRING_FILE`).
 
 ### Basic-auth credentials
 

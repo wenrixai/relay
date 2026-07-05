@@ -1,23 +1,47 @@
-"""Minimal mock upstream channel for local compose / CI smoke tests.
+"""Minimal mock upstream channel for local compose / CI smoke tests and the perf harness.
 
-Responds 200 to any method/path with a small body. Stdlib only — no dependencies — so the
-mock image stays tiny. Not used by the test suite (which mocks httpx transport directly).
+Responds 200 to any method/path. Stdlib only — no dependencies — so the mock image stays tiny.
+Not used by the test suite (which mocks httpx transport directly).
+
+Environment:
+- ``MOCK_PORT``        listen port (default 9000).
+- ``MOCK_LATENCY_MS``  fixed injected upstream latency in ms (default 0). Lets the perf harness
+                       isolate relay overhead from network/upstream time (PROJECT.md §13.4).
+- ``MOCK_BODY_FILE``   optional path to a file whose bytes are returned as the response body
+                       (e.g. a redactable XML response for the PII perf scenario).
+- ``MOCK_CONTENT_TYPE`` response content type (default ``application/json``).
 """
 
 from __future__ import annotations
 
 import os
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+
+_LATENCY_S = int(os.environ.get("MOCK_LATENCY_MS", "0")) / 1000.0
+_CONTENT_TYPE = os.environ.get("MOCK_CONTENT_TYPE", "application/json")
+
+
+def _load_body() -> bytes:
+    body_file = os.environ.get("MOCK_BODY_FILE")
+    if body_file and Path(body_file).is_file():
+        return Path(body_file).read_bytes()
+    return b'{"mock":"ok"}'
+
+
+_BODY = _load_body()
 
 
 class _Handler(BaseHTTPRequestHandler):
     def _respond(self) -> None:
-        body = b'{"mock":"ok"}'
+        if _LATENCY_S > 0:
+            time.sleep(_LATENCY_S)
         self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Content-Type", _CONTENT_TYPE)
+        self.send_header("Content-Length", str(len(_BODY)))
         self.end_headers()
-        self.wfile.write(body)
+        self.wfile.write(_BODY)
 
     # Handle the common verbs the relay forwards. Names are fixed by BaseHTTPRequestHandler.
     do_GET = _respond  # noqa: N815

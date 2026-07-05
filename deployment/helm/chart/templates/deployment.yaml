@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "wenrix-relay.fullname" . }}
+  labels:
+    {{- include "wenrix-relay.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "wenrix-relay.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Roll pods when the channel config changes.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "wenrix-relay.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "wenrix-relay.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: relay
+          image: {{ include "wenrix-relay.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.config.port }}
+              protocol: TCP
+          env:
+            - name: RELAY_CONFIG_FILE
+              value: /etc/wenrix/relay.json
+            - name: RELAY_PORT
+              value: {{ .Values.config.port | quote }}
+            {{- if .Values.config.telemetry.otlpEndpoint }}
+            - name: RELAY_OTLP_ENDPOINT
+              value: {{ .Values.config.telemetry.otlpEndpoint | quote }}
+            {{- end }}
+            {{- if .Values.piiKeyring.enabled }}
+            - name: RELAY_PII_KEYRING_FILE
+              value: {{ printf "%s/%s" .Values.piiKeyring.mountPath .Values.piiKeyring.key | quote }}
+            - name: RELAY_PII_KEY_EPOCH_ACTIVE
+              value: {{ .Values.piiKeyring.activeEpoch | quote }}
+            {{- end }}
+            {{- if and .Values.basicAuth.enabled .Values.basicAuth.secretName }}
+            - name: RELAY_BASIC_AUTH_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.basicAuth.secretName }}
+                  key: user
+            - name: RELAY_BASIC_AUTH_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.basicAuth.secretName }}
+                  key: pass
+            {{- end }}
+            {{- range $k, $v := .Values.config.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/wenrix/relay.json
+              subPath: relay.json
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+            {{- if .Values.piiKeyring.enabled }}
+            - name: pii-keyring
+              mountPath: {{ .Values.piiKeyring.mountPath }}
+              readOnly: true
+            {{- end }}
+            {{- if .Values.tls.enabled }}
+            - name: tls
+              mountPath: /etc/wenrix/tls
+              readOnly: true
+            {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "wenrix-relay.fullname" . }}-config
+        - name: tmp
+          emptyDir: {}
+        {{- if .Values.piiKeyring.enabled }}
+        - name: pii-keyring
+          secret:
+            secretName: {{ include "wenrix-relay.piiKeyringSecretName" . }}
+        {{- end }}
+        {{- if .Values.tls.enabled }}
+        - name: tls
+          secret:
+            secretName: {{ required "tls.secretName is required when tls.enabled" .Values.tls.secretName }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

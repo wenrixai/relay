@@ -55,6 +55,25 @@ run:
 up:
     docker compose up
 
+# Lint + render the Helm chart and run its assertion tests (requires helm).
+helm-test:
+    helm lint deployment/helm/chart --set networkPolicy.ingressFromCIDRs='{10.0.0.0/8}'
+    uv run pytest tests/deployment/test_helm_chart.py --no-cov
+
+# Run the k6 load/perf harness against a locally-started relay + mock (requires k6).
+perf payload_size="2048":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    MOCK_PORT=9000 MOCK_LATENCY_MS=50 uv run python deployment/mock_channel.py &
+    mock_pid=$!
+    RELAY_CONFIG_FILE=perf/relay.perf.json RELAY_BASIC_AUTH_ENABLED=false \
+      RELAY_PII_KEYRING="{\"0\":\"$(head -c32 /dev/urandom | base64)\"}" RELAY_PII_KEY_EPOCH_ACTIVE=0 \
+      uv run uvicorn channel_relay.main:app --port 8080 &
+    relay_pid=$!
+    trap 'kill $mock_pid $relay_pid 2>/dev/null || true' EXIT
+    for _ in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/readiness && break; sleep 1; done
+    k6 run -e RELAY_URL=http://127.0.0.1:8080 -e PAYLOAD_SIZE={{payload_size}} perf/relay-load.js
+
 # Run all pre-commit hooks against the whole tree.
 precommit:
     uv run pre-commit run --all-files

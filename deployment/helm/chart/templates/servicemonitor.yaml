@@ -1,0 +1,19 @@
+{{- if .Values.serviceMonitor.enabled -}}
+# NOTE: The relay currently exports telemetry via OTLP push only and does not yet expose a Prometheus
+# scrape endpoint. This ServiceMonitor is provided for when a /metrics surface is added; it is
+# disabled by default (values.serviceMonitor.enabled=false).
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "wenrix-relay.fullname" . }}
+  labels:
+    {{- include "wenrix-relay.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "wenrix-relay.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: {{ .Values.serviceMonitor.port }}
+      path: {{ .Values.serviceMonitor.path }}
+      interval: {{ .Values.serviceMonitor.interval }}
+{{- end }}

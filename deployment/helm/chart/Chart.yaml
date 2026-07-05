@@ -1,0 +1,14 @@
+apiVersion: v2
+name: wenrix-relay
+description: Wenrix Channel Relay — a safe, PII-redacting, channel-aware reverse proxy for GDS/NDC traffic.
+type: application
+# version is the chart version (SemVer); appVersion tracks the released image tag and is bumped by
+# .github/workflows/release.yml on each `v*` tag.
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.25.0-0"
+home: https://github.com/wenrixai/wenrix-proxy
+sources:
+  - https://github.com/wenrixai/wenrix-proxy
+maintainers:
+  - name: Wenrix

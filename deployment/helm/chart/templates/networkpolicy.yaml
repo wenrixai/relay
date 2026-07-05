@@ -1,0 +1,57 @@
+{{- if .Values.networkPolicy.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "wenrix-relay.fullname" . }}
+  labels:
+    {{- include "wenrix-relay.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "wenrix-relay.selectorLabels" . | nindent 6 }}
+  # Default-deny: with both types listed, only the rules below are permitted.
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        {{- range .Values.networkPolicy.ingressFromCIDRs }}
+        - ipBlock:
+            cidr: {{ . | quote }}
+        {{- end }}
+        {{- range .Values.networkPolicy.ingressFromNamespaceSelectors }}
+        - namespaceSelector:
+            {{- toYaml . | nindent 12 }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.config.port }}
+  egress:
+    # DNS resolution (channel hosts are resolved at request time).
+    - to: []
+      ports:
+        - protocol: UDP
+          port: {{ .Values.networkPolicy.dnsPort }}
+        - protocol: TCP
+          port: {{ .Values.networkPolicy.dnsPort }}
+    {{- with .Values.networkPolicy.egressToCIDRs }}
+    # Channel hosts (HTTPS upstream).
+    - to:
+        {{- range . }}
+        - ipBlock:
+            cidr: {{ . | quote }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 443
+    {{- end }}
+    {{- if .Values.config.telemetry.otlpHost }}
+    # Telemetry (OTLP) endpoint.
+    - to:
+        - ipBlock:
+            cidr: {{ printf "%s/32" .Values.config.telemetry.otlpHost | quote }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.config.telemetry.otlpPort }}
+    {{- end }}
+{{- end }}

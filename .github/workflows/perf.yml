@@ -1,0 +1,73 @@
+name: Perf
+
+# Load/perf harness (PROJECT.md §13.4). Non-gating: publishes a summary artifact and never fails
+# the build on threshold breaches. Runs on demand and weekly.
+on:
+  workflow_dispatch:
+    inputs:
+      payload_size:
+        description: "Payload size in bytes"
+        default: "2048"
+  schedule:
+    - cron: "0 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  k6:
+    name: k6 load test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.11"
+
+      - name: Sync (frozen)
+        run: uv sync --frozen
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install -y k6
+
+      - name: Start mock upstream (fixed 50ms latency)
+        run: |
+          MOCK_PORT=9000 MOCK_LATENCY_MS=50 uv run python deployment/mock_channel.py &
+          sleep 1
+
+      - name: Start relay
+        run: |
+          RELAY_CONFIG_FILE=perf/relay.perf.json \
+          RELAY_BASIC_AUTH_ENABLED=false \
+          RELAY_PII_KEYRING="{\"0\":\"$(head -c32 /dev/urandom | base64)\"}" \
+          RELAY_PII_KEY_EPOCH_ACTIVE=0 \
+          uv run uvicorn channel_relay.main:app --port 8080 &
+          for _ in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8080/readiness && break
+            sleep 1
+          done
+
+      - name: Run k6
+        # Non-gating: do not fail the job on threshold breaches.
+        continue-on-error: true
+        run: |
+          k6 run \
+            -e RELAY_URL=http://127.0.0.1:8080 \
+            -e PAYLOAD_SIZE=${{ github.event.inputs.payload_size || '2048' }} \
+            perf/relay-load.js
+
+      - name: Upload summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-summary
+          path: summary.json
+          if-no-files-found: warn
