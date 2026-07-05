@@ -121,7 +121,7 @@ def test_serialize_round_trip_preserves_namespaces() -> None:
 
 
 def test_error_kinds_are_stable() -> None:
-    # kinds feed the xml_parse_errors_total{kind} metric label set.
+    # kinds feed the channel_relay_xml_parse_errors_total{kind} metric label set.
     with pytest.raises(XmlParseError) as parse_exc:
         parse_bytes(b"not xml at all")
     assert parse_exc.value.kind == "malformed"

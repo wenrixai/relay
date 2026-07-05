@@ -37,11 +37,11 @@ def test_relay_metrics_counter_and_gauge() -> None:
     metrics.record_upstream_timeout("tf")
     metrics.record_upstream_timeout("tf")
 
-    timeouts = _metric_points(reader, "upstream_timeouts_total")
+    timeouts = _metric_points(reader, "channel_relay_upstream_timeouts_total")
     assert timeouts and timeouts[0].value == 2
     assert timeouts[0].attributes["channel"] == "tf"
 
-    gauge = _metric_points(reader, "channels_configured")
+    gauge = _metric_points(reader, "channel_relay_channels_configured")
     assert gauge and gauge[0].value == 3
 
 
@@ -61,7 +61,7 @@ def test_channels_configured_set_on_startup() -> None:
     )
     with TestClient(app):
         pass  # lifespan runs, sets the gauge
-    gauge = _metric_points(reader, "channels_configured")
+    gauge = _metric_points(reader, "channel_relay_channels_configured")
     assert gauge and gauge[0].value == 2
 
 
@@ -80,7 +80,7 @@ def test_upstream_timeout_increments_metric() -> None:
     with TestClient(app) as client:
         assert client.get("/channel/tf/op").status_code == 504
 
-    points = _metric_points(reader, "upstream_timeouts_total")
+    points = _metric_points(reader, "channel_relay_upstream_timeouts_total")
     assert points and points[0].value == 1
     assert points[0].attributes["channel"] == "tf"
 

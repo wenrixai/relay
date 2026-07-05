@@ -18,6 +18,11 @@ from opentelemetry.sdk.metrics.export import MetricReader, PeriodicExportingMetr
 from channel_relay.settings import Settings
 
 METER_NAME = "channel_relay"
+METRIC_PREFIX = "channel_relay_"
+
+
+def _metric_name(name: str) -> str:
+    return f"{METRIC_PREFIX}{name}"
 
 
 def build_meter_provider(
@@ -46,34 +51,34 @@ class RelayMetrics:
         self._channels_configured = 0
         self._rules_version: str | None = None
         self._upstream_timeouts: Counter = meter.create_counter(
-            "upstream_timeouts_total",
+            _metric_name("upstream_timeouts_total"),
             unit="1",
             description="Upstream channel timeouts (504s).",
         )
         meter.create_observable_gauge(
-            "channels_configured",
+            _metric_name("channels_configured"),
             callbacks=[self._observe_channels],
             unit="1",
             description="Number of configured channels.",
         )
         meter.create_observable_gauge(
-            "rule_version",
+            _metric_name("rule_version"),
             callbacks=[self._observe_rule_version],
             unit="1",
             description="Loaded PII rules version (info-style gauge).",
         )
         self._pii_redacted: Counter = meter.create_counter(
-            "pii_fields_redacted_total",
+            _metric_name("pii_fields_redacted_total"),
             unit="1",
             description="PII fields actioned on responses.",
         )
         self._pii_decrypted: Counter = meter.create_counter(
-            "pii_fields_decrypted_total",
+            _metric_name("pii_fields_decrypted_total"),
             unit="1",
             description="ENC_ tokens de-anonymized on requests.",
         )
         self._xml_parse_errors: Counter = meter.create_counter(
-            "xml_parse_errors_total",
+            _metric_name("xml_parse_errors_total"),
             unit="1",
             description="Hardened XML parse/structure rejections.",
         )

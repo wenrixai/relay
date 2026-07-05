@@ -3,7 +3,7 @@
 Every parse of untrusted XML goes through :func:`parse_bytes`: entities/DTD/network
 disabled, DOCTYPE rejected outright, a resolver that raises, and byte/depth/node limits.
 Ad-hoc ``etree.fromstring`` calls elsewhere are prohibited. Exceptions carry a stable
-``kind`` used as the ``xml_parse_errors_total{kind}`` metric label; oversize maps to
+``kind`` used as the ``channel_relay_xml_parse_errors_total{kind}`` metric label; oversize maps to
 HTTP 413 and everything else here maps to 502 (§10.3).
 """
 
