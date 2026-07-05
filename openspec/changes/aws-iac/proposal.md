@@ -6,7 +6,8 @@ Operators want to run the relay on AWS without standing up Kubernetes. The exist
 containers (Dockerfile) and Kubernetes (Helm, see `slice-5-hardened-deploy`) but nothing provisions
 AWS infrastructure. This change adds two equivalent, self-contained Infrastructure-as-Code paths —
 Terraform and CloudFormation — that deploy the relay as a highly available ECS Fargate service, plus
-a `.dockerignore` to tighten image builds. This is net-new scope not previously in `docs/PROJECT.md`;
+a `.dockerignore` to tighten image builds. This is net-new scope not previously in
+`openspec/specs/`;
 it adds tasks T5.5 and T5.6 to Slice 5.
 
 ## What Changes

@@ -27,6 +27,6 @@
 
 ## 5. Close-out
 
-- [x] 5.1 Update docs/config examples for Slice 3 credential keys.
+- [x] 5.1 Update spec/config examples for Slice 3 credential keys.
 - [x] 5.2 Run focused tests, `uv run pytest`, lint/type/pylint/pre-commit.
 - [x] 5.3 Archive OpenSpec change after validation and implementation.

@@ -1,7 +1,7 @@
 """Application entrypoint and factory.
 
-The app factory wires the middleware pipeline (see ``docs/PROJECT.md`` §3.1). This slice
-boots the app with health routes; feature stages are added per slice under TDD.
+The app factory wires the middleware pipeline (see ``openspec/specs/``). This slice boots
+the app with health routes; feature stages are added per slice under TDD.
 """
 
 from __future__ import annotations

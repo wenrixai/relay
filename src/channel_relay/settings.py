@@ -1,4 +1,5 @@
-"""Global server settings from ``RELAY_*`` environment variables (the relay-configuration spec).
+"""Global server settings from ``RELAY_*`` environment variables
+(see ``openspec/specs/relay-configuration/spec.md``).
 
 Channel definitions live in the JSON config (``config/models.py``); this module holds the
 process-level scalars. Secrets are read from mounted files/env, never from the JSON config.

@@ -3,12 +3,11 @@
 Agent/developer operating rules for this repository. This file is about **how to work**, not what to
 build. Canonical requirements live elsewhere; read them first:
 
-- **`PROJECT.md`** — product/security/architecture requirements (source of truth).
-- **`the relay-configuration spec`** — configuration reference and `WP_*` migration.
+- **`openspec/specs/`** — product, security, architecture, and configuration requirements
+  (source of truth).
 - **`CONTRIBUTING.md`** — full workflow: Definition of Done, TDD, OpenSpec loop + exemptions, PR rules.
-- **`SECURITY.md`** — threat model, disclosure, secret handling.
 
-When code and `PROJECT.md` disagree, the spec wins: propose a change, do not drift.
+When code and `openspec/specs/` disagree, the spec wins: propose a change, do not drift.
 
 ## Golden rules
 1. **Spec-driven + TDD.** Non-trivial work goes through the OpenSpec loop (details in
@@ -48,12 +47,13 @@ pre-commit run --all-files
 - Keys come from the mounted Secret/env; never hard-coded, logged, or committed. The Helm Secret is
   create-if-absent; never regenerate keys on upgrade.
 - Operation is parsed from the body, never trusted from a header. Constant-time secret comparison.
-- On any crypto/rule/XML error, return the defined error response (`PROJECT.md` §10); never forward
+- On any crypto/rule/XML error, return the defined error response from `openspec/specs/`; never forward
   partially processed PII.
 
 ## Testing
 Layers `tests/unit|integration|e2e`; e2e uses local mock channels and stays fast. Required suites and
-coverage gate are in `PROJECT.md` §13.3. Golden tests use sanitized fixtures in `tests/fixtures/`.
+coverage gate are in the canonical spec set under `openspec/specs/`. Golden tests use sanitized
+fixtures in `tests/fixtures/`.
 
 ## Git & review
 Conventional Commits; short-lived branches; no direct pushes to `main`; PRs pass all required checks.

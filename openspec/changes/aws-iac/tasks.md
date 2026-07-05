@@ -3,7 +3,7 @@
 ## 1. Spec
 
 - [x] 1.1 Add OpenSpec delta for deployment-ci (AWS ECS Fargate IaC) and append T5.5/T5.6 to
-      `docs/OpenSpec task lists`; `openspec validate --strict`.
+      the spec tree; `openspec validate --strict`.
 
 ## 2. Build context
 

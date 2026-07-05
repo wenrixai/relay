@@ -5,10 +5,9 @@ A privacy-first, transparent Python/FastAPI relay for travel channels. It preser
 observability — while staying invisible to the channel.
 
 ## Documentation
-- **[docs/PROJECT.md](docs/PROJECT.md)** — canonical spec (scope, architecture, security).
-- **[docs/the relay-configuration spec](docs/the relay-configuration spec)** — configuration reference and `WP_*` migration.
+- **[openspec/specs/](openspec/specs/)** — canonical specification set (scope, architecture, security).
+- **[openspec/changes/](openspec/changes/)** — change proposals, task lists, and archived deltas.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — workflow, Definition of Done, TDD, OpenSpec.
-- **[docs/SECURITY.md](docs/SECURITY.md)** — threat model, disclosure, secret handling.
 
 ## Requirements
 - Python 3.13 (pinned in `.python-version`)
@@ -38,14 +37,13 @@ PII fields in channel responses are replaced with self-describing `ENC_` tokens
 (AES-256-CTR, epoch keyring) before Wenrix sees them, and tokens in later requests are
 decrypted back to plaintext before reaching the channel. Requires a keyring
 (`RELAY_PII_KEYRING` / `RELAY_PII_KEYRING_FILE`) and redaction rules (fetched from
-`RELAY_RULES_API_URL` at startup, baked fallback otherwise). See `docs/PROJECT.md` §7-§8
-and `docs/the relay-configuration spec`.
+`RELAY_RULES_API_URL` at startup, baked fallback otherwise). See
+`openspec/specs/relay-configuration/spec.md` and `openspec/specs/redaction-engine/spec.md`.
 
 ## Layout
 ```
 src/channel_relay/   application package (main, config, middleware, channels, proxy, pii, observability)
 tests/               unit | integration | e2e | fixtures | mocks
 openspec/            spec-driven change workflow (specs/, changes/)
-docs/                canonical specification and references
 ```
-See `docs/PROJECT.md` §3.2 for the full target layout.
+See `openspec/specs/` for the full target layout.

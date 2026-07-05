@@ -19,7 +19,7 @@
 - [x] 3.1 TDD red: template assertions that the master-key Secret is created-if-absent (lookup
       guard) and mounted at the keyring file path; upgrade path emits no fresh key.
 - [x] 3.2 Implement create-if-absent Secret + mount wired to `RELAY_PII_KEYRING_FILE`.
-- [x] 3.3 Document epoch rotation in chart README/values and cross-ref `docs/SECURITY.md`.
+- [x] 3.3 Document epoch rotation in chart README/values and cross-ref `openspec/specs/`.
 
 ## 4. Release flow (T5.3)
 

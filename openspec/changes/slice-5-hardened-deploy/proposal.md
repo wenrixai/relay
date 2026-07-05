@@ -31,4 +31,4 @@ provisioning that survives upgrades, a tagged release pipeline, and a repeatable
   in ConfigMaps or logs; NetworkPolicy restricts egress to channels/telemetry/DNS only.
 - Metrics gap: the app is OTLP-push only, so the ServiceMonitor ships flag-default-off and a
   Prometheus scrape endpoint is called out as follow-up work (not built in this slice).
-- Docs: `docs/SECURITY.md` cross-references epoch rotation; `RELEASE_CHECKLIST.md` added.
+- Docs: `openspec/specs/` cross-references epoch rotation; `RELEASE_CHECKLIST.md` added.

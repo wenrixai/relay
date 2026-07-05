@@ -2,7 +2,8 @@
 
 This is the canonical process document for Wenrix Channel Relay v2. Other files in the
 repository reference this document rather than restating the process. Product requirements
-live in `PROJECT.md`; the security policy and threat model live in `SECURITY.md`.
+live in `openspec/specs/`; the security policy and threat model are captured in the same
+spec set.
 
 The repository lives in the `wenrixai` GitHub organization. The `main` branch is
 protected.
@@ -61,6 +62,9 @@ OpenSpec is **mandatory** for anything touching:
 - configuration,
 - channel contracts, or
 - deployment.
+
+The canonical requirement surface is the `openspec/specs/` tree. Change work belongs under
+`openspec/changes/` until it is archived into `openspec/specs/`.
 
 ### Exemptions
 
