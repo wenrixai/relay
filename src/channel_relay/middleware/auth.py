@@ -63,3 +63,11 @@ def verify_basic_auth(request: Request) -> None:
     creds = parse_basic_credentials(request.headers.get("authorization"))
     if creds is None or not credentials_valid(creds[0], creds[1], settings):
         raise HTTPException(status_code=401, detail="unauthorized", headers=_UNAUTHORIZED_HEADERS)
+
+
+def verify_admin_basic_auth(request: Request) -> None:
+    """FastAPI dependency: fail-closed basic auth for admin diagnostics routes."""
+    settings: Settings = request.app.state.settings
+    creds = parse_basic_credentials(request.headers.get("authorization"))
+    if not auth_active(settings) or creds is None or not credentials_valid(creds[0], creds[1], settings):
+        raise HTTPException(status_code=401, detail="unauthorized", headers=_UNAUTHORIZED_HEADERS)

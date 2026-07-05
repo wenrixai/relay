@@ -9,9 +9,10 @@ the relay; the periodic exporter swallows export errors.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
 
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
-from opentelemetry.metrics import CallbackOptions, Counter, Meter, Observation
+from opentelemetry.metrics import CallbackOptions, Counter as OtelCounter, Meter, Observation
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import MetricReader, PeriodicExportingMetricReader
 
@@ -23,6 +24,42 @@ METRIC_PREFIX = "channel_relay_"
 
 def _metric_name(name: str) -> str:
     return f"{METRIC_PREFIX}{name}"
+
+
+@dataclass
+class _MetricTotals:
+    """In-process totals mirroring the write-only OTel counters."""
+
+    upstream_timeouts: dict[str, int] = field(default_factory=dict)
+    pii_redacted: dict[str, dict[str, int]] = field(default_factory=dict)
+    pii_decrypted: dict[str, int] = field(default_factory=dict)
+    xml_parse_errors: dict[str, dict[str, int]] = field(default_factory=dict)
+
+    @staticmethod
+    def increment(values: dict[str, int], key: str, count: int = 1) -> None:
+        """Increment a flat counter mapping."""
+        values[key] = values.get(key, 0) + count
+
+    @staticmethod
+    def increment_nested(values: dict[str, dict[str, int]], key: str, nested_key: str, count: int) -> None:
+        """Increment a nested counter mapping."""
+        nested_values = values.setdefault(key, {})
+        nested_values[nested_key] = nested_values.get(nested_key, 0) + count
+
+    def snapshot(self, *, channels_configured: int, rules_version: str | None) -> dict[str, object]:
+        """Return stable JSON-compatible totals."""
+        return {
+            "channels_configured": channels_configured,
+            "rules_version": rules_version,
+            "upstream_timeouts_total": dict(sorted(self.upstream_timeouts.items())),
+            "pii_fields_redacted_total": {
+                channel: dict(sorted(counts.items())) for channel, counts in sorted(self.pii_redacted.items())
+            },
+            "pii_fields_decrypted_total": dict(sorted(self.pii_decrypted.items())),
+            "xml_parse_errors_total": {
+                channel: dict(sorted(counts.items())) for channel, counts in sorted(self.xml_parse_errors.items())
+            },
+        }
 
 
 def build_meter_provider(
@@ -50,7 +87,8 @@ class RelayMetrics:
     def __init__(self, meter: Meter) -> None:
         self._channels_configured = 0
         self._rules_version: str | None = None
-        self._upstream_timeouts: Counter = meter.create_counter(
+        self._totals = _MetricTotals()
+        self._upstream_timeouts: OtelCounter = meter.create_counter(
             _metric_name("upstream_timeouts_total"),
             unit="1",
             description="Upstream channel timeouts (504s).",
@@ -67,17 +105,17 @@ class RelayMetrics:
             unit="1",
             description="Loaded PII rules version (info-style gauge).",
         )
-        self._pii_redacted: Counter = meter.create_counter(
+        self._pii_redacted: OtelCounter = meter.create_counter(
             _metric_name("pii_fields_redacted_total"),
             unit="1",
             description="PII fields actioned on responses.",
         )
-        self._pii_decrypted: Counter = meter.create_counter(
+        self._pii_decrypted: OtelCounter = meter.create_counter(
             _metric_name("pii_fields_decrypted_total"),
             unit="1",
             description="ENC_ tokens de-anonymized on requests.",
         )
-        self._xml_parse_errors: Counter = meter.create_counter(
+        self._xml_parse_errors: OtelCounter = meter.create_counter(
             _metric_name("xml_parse_errors_total"),
             unit="1",
             description="Hardened XML parse/structure rejections.",
@@ -109,19 +147,30 @@ class RelayMetrics:
 
     def record_upstream_timeout(self, channel: str) -> None:
         """Increment the upstream-timeout counter for a channel."""
+        self._totals.increment(self._totals.upstream_timeouts, channel)
         self._upstream_timeouts.add(1, {"channel": channel})
 
     def record_pii_redacted(self, channel: str, counts: Mapping[str, int]) -> None:
         """Record redacted-field counts per ``pii_type`` (label values, never field data)."""
         for pii_type, count in counts.items():
             if count:
+                self._totals.increment_nested(self._totals.pii_redacted, channel, pii_type, count)
                 self._pii_redacted.add(count, {"channel": channel, "pii_type": pii_type})
 
     def record_pii_decrypted(self, channel: str, count: int) -> None:
         """Record how many tokens were de-anonymized on a request."""
         if count:
+            self._totals.increment(self._totals.pii_decrypted, channel, count)
             self._pii_decrypted.add(count, {"channel": channel})
 
     def record_xml_parse_error(self, channel: str, kind: str) -> None:
         """Record a hardened-parser rejection with its stable ``kind``."""
+        self._totals.increment_nested(self._totals.xml_parse_errors, channel, kind, 1)
         self._xml_parse_errors.add(1, {"channel": channel, "kind": kind})
+
+    def snapshot(self) -> dict[str, object]:
+        """Return safe in-process metric totals for admin diagnostics."""
+        return self._totals.snapshot(
+            channels_configured=self._channels_configured,
+            rules_version=self._rules_version,
+        )

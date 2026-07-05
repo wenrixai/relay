@@ -20,12 +20,13 @@ from opentelemetry.sdk.metrics.export import MetricReader
 from starlette.responses import Response
 
 from channel_relay import __version__
+from channel_relay.admin import diagnostics_snapshot
 from channel_relay.channels import credentials_require_response_keyring
 from channel_relay.config.loader import load_config
 from channel_relay.config.models import RelayConfig
 from channel_relay.health import readiness_reasons
 from channel_relay.middleware.access_log import log_access
-from channel_relay.middleware.auth import verify_basic_auth
+from channel_relay.middleware.auth import verify_admin_basic_auth, verify_basic_auth
 from channel_relay.observability.logging import configure_logging
 from channel_relay.observability.metrics import METER_NAME, RelayMetrics, build_meter_provider
 from channel_relay.pii.crypto import Keyring, load_keyring
@@ -135,6 +136,7 @@ def create_app(
     application.state.rules = None
     application.state.metrics = metrics
     application.state.meter_provider = meter_provider
+    application.state.started_at = time.time()
 
     @application.get("/liveness")
     async def liveness() -> dict[str, str]:
@@ -151,6 +153,11 @@ def create_app(
                 content={"status": "not_ready", "reasons": reasons},
             )
         return JSONResponse(status_code=200, content={"status": "ready"})
+
+    @application.get("/admin/flare", dependencies=[Depends(verify_admin_basic_auth)])
+    async def admin_flare(request: Request) -> dict[str, object]:
+        """Authenticated redacted diagnostics snapshot."""
+        return diagnostics_snapshot(request)
 
     @application.api_route(
         "/channel/{name}/{path:path}",
