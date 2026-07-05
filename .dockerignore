@@ -1,0 +1,37 @@
+# Keep the image build context small and free of anything the runtime image doesn't need.
+# NOTE: the main Dockerfile copies README.md, and Dockerfile.mockserver copies
+# deployment/mock_channel.py — both are preserved below.
+.git
+.github
+.gitignore
+.dockerignore
+
+# Tests, docs, specs, perf — not part of any image.
+tests
+docs
+openspec
+perf
+
+# deployment/ is excluded except the mock channel used by Dockerfile.mockserver.
+deployment/*
+!deployment/mock_channel.py
+
+# Repo docs that are not copied into the image (README.md is intentionally kept).
+*CLAUDE*
+CONTRIBUTING.md
+RELEASE_CHECKLIST.md
+
+# Python caches / local envs.
+.venv
+__pycache__
+*.pyc
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.coverage
+htmlcov
+
+# Editor / OS cruft.
+.idea
+.vscode
+.DS_Store

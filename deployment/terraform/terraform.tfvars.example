@@ -1,0 +1,23 @@
+region  = "eu-west-1"
+name    = "wenrix-relay"
+image   = "ghcr.io/wenrixai/wenrix-relay:v0.1.0"
+
+# Restrict ALB ingress to the Wenrix client source — never 0.0.0.0/0.
+wenrix_ingress_cidrs = ["203.0.113.0/24"]
+
+# ACM certificate for the HTTPS listener (must be in var.region).
+certificate_arn = "arn:aws:acm:eu-west-1:111122223333:certificate/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Channel config (no secrets). Credentials belong in Secrets Manager references, not here.
+relay_config_json = "{\"channels\":[{\"name\":\"travelport\",\"type\":\"travelport\"}]}"
+
+# PII keyring — supply via a secret var file / TF_VAR, not committed. {"<epoch>":"<base64(32B)>"}.
+# pii_keyring_json     = "{\"0\":\"...base64-32-bytes...\"}"
+pii_key_epoch_active = 0
+
+otlp_endpoint = "otel-collector.telemetry.internal:4317"
+
+az_count      = 2
+desired_count = 2
+min_capacity  = 2
+max_capacity  = 10

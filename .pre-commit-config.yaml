@@ -10,8 +10,9 @@ repos:
     hooks:
       - id: check-json
       - id: check-yaml
-        # Helm templates are Go-templated, not plain YAML.
-        exclude: ^deployment/helm/chart/templates/
+        # Helm templates are Go-templated; CloudFormation uses YAML tags (!Ref, !GetAtt, !Sub).
+        # Neither is plain YAML the safe loader accepts.
+        exclude: ^deployment/(helm/chart/templates/|cloudformation/)
       - id: check-toml
       - id: check-added-large-files
       - id: end-of-file-fixer

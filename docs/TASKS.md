@@ -177,6 +177,20 @@ Implement PROJECT.md §13.4: 50 rps/instance @ 1000m vCPU target; hardware basel
 round-trip; fixed mock upstream latency; pass/fail thresholds; k6 or locust; results as CI artifact
 (non-gating by default).
 
+### T5.5 — Terraform (AWS ECS Fargate) (P2) — Depends: T1.12
+Self-contained Terraform module under `deployment/terraform/` deploying the relay as a highly
+available ECS Fargate service: multi-AZ VPC (public/private subnets + NAT), HTTPS ALB with
+`/readiness` health check, ECS service (min 2 tasks, multi-AZ) with CPU + ALB-request autoscaling,
+Secrets Manager for the PII keyring injected as `RELAY_PII_KEYRING`, least-privilege IAM/security
+groups (execution role reads only its secret; ALB ingress restricted to the Wenrix CIDR; tasks accept
+traffic only from the ALB), non-root read-only-rootfs tasks, CloudWatch logs. `terraform validate`
+clean; README with usage and rotation notes.
+
+### T5.6 — CloudFormation (HA ECS Fargate) (P2) — Depends: T1.12
+Equivalent CloudFormation template `deployment/cloudformation/wenrix-relay.yaml` for the same HA ECS
+Fargate topology, with parameters/outputs, scoped IAM, Secrets Manager (`DeletionPolicy: Retain`),
+autoscaling, and ALB `/readiness` health. `cfn-lint` clean; README with deploy/validate steps.
+
 ---
 
 ## Slice 6 — Later capabilities (postponed by design)
