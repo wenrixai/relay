@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
+import pytest
 from lxml import etree
 
 from channel_relay.channels import get_handler
@@ -24,20 +26,46 @@ def _ctx(channel: ChannelConfig, headers: dict[str, str] | None = None) -> SwapC
     return SwapContext(channel=channel, headers={} if headers is None else headers, keyring=None)
 
 
+def _tf_channel(credentials: dict[str, str] | None = None) -> ChannelConfig:
+    return ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION, credentials=credentials or {})
+
+
+def _farelogix_channel(credentials: dict[str, str] | None = None) -> ChannelConfig:
+    return ChannelConfig(name="flx", type=ChannelType.FARELOGIX_AA, credentials=credentials or {})
+
+
+def _ndc_channel(
+    channel_type: ChannelType = ChannelType.BA_NDC_DIRECT,
+    credentials: dict[str, str] | None = None,
+) -> ChannelConfig:
+    host = "la.test" if channel_type is ChannelType.LA_NDC_DIRECT else None
+    return ChannelConfig(name=channel_type.value, type=channel_type, host=host, credentials=credentials or {})
+
+
+def _gds_channel(
+    channel_type: ChannelType = ChannelType.AMADEUS,
+    credentials: dict[str, str] | None = None,
+) -> ChannelConfig:
+    return ChannelConfig(name=channel_type.value, type=channel_type, host="gds.test", credentials=credentials or {})
+
+
+def _assert_swap_error(message: str, func: Callable[..., object], *args: object) -> None:
+    with pytest.raises(CredentialSwapError, match=message):
+        func(*args)
+
+
 def test_registry_has_handler_for_every_channel_type() -> None:
     for channel_type in ChannelType:
         assert get_handler(channel_type).channel_type is channel_type
 
 
 def test_travelfusion_operation_ignores_general_info_and_swaps_request() -> None:
-    channel = ChannelConfig(
-        name="tf",
-        type=ChannelType.TRAVELFUSION,
-        credentials={
+    channel = _tf_channel(
+        {
             "login_id": "relay-login",
             "xml_login_id": "relay-xml",
             "supplier_parameters": "market=US,currency=USD",
-        },
+        }
     )
     root = _root("travelfusion/request.xml")
     handler = get_handler(channel.type)
@@ -54,11 +82,7 @@ def test_travelfusion_operation_ignores_general_info_and_swaps_request() -> None
 
 
 def test_travelfusion_response_strips_login_fields() -> None:
-    channel = ChannelConfig(
-        name="tf",
-        type=ChannelType.TRAVELFUSION,
-        credentials={"login_id": "relay-login", "xml_login_id": "relay-xml"},
-    )
+    channel = _tf_channel({"login_id": "relay-login", "xml_login_id": "relay-xml"})
     root = _root("travelfusion/response.xml")
 
     assert get_handler(channel.type).swap_response(root, _ctx(channel)) is True
@@ -68,14 +92,47 @@ def test_travelfusion_response_strips_login_fields() -> None:
     assert "<Status>OK</Status>" in xml
 
 
-def test_ndc_header_swaps_leave_body_unchanged() -> None:
-    ba = ChannelConfig(name="ba", type=ChannelType.BA_NDC_DIRECT, credentials={"client_key": "ba-key"})
-    la = ChannelConfig(
-        name="la",
-        type=ChannelType.LA_NDC_DIRECT,
-        host="la.test",
-        credentials={"api_key": "la-key", "api_key_header": "X-LA-Key"},
+def test_travelfusion_no_credentials_is_noop() -> None:
+    channel = _tf_channel()
+    root = _root("travelfusion/request.xml")
+    response = _root("travelfusion/response.xml")
+    handler = get_handler(channel.type)
+
+    assert handler.requires_body_inspection(channel) is False
+    assert handler.swap_request_body(root, _ctx(channel)) is False
+    assert handler.swap_response(response, _ctx(channel)) is False
+
+
+@pytest.mark.parametrize(
+    ("message", "body", "credentials"),
+    [
+        ("operation element not found", b"<GeneralInfoItemList/>", {}),
+        ("login elements not found", b"<Root><StartRouting/></Root>", {}),
+        (
+            "supplier parameter must be name=value",
+            b"<Root><StartRouting><LoginId/><XmlLoginId/><CustomSupplierParameterList/></StartRouting></Root>",
+            {"supplier_parameters": "bad"},
+        ),
+    ],
+    ids=["missing-operation", "missing-login", "bad-supplier-parameter"],
+)
+def test_travelfusion_missing_operation_or_supplier_parameter_fails_closed(
+    message: str, body: bytes, credentials: dict[str, str]
+) -> None:
+    handler = get_handler(ChannelType.TRAVELFUSION)
+    channel = _tf_channel({"login_id": "login", "xml_login_id": "xml"} | credentials)
+
+    _assert_swap_error(
+        message,
+        handler.swap_request_body,
+        parse_bytes(body),
+        _ctx(channel),
     )
+
+
+def test_ndc_header_swaps_leave_body_unchanged() -> None:
+    ba = _ndc_channel(ChannelType.BA_NDC_DIRECT, {"client_key": "ba-key"})
+    la = _ndc_channel(ChannelType.LA_NDC_DIRECT, {"api_key": "la-key", "api_key_header": "X-LA-Key"})
     ba_root = _root("ba/request.xml")
     la_root = _root("la/request.xml")
     ba_headers: dict[str, str] = {}
@@ -94,11 +151,20 @@ def test_ndc_header_swaps_leave_body_unchanged() -> None:
     assert serialize(la_root) == serialize(_root("la/request.xml"))
 
 
+def test_ndc_header_swap_no_credentials_is_noop_and_missing_key_fails_closed() -> None:
+    handler = get_handler(ChannelType.BA_NDC_DIRECT)
+    no_creds = _ndc_channel()
+    missing_key = _ndc_channel(credentials={"api_key_header": "X-Key"})
+    headers: dict[str, str] = {}
+
+    handler.swap_request_headers(_ctx(no_creds, headers))
+    assert headers == {}
+    _assert_swap_error("missing credential client_key", handler.swap_request_headers, _ctx(missing_key, headers))
+
+
 def test_farelogix_swaps_expected_attributes_and_subscription_header() -> None:
-    channel = ChannelConfig(
-        name="flx",
-        type=ChannelType.FARELOGIX_AA,
-        credentials={
+    channel = _farelogix_channel(
+        {
             "subscription_key": "sub-key",
             "username": "relay-user",
             "password": "relay-pass",
@@ -106,7 +172,7 @@ def test_farelogix_swaps_expected_attributes_and_subscription_header() -> None:
             "agent_user": "relay-agent-user",
             "agent_password": "relay-agent-pass",
             "agent_number": "relay-agency",
-        },
+        }
     )
     root = _root("farelogix/request.xml")
     headers: dict[str, str] = {}
@@ -127,26 +193,31 @@ def test_farelogix_swaps_expected_attributes_and_subscription_header() -> None:
 
 
 def test_farelogix_missing_required_elements_fails_closed() -> None:
-    channel = ChannelConfig(
-        name="flx",
-        type=ChannelType.FARELOGIX_AA,
-        credentials={
+    channel = _farelogix_channel(
+        {
             "subscription_key": "sub-key",
             "username": "relay-user",
             "password": "relay-pass",
             "agent": "relay-agent",
             "agent_user": "relay-agent-user",
             "agent_password": "relay-agent-pass",
-        },
+        }
     )
     root = parse_bytes(b"<Envelope><Body><AirShoppingRQ/></Body></Envelope>")
 
-    try:
-        get_handler(channel.type).swap_request_body(root, _ctx(channel))
-    except CredentialSwapError:
-        pass
-    else:  # pragma: no cover - assertion path
-        raise AssertionError("expected CredentialSwapError")
+    _assert_swap_error("Farelogix", get_handler(channel.type).swap_request_body, root, _ctx(channel))
+
+
+def test_farelogix_no_credentials_is_noop_and_missing_subscription_key_fails_closed() -> None:
+    handler = get_handler(ChannelType.FARELOGIX_AA)
+    no_creds = _farelogix_channel()
+    missing_key = _farelogix_channel({"username": "u"})
+    root = _root("farelogix/request.xml")
+
+    assert handler.requires_body_inspection(no_creds) is False
+    handler.swap_request_headers(_ctx(no_creds, {}))
+    assert handler.swap_request_body(root, _ctx(no_creds)) is False
+    _assert_swap_error("missing Farelogix subscription key", handler.swap_request_headers, _ctx(missing_key, {}))
 
 
 def test_soap_security_fragment_replaces_header_for_gds_channels() -> None:
@@ -160,9 +231,7 @@ def test_soap_security_fragment_replaces_header_for_gds_channels() -> None:
         (ChannelType.SABRE, "sabre/request.xml", "TravelItineraryReadRQ"),
         (ChannelType.TRAVELPORT, "travelport/request.xml", "UniversalRecordRetrieveReq"),
     ]:
-        channel = ChannelConfig(
-            name=channel_type.value, type=channel_type, host="gds.test", credentials={"soap_security": fragment}
-        )
+        channel = _gds_channel(channel_type, {"soap_security": fragment})
         root = _root(fixture)
         handler = get_handler(channel_type)
 
@@ -175,8 +244,55 @@ def test_soap_security_fragment_replaces_header_for_gds_channels() -> None:
         assert "caller-token" not in xml
 
 
+def test_soap_security_xpath_target_variant_replaces_header() -> None:
+    handler = get_handler(ChannelType.AMADEUS)
+    channel = _gds_channel(
+        credentials={
+            "soap_security": "<Security><Token>relay</Token></Security>",
+            "soap_security_target_xpath": "//*[local-name()='Security']",
+        },
+    )
+    root = _root("amadeus/request.xml")
+
+    assert handler.swap_request_body(root, _ctx(channel)) is True
+    assert "relay" in serialize(root).decode()
+
+
+@pytest.mark.parametrize(
+    ("credentials", "message"),
+    [
+        ({"soap_security": "<Security/>", "soap_security_target_xpath": "//*["}, "invalid"),
+        ({"soap_security": "<Security/>", "soap_security_target_xpath": "string(//*)"}, "not found"),
+        ({"soap_security": "<Security/>", "soap_security_target_xpath": "//*[local-name()='Missing']"}, "not found"),
+        ({"soap_security": "<Security><Token>"}, "parseable XML"),
+    ],
+    ids=["invalid-xpath", "scalar-xpath", "missing-target", "invalid-fragment"],
+)
+def test_soap_security_xpath_target_failures(credentials: dict[str, str], message: str) -> None:
+    handler = get_handler(ChannelType.AMADEUS)
+    channel = _gds_channel(credentials=credentials)
+
+    _assert_swap_error(message, handler.swap_request_body, _root("amadeus/request.xml"), _ctx(channel))
+
+
+@pytest.mark.parametrize(
+    ("message", "body"),
+    [
+        ("SOAP Header not found", b"<Envelope/>"),
+        ("SOAP Security header not found", b"<Envelope><Header/><Body/></Envelope>"),
+    ],
+    ids=["missing-header", "missing-security"],
+)
+def test_soap_security_missing_header_or_security_fails_closed(message: str, body: bytes) -> None:
+    handler = get_handler(ChannelType.SABRE)
+    channel = _gds_channel(ChannelType.SABRE, {"soap_security": "<Security/>"})
+
+    assert handler.requires_body_inspection(_gds_channel(ChannelType.SABRE)) is False
+    _assert_swap_error(message, handler.swap_request_body, parse_bytes(body), _ctx(channel))
+
+
 def test_ndc_header_swap_replaces_client_sent_variant_case_insensitively() -> None:
-    ba = ChannelConfig(name="ba", type=ChannelType.BA_NDC_DIRECT, credentials={"client_key": "ba-key"})
+    ba = _ndc_channel(credentials={"client_key": "ba-key"})
     # A client-supplied lowercase variant must not survive alongside the relay-injected header.
     headers = {"client-key": "caller-key", "accept": "application/xml"}
 
@@ -193,9 +309,7 @@ def test_amadeus_and_sabre_response_auth_fields_are_encrypted() -> None:
         (ChannelType.AMADEUS, "amadeus/response_auth.xml", "SESSION-123"),
         (ChannelType.SABRE, "sabre/response_auth.xml", "SABRE-TOKEN"),
     ]:
-        channel = ChannelConfig(
-            name=channel_type.value, type=channel_type, host="gds.test", credentials={"soap_security": "<Security/>"}
-        )
+        channel = _gds_channel(channel_type, {"soap_security": "<Security/>"})
         root = _root(fixture)
 
         assert get_handler(channel_type).swap_response(root, SwapContext(channel=channel, headers={}, keyring=keyring))
@@ -203,3 +317,23 @@ def test_amadeus_and_sabre_response_auth_fields_are_encrypted() -> None:
         xml = serialize(root).decode()
         assert plaintext not in xml
         assert "ENC_" in xml
+
+
+def test_soap_response_noop_and_missing_keyring_paths() -> None:
+    keyring = Keyring.from_json(KEYRING_JSON)
+    handler = get_handler(ChannelType.AMADEUS)
+    channel = _gds_channel(credentials={"soap_security": "<Security/>"})
+    no_creds_response = parse_bytes(b"<Envelope><SessionId>SESSION-123</SessionId></Envelope>")
+
+    _assert_swap_error(
+        "response auth encryption requires keyring",
+        handler.swap_response,
+        _root("amadeus/response_auth.xml"),
+        _ctx(channel),
+    )
+
+    already_encrypted = parse_bytes(b"<Envelope><SessionId>ENC_aGVsbG8</SessionId></Envelope>")
+    assert handler.swap_response(already_encrypted, SwapContext(channel, {}, keyring)) is False
+
+    no_creds = channel.model_copy(update={"credentials": {}})
+    assert handler.swap_response(no_creds_response, SwapContext(no_creds, {}, keyring)) is False
