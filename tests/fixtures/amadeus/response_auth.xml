@@ -1,0 +1,12 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:awsse="http://xml.amadeus.com/2010/06/Session_v3">
+  <soap:Header>
+    <awsse:Session>
+      <awsse:SessionId>SESSION-123</awsse:SessionId>
+      <awsse:SequenceNumber>42</awsse:SequenceNumber>
+      <awsse:SecurityToken>TOKEN-ABC</awsse:SecurityToken>
+    </awsse:Session>
+  </soap:Header>
+  <soap:Body>
+    <PNR_Reply/>
+  </soap:Body>
+</soap:Envelope>

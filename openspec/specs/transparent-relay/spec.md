@@ -20,14 +20,13 @@ using per-channel connect/read timeouts, with **no retries**.
 - **THEN** the relay does not retry the upstream request
 
 ### Requirement: Content handling and pass-through
+
 The relay SHALL pass through non-XML/unknown content transparently, support chunked transfer, pass
 compressed bodies through untouched when no inspection is required, and reject bodies exceeding the
-inspectable-size cap with 413 when inspection is required.
+inspectable-size cap with 413 when inspection is required. Inspection is required when PII is enabled
+or when configured channel credentials require body parsing for operation parsing, request swap, or
+response cleanup/encryption.
 
-#### Scenario: Gzip passes through untouched
-- **WHEN** a gzip-encoded body is relayed and no inspection is required
-- **THEN** the bytes and `Content-Encoding` are preserved unchanged
-
-#### Scenario: Oversize inspectable body rejected
-- **WHEN** a body requiring inspection exceeds the inspectable-size cap
-- **THEN** the relay returns 413
+#### Scenario: Credential swap requires inspection
+- **WHEN** a channel has credentials that require XML credential swap
+- **THEN** oversized inspectable request bodies are rejected with 413 before forwarding

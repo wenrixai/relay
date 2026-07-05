@@ -58,16 +58,16 @@ channels:
 ## 3. Channel types, defaults, credential keys
 | `type` | Default `host` | Credential keys | Swap |
 |---|---|---|---|
-| `travelfusion` | api.travelfusion.com | `login_id`, `xml_login_id`, `supplier_parameters` | Structural LoginId/XmlLoginId in request; strip from response. |
+| `travelfusion` | api.travelfusion.com | `login_id`, `xml_login_id`, optional `supplier_parameters` | Structural LoginId/XmlLoginId in request; strip from response. |
 | `ba-ndc-direct` | api.ba.com | `client_key` | Add `Client-Key` header. |
-| `la-ndc-direct` | (per deployment) | `api_key` | Add API key header. |
-| `farelogix-aa` | aa.farelogix.com | `api_key`, `agent`, `username`, `password`, `agent_user`, `agent_password` | `Ocp-Apim-Subscription-Key` + `#FLX_*#` body substitution. |
+| `la-ndc-direct` | (per deployment) | `api_key`, optional `api_key_header` | Add API key header (`API-Key` by default). |
+| `farelogix-aa` | aa.farelogix.com | `subscription_key` (or legacy `api_key`), `agent`, `username`, `password`, `agent_user`, `agent_password`, optional `agent_number` | `Ocp-Apim-Subscription-Key` + structural `tc/iden` and `tc/agent` attribute replacement. |
 | `farelogix-lh` | lhg.farelogix.com | (same as AA) | Same. |
 | `farelogix-ua` | ua.farelogix.com | (same as AA) | Same. |
 | `farelogix-ek` | ek.farelogix.com | (same as AA) | Same. |
-| `amadeus` | (per deployment) | `soap_security` | Replace SOAP security header; response auth-field encryption. |
-| `sabre` | (per deployment) | `soap_security` | Replace SOAP security header; response auth-field encryption. |
-| `travelport` | (per deployment) | `soap_security` | Replace SOAP security header. |
+| `amadeus` | (per deployment) | `soap_security`, optional `soap_security_target_xpath` | Replace SOAP security header; response auth-field encryption. |
+| `sabre` | (per deployment) | `soap_security`, optional `soap_security_target_xpath` | Replace SOAP security header; response auth-field encryption. |
+| `travelport` | (per deployment) | `soap_security`, optional `soap_security_target_xpath` | Replace SOAP security header. |
 
 ---
 
@@ -149,7 +149,8 @@ JSON-only; there is no v1 `WP_*` equivalent.
     { "name": "ba", "type": "ba-ndc-direct", "credentials": { "client_key": "..." },
       "pii": { "enabled": true } },
     { "name": "amadeus", "type": "amadeus", "host": "nodeD1.test.webservices.amadeus.com",
-      "credentials": { "soap_security": "..." }, "pii": { "enabled": true },
+      "credentials": { "soap_security": "<wsse:Security>...</wsse:Security>" },
+      "pii": { "enabled": true },
       "authorization": { "allowed_operations": [ { "operation": "PNR_Retrieve", "version": "^1.0" } ] } },
     { "name": "passthrough-x", "type": "travelport" }
   ]

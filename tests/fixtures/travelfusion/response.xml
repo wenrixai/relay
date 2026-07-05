@@ -1,0 +1,7 @@
+<CommandList>
+  <StartRoutingResponse>
+    <LoginId>supplier-login</LoginId>
+    <XmlLoginId>supplier-xml</XmlLoginId>
+    <Status>OK</Status>
+  </StartRoutingResponse>
+</CommandList>

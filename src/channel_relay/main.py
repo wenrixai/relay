@@ -20,6 +20,7 @@ from opentelemetry.sdk.metrics.export import MetricReader
 from starlette.responses import Response
 
 from channel_relay import __version__
+from channel_relay.channels import credentials_require_response_keyring
 from channel_relay.config.loader import load_config
 from channel_relay.config.models import RelayConfig
 from channel_relay.health import readiness_reasons
@@ -46,9 +47,11 @@ def build_keyring(settings: Settings, config: RelayConfig | None) -> Keyring | N
         file_path=settings.pii_keyring_file,
         active_epoch=settings.pii_key_epoch_active,
     )
-    pii_enabled = config is not None and any(channel.pii.enabled for channel in config.channels)
-    if keyring is None and pii_enabled:
-        msg = "PII is enabled for a channel but no keyring is configured"
+    keyring_required = config is not None and any(
+        channel.pii.enabled or credentials_require_response_keyring(channel) for channel in config.channels
+    )
+    if keyring is None and keyring_required:
+        msg = "PII or response auth encryption is enabled for a channel but no keyring is configured"
         raise RuntimeError(msg)
     return keyring
 

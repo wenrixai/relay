@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from channel_relay.channels import credentials_require_body_inspection, credentials_require_response_keyring
 from channel_relay.config.models import ChannelConfig
 
 
@@ -39,10 +40,15 @@ def classify_content(content_type: str | None) -> ContentKind:
 def requires_inspection(channel: ChannelConfig) -> bool:
     """Whether the relay must read/parse the body for this channel.
 
-    Slice 1: only PII-enabled channels require inspection. Later slices add credential
-    swap and authorization as additional triggers.
+    PII-enabled channels require inspection for request de-anonymization/response
+    redaction. Slice 3 credential swap adds body inspection for channels whose
+    configured credentials require structural XML mutation or response auth encryption.
     """
-    return channel.pii.enabled
+    return (
+        channel.pii.enabled
+        or credentials_require_body_inspection(channel)
+        or credentials_require_response_keyring(channel)
+    )
 
 
 def body_exceeds_cap(size: int, max_bytes: int) -> bool:

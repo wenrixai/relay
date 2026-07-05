@@ -15,6 +15,8 @@ from fastapi import Request
 from loguru import logger
 from starlette.responses import Response
 
+from channel_relay.channels import get_handler
+from channel_relay.channels.base import ChannelHandler, CredentialSwapError, SwapContext
 from channel_relay.config.models import ChannelConfig, RelayConfig
 from channel_relay.middleware.content import (
     ContentKind,
@@ -36,6 +38,7 @@ from channel_relay.pii.engine import (
 )
 from channel_relay.pii.rules import RuleSet
 from channel_relay.pii.xml_ops import XmlOpsError, XmlOversizeError
+from channel_relay.pii.xml_ops import parse_bytes, serialize
 from channel_relay.proxy.errors import (
     TRACE_ID_HEADER,
     ErrorReason,
@@ -82,7 +85,31 @@ def channel_timeout(channel: ChannelConfig) -> httpx.Timeout:
     )
 
 
-async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
+def _headers_to_dict(headers: list[tuple[str, str]]) -> dict[str, str]:
+    """Convert cleaned headers to a mutable mapping while preserving the last value."""
+    return dict(headers)
+
+
+def _remove_body_framing(headers: dict[str, str], *, remove_encoding: bool = False) -> None:
+    """Remove stale body framing headers after a body rewrite."""
+    for name in list(headers):
+        lower = name.lower()
+        if lower == "content-length" or (remove_encoding and lower == "content-encoding"):
+            del headers[name]
+
+
+def _gzip_decode(body: bytes) -> bytes:
+    try:
+        return gzip.decompress(body)
+    except (zlib.error, OSError) as exc:
+        raise CredentialSwapError("gzip request body could not be decoded") from exc
+
+
+def _gzip_encode(body: bytes) -> bytes:
+    return gzip.compress(body)
+
+
+async def forward(  # pylint: disable=too-many-locals,too-many-return-statements,too-many-branches,too-many-statements
     client: httpx.AsyncClient,
     channel: ChannelConfig,
     path: str,
@@ -112,26 +139,63 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     logger.debug("Relaying {} body for channel {}", kind, channel.name)
     url = build_target_url(channel, path, request.url.query)
 
-    headers = clean_request_headers(request.headers.items(), channel.host)
-
-    # [7] De-anonymize: the channel must always receive plaintext (§8.6). Envelope-driven,
-    # keyring-only; fail closed — an undecryptable token never reaches the channel.
+    headers = _headers_to_dict(clean_request_headers(request.headers.items(), channel.host))
     keyring = getattr(request.app.state, "keyring", None)
-    if channel.pii.enabled and keyring is not None and body and kind is ContentKind.XML:
-        outcome = _request_pii_stage(
-            channel=channel,
-            keyring=keyring,
-            body=body,
-            content_encoding=request.headers.get("content-encoding", "").lower(),
-            max_inspect_bytes=max_inspect_bytes,
-            trace_id=trace_id,
-            metrics=metrics,
-        )
-        if isinstance(outcome, Response):
-            return outcome
-        body = outcome
-        # The body changed size; stale framing headers must be recomputed by httpx.
-        headers = [(k, v) for k, v in headers if k.lower() != "content-length"]
+    handler = get_handler(channel.type)
+
+    # [8a] Credential header injection needs no body and runs for every credentialed channel;
+    # header-only channels (NDC) forward the body byte-for-byte (§spec: body left unchanged).
+    if channel.credentials:
+        header_outcome = _request_header_swap(handler, channel, headers, keyring, trace_id)
+        if header_outcome is not None:
+            return header_outcome
+
+    # [7]/[8b] Body stages operate on decoded plaintext; gzip is decoded/re-encoded once here
+    # so PII de-anonymization and credential-body swap never round-trip it twice.
+    need_pii = channel.pii.enabled and keyring is not None and kind is ContentKind.XML
+    need_cred_body = bool(channel.credentials) and handler.requires_body_inspection(channel)
+    if body and (need_pii or need_cred_body):
+        gzipped = request.headers.get("content-encoding", "").lower() == "gzip"
+        try:
+            working = _gzip_decode(body) if gzipped else body
+        except CredentialSwapError:
+            logger.warning("Request body could not be gzip-decoded for channel {}", channel.name)
+            return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not decodable", trace_id)
+        changed = False
+        # [7] De-anonymize: the channel must always receive plaintext (§8.6). Envelope-driven,
+        # keyring-only; fail closed — an undecryptable token never reaches the channel.
+        if need_pii and keyring is not None:
+            pii_outcome = _request_pii_stage(
+                channel=channel,
+                keyring=keyring,
+                body=working,
+                max_inspect_bytes=max_inspect_bytes,
+                trace_id=trace_id,
+                metrics=metrics,
+            )
+            if isinstance(pii_outcome, Response):
+                return pii_outcome
+            working = pii_outcome
+            changed = True
+        if need_cred_body:
+            swap_outcome = _request_credential_swap_stage(
+                handler=handler,
+                channel=channel,
+                body=working,
+                headers=headers,
+                max_inspect_bytes=max_inspect_bytes,
+                trace_id=trace_id,
+                metrics=metrics,
+                keyring=keyring,
+            )
+            if isinstance(swap_outcome, Response):
+                return swap_outcome
+            working, cred_changed = swap_outcome
+            changed = changed or cred_changed
+        if changed:
+            body = _gzip_encode(working) if gzipped else working
+            # The body changed size; stale framing headers must be recomputed by httpx.
+            _remove_body_framing(headers)
 
     try:
         upstream = await client.request(
@@ -151,11 +215,27 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
         return internal_error_response(ErrorReason.INTERNAL_ERROR, "upstream request failed", trace_id)
 
     content = upstream.content
-    response_headers = clean_response_headers(upstream.headers.items())
+    response_headers = _headers_to_dict(clean_response_headers(upstream.headers.items()))
+    response_kind = classify_content(upstream.headers.get("content-type"))
+
+    if channel.credentials and content and response_kind is ContentKind.XML:
+        response_swap_outcome = _response_credential_swap_stage(
+            channel=channel,
+            content=content,
+            response_headers=response_headers,
+            max_inspect_bytes=max_inspect_bytes,
+            trace_id=trace_id,
+            metrics=metrics,
+            keyring=keyring,
+        )
+        if isinstance(response_swap_outcome, Response):
+            return response_swap_outcome
+        content, changed = response_swap_outcome
+        if changed:
+            _remove_body_framing(response_headers, remove_encoding=True)
 
     # [9] Redact: encrypt/mask PII fields per rules before the client sees them (§8.5).
     rules = getattr(request.app.state, "rules", None)
-    response_kind = classify_content(upstream.headers.get("content-type"))
     if (
         channel.pii.enabled
         and keyring is not None
@@ -163,7 +243,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
         and content
         and response_kind is ContentKind.XML
     ):
-        outcome = _response_pii_stage(
+        redaction_outcome = _response_pii_stage(
             channel=channel,
             keyring=keyring,
             rules=rules,
@@ -172,17 +252,102 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
             trace_id=trace_id,
             metrics=metrics,
         )
-        if isinstance(outcome, Response):
-            return outcome
-        content = outcome
+        if isinstance(redaction_outcome, Response):
+            return redaction_outcome
+        content = redaction_outcome
         # The relay rewrote the (decoded) body: framing headers are stale.
-        response_headers = [(k, v) for k, v in response_headers if k.lower() not in _BODY_SENSITIVE_HEADERS]
+        for name in list(response_headers):
+            if name.lower() in _BODY_SENSITIVE_HEADERS:
+                del response_headers[name]
 
     return Response(
         content=content,
         status_code=upstream.status_code,
-        headers=dict(response_headers),
+        headers=response_headers,
     )
+
+
+def _request_header_swap(
+    handler: ChannelHandler,
+    channel: ChannelConfig,
+    headers: dict[str, str],
+    keyring: Keyring | None,
+    trace_id: str | None,
+) -> Response | None:
+    """Pipeline stage [8a]: inject outbound credential headers; error → 502. No body needed."""
+    try:
+        handler.swap_request_headers(SwapContext(channel, headers, keyring))
+    except CredentialSwapError:
+        logger.warning("Credential header swap failed for channel {}", channel.name)
+        return internal_error_response(ErrorReason.CREDENTIAL_SWAP_FAILED, "request credential swap failed", trace_id)
+    return None
+
+
+def _request_credential_swap_stage(  # pylint: disable=too-many-arguments
+    *,
+    handler: ChannelHandler,
+    channel: ChannelConfig,
+    body: bytes,
+    headers: dict[str, str],
+    max_inspect_bytes: int,
+    trace_id: str | None,
+    metrics: RelayMetrics | None = None,
+    keyring: Keyring | None = None,
+) -> tuple[bytes, bool] | Response:
+    """Pipeline stage [8b]: per-channel request *body* credential swap; error → 502.
+
+    Only reached for handlers that require body inspection; ``body`` is already plaintext.
+    """
+    try:
+        root = parse_bytes(body, max_bytes=max_inspect_bytes)
+        changed = handler.swap_request_body(root, SwapContext(channel, headers, keyring))
+        return (serialize(root), True) if changed else (body, False)
+    except XmlOversizeError as exc:
+        _record_xml_error(metrics, channel.name, exc.kind)
+        return payload_too_large_response()
+    except XmlOpsError as exc:
+        _record_xml_error(metrics, channel.name, exc.kind)
+        logger.warning("Request XML rejected during credential swap for channel {}", channel.name)
+        return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not parseable XML", trace_id)
+    except CredentialSwapError:
+        logger.warning("Credential swap failed for channel {}", channel.name)
+        return internal_error_response(
+            ErrorReason.CREDENTIAL_SWAP_FAILED,
+            "request credential swap failed",
+            trace_id,
+        )
+
+
+def _response_credential_swap_stage(  # pylint: disable=too-many-arguments
+    *,
+    channel: ChannelConfig,
+    content: bytes,
+    response_headers: dict[str, str],
+    max_inspect_bytes: int,
+    trace_id: str | None,
+    metrics: RelayMetrics | None = None,
+    keyring: Keyring | None = None,
+) -> tuple[bytes, bool] | Response:
+    """Pipeline response hook: credential cleanup/encryption before PII redaction."""
+    handler = get_handler(channel.type)
+    try:
+        root = parse_bytes(content, max_bytes=max_inspect_bytes)
+        changed = handler.swap_response(root, SwapContext(channel, response_headers, keyring))
+        return (serialize(root), True) if changed else (content, False)
+    except XmlOversizeError as exc:
+        _record_xml_error(metrics, channel.name, exc.kind)
+        return payload_too_large_response()
+    except XmlOpsError as exc:
+        _record_xml_error(metrics, channel.name, exc.kind)
+        logger.warning("Response XML rejected during credential cleanup for channel {}", channel.name)
+        return internal_error_response(ErrorReason.XML_PARSE_ERROR, "response body is not parseable XML", trace_id)
+    except CredentialSwapError:
+        logger.warning("Response credential cleanup failed for channel {}", channel.name)
+        return internal_error_response(
+            ErrorReason.CREDENTIAL_SWAP_FAILED,
+            "response credential cleanup failed",
+            trace_id,
+        )
 
 
 def _request_pii_stage(  # pylint: disable=too-many-arguments
@@ -190,17 +355,13 @@ def _request_pii_stage(  # pylint: disable=too-many-arguments
     channel: ChannelConfig,
     keyring: Keyring,
     body: bytes,
-    content_encoding: str,
     max_inspect_bytes: int,
     trace_id: str | None,
     metrics: RelayMetrics | None = None,
 ) -> bytes | Response:
-    """Pipeline stage [7]: de-anonymize the request body; error → contract Response."""
-    gzipped = content_encoding == "gzip"
+    """Pipeline stage [7]: de-anonymize the (plaintext) request body; error → contract Response."""
     try:
-        working = gzip.decompress(body) if gzipped else body
-        working, decrypted = deanonymize_request_body(working, keyring=keyring, max_bytes=max_inspect_bytes)
-        result = gzip.compress(working) if gzipped else working
+        working, decrypted = deanonymize_request_body(body, keyring=keyring, max_bytes=max_inspect_bytes)
     except XmlOversizeError as exc:
         _record_xml_error(metrics, channel.name, exc.kind)
         return payload_too_large_response()
@@ -208,7 +369,7 @@ def _request_pii_stage(  # pylint: disable=too-many-arguments
         _record_xml_error(metrics, channel.name, exc.kind)
         logger.warning("Request XML rejected by hardened parser for channel {}", channel.name)
         return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not parseable XML", trace_id)
-    except (DeanonymizationError, zlib.error, OSError):
+    except DeanonymizationError:
         logger.warning("De-anonymization failed for channel {}", channel.name)
         return internal_error_response(
             ErrorReason.PII_DEANONYMIZATION_FAILED,
@@ -219,7 +380,7 @@ def _request_pii_stage(  # pylint: disable=too-many-arguments
         logger.debug("De-anonymized {} tokens for channel {}", decrypted, channel.name)
         if metrics is not None:
             metrics.record_pii_decrypted(channel.name, decrypted)
-    return result
+    return working
 
 
 def _response_pii_stage(  # pylint: disable=too-many-arguments

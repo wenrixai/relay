@@ -1,0 +1,8 @@
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+  <soap-env:Header>
+    <wsse:Security><wsse:BinarySecurityToken>caller-token</wsse:BinarySecurityToken></wsse:Security>
+  </soap-env:Header>
+  <soap-env:Body>
+    <TravelItineraryReadRQ/>
+  </soap-env:Body>
+</soap-env:Envelope>

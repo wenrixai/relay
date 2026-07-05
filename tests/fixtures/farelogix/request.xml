@@ -1,0 +1,9 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tc="http://farelogix.com/flx/tc">
+  <soap:Header>
+    <tc:iden u="caller-user" p="caller-pass" agt="caller-agent" agtpwd="caller-agent-pass" agy="caller-agency"/>
+    <tc:agent user="caller-agent-user"/>
+  </soap:Header>
+  <soap:Body>
+    <AirShoppingRQ/>
+  </soap:Body>
+</soap:Envelope>

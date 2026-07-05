@@ -1,0 +1,10 @@
+<CommandList>
+  <GeneralInfoItemList/>
+  <StartRouting>
+    <LoginId>caller-login</LoginId>
+    <XmlLoginId>caller-xml</XmlLoginId>
+    <CustomSupplierParameterList>
+      <SupplierParameter><Name>old</Name><Value>old-value</Value></SupplierParameter>
+    </CustomSupplierParameterList>
+  </StartRouting>
+</CommandList>
