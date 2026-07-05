@@ -126,7 +126,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     requires inspection, an oversize body is rejected with 413 (§5.4, §9.4).
     """
     trace_id = request.headers.get(TRACE_ID_HEADER)
-    metrics = getattr(request.app.state, "metrics", None)
+    metrics: RelayMetrics | None = request.app.state.metrics
     if channel.proxy_pass is None:
         logger.bind(channel=channel.name).error("Channel has no upstream base configured")
         return internal_error_response(ErrorReason.INTERNAL_ERROR, "channel has no upstream configured", trace_id)
@@ -140,7 +140,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     url = build_target_url(channel, path, request.url.query)
 
     headers = _headers_to_dict(clean_request_headers(request.headers.items(), channel.host))
-    keyring = getattr(request.app.state, "keyring", None)
+    keyring: Keyring | None = request.app.state.keyring
     handler = get_handler(channel.type)
 
     # [8a] Credential header injection needs no body and runs for every credentialed channel;
@@ -235,7 +235,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
             _remove_body_framing(response_headers, remove_encoding=True)
 
     # [9] Redact: encrypt/mask PII fields per rules before the client sees them (§8.5).
-    rules = getattr(request.app.state, "rules", None)
+    rules: RuleSet | None = request.app.state.rules
     if (
         channel.pii.enabled
         and keyring is not None

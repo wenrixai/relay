@@ -14,12 +14,14 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Sequence
+from typing import assert_never
 
 from lxml import etree
 
 from channel_relay.pii.codec import TOKEN_RE, TokenError, decrypt, encrypt
 from channel_relay.pii.crypto import Keyring
 from channel_relay.pii.rules import (
+    EncryptAction,
     FieldRule,
     MaskAction,
     ReferenceRule,
@@ -73,14 +75,18 @@ def parse_operation(root: etree._Element) -> str:
 def _apply_action(rule: FieldRule, value: str, keyring: Keyring) -> str | None:
     """The replacement for ``value`` under this rule's action (``None`` = remove)."""
     action = rule.action
-    if isinstance(action, MaskAction):
-        kept = value[: action.keep_prefix]
-        return kept + action.mask_char * max(len(value) - action.keep_prefix, 0)
-    if isinstance(action, ReplaceAction):
-        return action.replacement
-    if isinstance(action, RemoveAction):
-        return None
-    return encrypt(value, keyring)
+    match action:
+        case MaskAction():
+            kept = value[: action.keep_prefix]
+            return kept + action.mask_char * max(len(value) - action.keep_prefix, 0)
+        case ReplaceAction():
+            return action.replacement
+        case RemoveAction():
+            return None
+        case EncryptAction():
+            return encrypt(value, keyring)
+        case _:
+            assert_never(action)
 
 
 def _locate(root: etree._Element, rule: FieldRule | ReferenceRule) -> list[object]:
