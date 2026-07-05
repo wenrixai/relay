@@ -61,9 +61,9 @@ async def load_rules(
             fetched = await _fetch_rules(client, url)
         except (httpx.HTTPError, ValidationError, ValueError) as exc:
             # Log the error type only; rule contents / URLs may embed credentials.
-            logger.warning("Rules fetch failed ({}); using baked fallback", type(exc).__name__)
+            logger.bind(error_type=type(exc).__name__).warning("Rules fetch failed; using baked fallback")
         else:
-            logger.info("Rules loaded from API, rules_version={}", fetched.rules_version)
+            logger.bind(rules_version=fetched.rules_version).info("Rules loaded from API")
             return fetched
     try:
         baked = load_baked_rules()
@@ -71,7 +71,7 @@ async def load_rules(
         if pii_required:
             msg = "baked rules bundle is invalid and PII is enabled"
             raise RuntimeError(msg) from exc
-        logger.warning("Baked rules bundle invalid ({}); no rules loaded", type(exc).__name__)
+        logger.bind(error_type=type(exc).__name__).warning("Baked rules bundle invalid; no rules loaded")
         return None
-    logger.info("Rules loaded from baked bundle, rules_version={}", baked.rules_version)
+    logger.bind(rules_version=baked.rules_version).info("Rules loaded from baked bundle")
     return baked

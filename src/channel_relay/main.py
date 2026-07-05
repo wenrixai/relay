@@ -63,7 +63,7 @@ def _load_startup_config(settings: Settings) -> RelayConfig | None:
     Missing file → not ready (returns ``None``); invalid config → raise to abort startup.
     """
     if not Path(settings.config_file).exists():
-        logger.warning("Config file not found at {}; relay not ready", settings.config_file)
+        logger.bind(config_file=settings.config_file).warning("Config file not found; relay not ready")
         return None
     return load_config(settings.config_file)
 

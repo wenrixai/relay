@@ -30,5 +30,5 @@ def load_config(path: str | Path) -> RelayConfig:
         return RelayConfig.model_validate(data)
     except Exception as exc:  # re-raise after logging to abort startup
         # Log the validation error (never the config values, which may hold secrets).
-        logger.error("Invalid relay configuration: {}", type(exc).__name__)
+        logger.bind(error_type=type(exc).__name__).error("Invalid relay configuration")
         raise

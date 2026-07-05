@@ -128,15 +128,15 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     trace_id = request.headers.get(TRACE_ID_HEADER)
     metrics = getattr(request.app.state, "metrics", None)
     if channel.proxy_pass is None:
-        logger.error("Channel {} has no upstream base configured", channel.name)
+        logger.bind(channel=channel.name).error("Channel has no upstream base configured")
         return internal_error_response(ErrorReason.INTERNAL_ERROR, "channel has no upstream configured", trace_id)
 
     body = await request.body()
     kind = classify_content(request.headers.get("content-type"))
     if requires_inspection(channel) and body_exceeds_cap(len(body), max_inspect_bytes):
-        logger.warning("Inspectable body over cap for channel {}: {} bytes", channel.name, len(body))
+        logger.bind(channel=channel.name, body_bytes=len(body)).warning("Inspectable body over cap")
         return payload_too_large_response()
-    logger.debug("Relaying {} body for channel {}", kind, channel.name)
+    logger.bind(channel=channel.name, content_kind=kind).debug("Relaying body")
     url = build_target_url(channel, path, request.url.query)
 
     headers = _headers_to_dict(clean_request_headers(request.headers.items(), channel.host))
@@ -159,7 +159,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
         try:
             working = _gzip_decode(body) if gzipped else body
         except CredentialSwapError:
-            logger.warning("Request body could not be gzip-decoded for channel {}", channel.name)
+            logger.bind(channel=channel.name).warning("Request body could not be gzip-decoded")
             return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not decodable", trace_id)
         changed = False
         # [7] De-anonymize: the channel must always receive plaintext (§8.6). Envelope-driven,
@@ -206,12 +206,12 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
             timeout=channel_timeout(channel),
         )
     except httpx.TimeoutException:
-        logger.warning("Upstream timeout for channel {}", channel.name)
+        logger.bind(channel=channel.name).warning("Upstream timeout")
         if metrics is not None:
             metrics.record_upstream_timeout(channel.name)
         return upstream_timeout_response()
     except httpx.HTTPError:
-        logger.error("Upstream request failed for channel {}", channel.name)
+        logger.bind(channel=channel.name).error("Upstream request failed")
         return internal_error_response(ErrorReason.INTERNAL_ERROR, "upstream request failed", trace_id)
 
     content = upstream.content
@@ -278,7 +278,7 @@ def _request_header_swap(
     try:
         handler.swap_request_headers(SwapContext(channel, headers, keyring))
     except CredentialSwapError:
-        logger.warning("Credential header swap failed for channel {}", channel.name)
+        logger.bind(channel=channel.name).warning("Credential header swap failed")
         return internal_error_response(ErrorReason.CREDENTIAL_SWAP_FAILED, "request credential swap failed", trace_id)
     return None
 
@@ -307,10 +307,10 @@ def _request_credential_swap_stage(  # pylint: disable=too-many-arguments
         return payload_too_large_response()
     except XmlOpsError as exc:
         _record_xml_error(metrics, channel.name, exc.kind)
-        logger.warning("Request XML rejected during credential swap for channel {}", channel.name)
+        logger.bind(channel=channel.name).warning("Request XML rejected during credential swap")
         return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not parseable XML", trace_id)
     except CredentialSwapError:
-        logger.warning("Credential swap failed for channel {}", channel.name)
+        logger.bind(channel=channel.name).warning("Credential swap failed")
         return internal_error_response(
             ErrorReason.CREDENTIAL_SWAP_FAILED,
             "request credential swap failed",
@@ -339,10 +339,10 @@ def _response_credential_swap_stage(  # pylint: disable=too-many-arguments
         return payload_too_large_response()
     except XmlOpsError as exc:
         _record_xml_error(metrics, channel.name, exc.kind)
-        logger.warning("Response XML rejected during credential cleanup for channel {}", channel.name)
+        logger.bind(channel=channel.name).warning("Response XML rejected during credential cleanup")
         return internal_error_response(ErrorReason.XML_PARSE_ERROR, "response body is not parseable XML", trace_id)
     except CredentialSwapError:
-        logger.warning("Response credential cleanup failed for channel {}", channel.name)
+        logger.bind(channel=channel.name).warning("Response credential cleanup failed")
         return internal_error_response(
             ErrorReason.CREDENTIAL_SWAP_FAILED,
             "response credential cleanup failed",
@@ -367,17 +367,17 @@ def _request_pii_stage(  # pylint: disable=too-many-arguments
         return payload_too_large_response()
     except XmlOpsError as exc:
         _record_xml_error(metrics, channel.name, exc.kind)
-        logger.warning("Request XML rejected by hardened parser for channel {}", channel.name)
+        logger.bind(channel=channel.name).warning("Request XML rejected by hardened parser")
         return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not parseable XML", trace_id)
     except DeanonymizationError:
-        logger.warning("De-anonymization failed for channel {}", channel.name)
+        logger.bind(channel=channel.name).warning("De-anonymization failed")
         return internal_error_response(
             ErrorReason.PII_DEANONYMIZATION_FAILED,
             "request token de-anonymization failed",
             trace_id,
         )
     if decrypted:
-        logger.debug("De-anonymized {} tokens for channel {}", decrypted, channel.name)
+        logger.bind(channel=channel.name, decrypted=decrypted).debug("De-anonymized tokens")
         if metrics is not None:
             metrics.record_pii_decrypted(channel.name, decrypted)
     return working
@@ -409,13 +409,13 @@ def _response_pii_stage(  # pylint: disable=too-many-arguments
         return payload_too_large_response()
     except XmlOpsError as exc:
         _record_xml_error(metrics, channel.name, exc.kind)
-        logger.warning("Response XML rejected by hardened parser for channel {}", channel.name)
+        logger.bind(channel=channel.name).warning("Response XML rejected by hardened parser")
         return internal_error_response(ErrorReason.XML_PARSE_ERROR, "response body is not parseable XML", trace_id)
     except RedactionError:
-        logger.warning("PII redaction failed for channel {}", channel.name)
+        logger.bind(channel=channel.name).warning("PII redaction failed")
         return internal_error_response(ErrorReason.PII_REDACTION_FAILED, "response redaction failed", trace_id)
     if counts:
-        logger.debug("Redacted fields for channel {}: {}", channel.name, counts)
+        logger.bind(channel=channel.name, counts=counts).debug("Redacted fields")
         if metrics is not None:
             metrics.record_pii_redacted(channel.name, counts)
     return redacted
