@@ -398,10 +398,11 @@ def _response_pii_stage(  # pylint: disable=too-many-arguments
         # httpx already decoded any content-encoding, so `content` is plain XML.
         redacted, counts = redact_response_body(
             content,
-            channel=channel.name,
+            channel=(channel.type.value, channel.name),
             ruleset=rules,
             keyring=keyring,
             max_bytes=max_inspect_bytes,
+            operation_parser=get_handler(channel.type).parse_operation,
         )
     except XmlOversizeError as exc:
         _record_xml_error(metrics, channel.name, exc.kind)

@@ -1,0 +1,1202 @@
+<CommandList>
+    <GetBookingDetails millis="9">
+        <LoginId>******</LoginId>
+        <Status>CancelSucceeded</Status>
+        <BranchId>2OYUH0N8S2I5FAMB</BranchId>
+        <TFReference>12345</TFReference>
+        <SupplierReference>5U36WM</SupplierReference>
+        <IsFakeBooking>false</IsFakeBooking>
+        <RouterHistory>
+            <RoutingId>J1AJE82SXB1W8SVM</RoutingId>
+            <SearchRouter>
+                <Supplier>singaporeairlines</Supplier>
+                <Vendor>
+                    <Name>Singapore Airlines</Name>
+                    <Url>http://www.singaporeair.com/</Url>
+                </Vendor>
+                <Complete>true</Complete>
+                <RequestedLocations>
+                    <Origin>
+                        <Type>city</Type>
+                        <Code>SIN</Code>
+                    </Origin>
+                    <Destination>
+                        <Type>city</Type>
+                        <Code>SZX</Code>
+                    </Destination>
+                </RequestedLocations>
+                <GroupList>
+                    <Group>
+                        <Id>DNVZ6DHPYR9XXKTG</Id>
+                        <OutwardList>
+                            <Outward>
+                                <Id>AYOSGQY282NBK4W4</Id>
+                                <CacheInfo>
+                                    <CacheDataAgeSeconds>5582</CacheDataAgeSeconds>
+                                </CacheInfo>
+                                <Price>
+                                    <Amount>509.20</Amount>
+                                    <Currency>SGD</Currency>
+                                    <PriceIncludesTax>true</PriceIncludesTax>
+                                    <TaxItemList>
+                                        <TaxItem>
+                                            <Name>TAX AMOUNT</Name>
+                                            <Amount>65.20</Amount>
+                                            <Currency>SGD</Currency>
+                                        </TaxItem>
+                                    </TaxItemList>
+                                    <PassengerPriceList>
+                                        <PassengerPrice>
+                                            <Amount>509.20</Amount>
+                                            <Currency>SGD</Currency>
+                                            <PriceIncludesTax>true</PriceIncludesTax>
+                                            <TaxItemList>
+                                                <TaxItem>
+                                                    <Name>TAX AMOUNT</Name>
+                                                    <Amount>65.20</Amount>
+                                                    <Currency>SGD</Currency>
+                                                </TaxItem>
+                                            </TaxItemList>
+                                            <Age>30</Age>
+                                        </PassengerPrice>
+                                    </PassengerPriceList>
+                                </Price>
+                                <Duration>255</Duration>
+                                <SegmentList>
+                                    <Segment>
+                                        <Origin>
+                                            <Type>airport</Type>
+                                            <Code>SIN</Code>
+                                            <Terminal>T3</Terminal>
+                                        </Origin>
+                                        <Destination>
+                                            <Type>airport</Type>
+                                            <Code>SZX</Code>
+                                        </Destination>
+                                        <DepartDate>12/12/2024-20:45</DepartDate>
+                                        <ArriveDate>13/12/2024-01:00</ArriveDate>
+                                        <Duration>255</Duration>
+                                        <TfOperator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </TfOperator>
+                                        <TfVendingOperator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </TfVendingOperator>
+                                        <Operator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </Operator>
+                                        <VendingOperator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </VendingOperator>
+                                        <FlightId>
+                                            <Code>SQ856</Code>
+                                            <Number>856</Number>
+                                        </FlightId>
+                                        <TravelClass>
+                                            <TfClass>Economy With Restrictions</TfClass>
+                                            <SupplierClass>Economy Standard</SupplierClass>
+                                            <SupplierClassDescription>*CANCEL_BEFOREDEPARTURE:SGD 130-270
+                                                *CANCEL_NOSHOWFIRST:SGD 130 *CHANGE_BEFOREDEPARTURE:SGD 30-70
+                                                *AWARD_UPGRADE:Allowed *AWARD_ACCRUAL:75% *BAGGAGEALLOWANCE_CARRYON:1
+                                                piece Up to 7kg each. Sum of length, width and height of each piece
+                                                should not exceed 115cm. *SEATSELECTION:Complimentary (Standard Seats)
+                                            </SupplierClassDescription>
+                                            <SupplierFareBasisCode>W14SGO</SupplierFareBasisCode>
+                                            <SupplierRBDCode>W</SupplierRBDCode>
+                                        </TravelClass>
+                                        <AircraftType>
+                                            <AircraftCode>7M8</AircraftCode>
+                                        </AircraftType>
+                                        <FareEligibilityType>Private Fare</FareEligibilityType>
+                                        <SegmentMayEndWithAStop>false</SegmentMayEndWithAStop>
+                                    </Segment>
+                                </SegmentList>
+                                <Vendor>
+                                    <Name>singaporeairlines</Name>
+                                    <Url>http://www.singaporeair.com/</Url>
+                                </Vendor>
+                            </Outward>
+                        </OutwardList>
+                    </Group>
+                </GroupList>
+            </SearchRouter>
+            <SearchBookingProfile>
+                <CustomSupplierParameterList>
+                    <CustomSupplierParameter>
+                        <Supplier>singaporeairlines</Supplier>
+                        <Name>PointOfSale</Name>
+                        <Value>SG</Value>
+                    </CustomSupplierParameter>
+                    <CustomSupplierParameter>
+                        <Name>UseNewLuggageFramework</Name>
+                        <Value>true</Value>
+                    </CustomSupplierParameter>
+                    <CustomSupplierParameter>
+                        <Name>IncludeStructuredFeatures</Name>
+                        <Value>y</Value>
+                    </CustomSupplierParameter>
+                    <CustomSupplierParameter>
+                        <Name>UseNewCardChargesFormat</Name>
+                        <Value>true</Value>
+                    </CustomSupplierParameter>
+                    <CustomSupplierParameter>
+                        <Supplier>SingaporeAirlines</Supplier>
+                        <Name>DisplayInCurrency</Name>
+                        <Value>SGD</Value>
+                    </CustomSupplierParameter>
+                </CustomSupplierParameterList>
+            </SearchBookingProfile>
+            <DetailsRouter>
+                <Supplier>singaporeairlines</Supplier>
+                <Vendor>
+                    <Name>Singapore Airlines</Name>
+                    <Url>http://www.singaporeair.com/</Url>
+                </Vendor>
+                <Complete>true</Complete>
+                <RequiredParameterList>
+                    <RequiredParameter>
+                        <Name>DateOfBirth</Name>
+                        <Type>formatted_text</Type>
+                        <DisplayText>Date of birth (dd/mm/yyyy)</DisplayText>
+                        <PerPassenger>true</PerPassenger>
+                        <IsOptional>false</IsOptional>
+                    </RequiredParameter>
+                </RequiredParameterList>
+                <RequestedLocations>
+                    <Origin>
+                        <Type>city</Type>
+                        <Code>SIN</Code>
+                    </Origin>
+                    <Destination>
+                        <Type>city</Type>
+                        <Code>SZX</Code>
+                    </Destination>
+                </RequestedLocations>
+                <GroupList>
+                    <Group>
+                        <Id>DNVZ6DHPYR9XXKTG</Id>
+                        <OutwardList>
+                            <Outward>
+                                <Id>AYOSGQY282NBK4W4</Id>
+                                <CacheInfo>
+                                    <CacheDataAgeSeconds>0</CacheDataAgeSeconds>
+                                </CacheInfo>
+                                <Price>
+                                    <Amount>509.20</Amount>
+                                    <Currency>SGD</Currency>
+                                    <PriceIncludesTax>true</PriceIncludesTax>
+                                    <PassengerPriceList>
+                                        <PassengerPrice>
+                                            <Amount>509.20</Amount>
+                                            <Currency>SGD</Currency>
+                                            <PriceIncludesTax>true</PriceIncludesTax>
+                                            <TaxItemList>
+                                                <TaxItem>
+                                                    <Name>Passenger Service Charge (SG)</Name>
+                                                    <Amount>46.40</Amount>
+                                                    <Currency>SGD</Currency>
+                                                </TaxItem>
+                                                <TaxItem>
+                                                    <Name>Aviation Levy (OP)</Name>
+                                                    <Amount>8.00</Amount>
+                                                    <Currency>SGD</Currency>
+                                                </TaxItem>
+                                                <TaxItem>
+                                                    <Name>Airport Development Levy (L7)</Name>
+                                                    <Amount>10.80</Amount>
+                                                    <Currency>SGD</Currency>
+                                                </TaxItem>
+                                            </TaxItemList>
+                                            <Age>30</Age>
+                                        </PassengerPrice>
+                                    </PassengerPriceList>
+                                </Price>
+                                <Duration>255</Duration>
+                                <SegmentList>
+                                    <Segment>
+                                        <Origin>
+                                            <Type>airport</Type>
+                                            <Code>SIN</Code>
+                                            <Terminal>T3</Terminal>
+                                        </Origin>
+                                        <Destination>
+                                            <Type>airport</Type>
+                                            <Code>SZX</Code>
+                                        </Destination>
+                                        <DepartDate>12/12/2024-20:45</DepartDate>
+                                        <ArriveDate>13/12/2024-01:00</ArriveDate>
+                                        <Duration>255</Duration>
+                                        <TfOperator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </TfOperator>
+                                        <TfVendingOperator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </TfVendingOperator>
+                                        <Operator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </Operator>
+                                        <VendingOperator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </VendingOperator>
+                                        <FlightId>
+                                            <Code>SQ856</Code>
+                                            <Number>856</Number>
+                                        </FlightId>
+                                        <TravelClass>
+                                            <TfClass>Economy With Restrictions</TfClass>
+                                            <SupplierClass>Economy Standard</SupplierClass>
+                                            <SupplierClassDescription>*AWARD_ACCRUAL:1208 *AWARD_ACCRUAL_FULL:SINGAPORE
+                                                AIRLINES OPERATED FLIGHTS KrisFlyer: 75% of actual flown distance.
+                                                Partner frequent flyer programmes: Accrual levels may differ on
+                                                Singapore Airlines operated flights. For ticket(s) partially paid for
+                                                using KrisFlyer miles, the miles earned are proportionate to the amount
+                                                paid using credit/debit card. These miles can only be credited to
+                                                KrisFlyer membership accounts. FLIGHTS OPERATED BY OTHER
+                                                AIRLINESKrisFlyer mileage accrual levels on flights operated by
+                                                KrisFlyer partner airlines may differ. Codeshare flights operated by
+                                                non-KrisFlyer partner airlines are not accruable to KrisFlyer. For
+                                                details, visit
+                                                http://www.singaporeair.com/en_UK/sg/ppsclub-krisflyer/earn-miles/earn-when-you-fly/
+                                                *AWARD_UPGRADE:Allowed *AWARD_UPGRADE_FULL:KrisFlyer Upgrade Awards on
+                                                Singapore Airlines: Allowed. Star Alliance Upgrade Awards on Singapore
+                                                Airlines: Not allowed. Codeshare flights are not eligible for upgrades.
+                                                *CANCEL_BEFOREDEPARTURE:SGD 130 *CANCEL_BEFOREDEPARTURE_FULL:With
+                                                payment of SGD 130, subject to currency conversion and your bank's
+                                                exchange rate. *CANCEL_NOSHOWFIRST:SGD 130 *CANCEL_NOSHOWFIRST_FULL:SGD
+                                                130, subject to currency conversion and your bank's exchange rate.
+                                                If the ticket is cancelled, no show fee will not apply and
+                                                cancellation/refund conditions will apply. *CHANGE_BEFOREDEPARTURE:SGD
+                                                30 *CHANGE_BEFOREDEPARTURE_FULL:With payment of SGD 30 and any fare
+                                                difference, subject to currency conversion and your bank's exchange
+                                                rate. *CHANGE_NOSHOWFIRST:SGD 130 *CHANGE_NOSHOWFIRST_FULL:SGD 130,
+                                                subject to currency conversion and your bank's exchange rate. If
+                                                the ticket is cancelled, no show fee will not apply and
+                                                cancellation/refund conditions will apply. *DISCLAIMER_FULL:If payment
+                                                was made with a mix of cash and KrisFlyer miles, you will only earn
+                                                miles on the part of the fare that was paid with a credit / debit card.
+                                                Full fare rules and KrisFlyer terms and conditions apply.
+                                                *MIXEDFARETYPE_FULL:Cancellation and no-show fees will follow the more
+                                                restrictive fare type. If you change more than one flight in the same
+                                                transaction, only the higher change fee will be applied.
+                                                *TRAVELITINERARYSEQUENCE_FULL:Fares are valid only if all flight coupons
+                                                / sectors in the ticket are used in sequence. If you start your journey
+                                                at any stopover or stopping place, Singapore Airlines will recompute the
+                                                fares based on actual flight sequence flown and you will need to pay the
+                                                fare difference, if any.
+                                            </SupplierClassDescription>
+                                            <SupplierFareBasisCode>W14SGO</SupplierFareBasisCode>
+                                            <SupplierRBDCode>W</SupplierRBDCode>
+                                        </TravelClass>
+                                        <AircraftType>
+                                            <AircraftCode>7M8</AircraftCode>
+                                        </AircraftType>
+                                        <SupplierInfoList>
+                                            <SupplierInfo>
+                                                <DisplayName>Supplier Fare Type</DisplayName>
+                                                <InfoType>text</InfoType>
+                                                <Info>NEGOTIATED FARE</Info>
+                                            </SupplierInfo>
+                                            <SupplierInfo>
+                                                <DisplayName>Fare Type</DisplayName>
+                                                <InfoType>remark</InfoType>
+                                                <Info>Private Fare</Info>
+                                            </SupplierInfo>
+                                        </SupplierInfoList>
+                                        <FareEligibilityType>Private Fare</FareEligibilityType>
+                                        <SegmentMayEndWithAStop>false</SegmentMayEndWithAStop>
+                                    </Segment>
+                                </SegmentList>
+                                <Vendor>
+                                    <Name>singaporeairlines</Name>
+                                    <Url>http://www.singaporeair.com/</Url>
+                                </Vendor>
+                            </Outward>
+                        </OutwardList>
+                    </Group>
+                </GroupList>
+                <SupplierInfoList>
+                    <SupplierInfo>
+                        <DisplayName>Award accrual</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>SINGAPORE AIRLINES OPERATED FLIGHTS KrisFlyer: 75% of actual flown distance. Partner
+                            frequent flyer programmes: Accrual levels may differ on Singapore Airlines operated flights.
+                            For ticket(s) partially paid for using KrisFlyer miles, the miles earned are proportionate
+                            to the amount paid using credit/debit card. These miles can only be credited to KrisFlyer
+                            membership accounts. FLIGHTS OPERATED BY OTHER AIRLINESKrisFlyer mileage accrual levels on
+                            flights operated by KrisFlyer partner airlines may differ. Codeshare flights operated by
+                            non-KrisFlyer partner airlines are not accruable to KrisFlyer. For details, visit
+                            http://www.singaporeair.com/en_UK/sg/ppsclub-krisflyer/earn-miles/earn-when-you-fly/
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Award upgrade</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>KrisFlyer Upgrade Awards on Singapore Airlines: Allowed. Star Alliance Upgrade Awards on
+                            Singapore Airlines: Not allowed. Codeshare flights are not eligible for upgrades.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Cancel before departure</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>With payment of SGD 130, subject to currency conversion and your bank's exchange
+                            rate.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Cancel no show first</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>SGD 130, subject to currency conversion and your bank's exchange rate. If the ticket
+                            is cancelled, no show fee will not apply and cancellation/refund conditions will apply.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Change before departure</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>With payment of SGD 30 and any fare difference, subject to currency conversion and your
+                            bank's exchange rate.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Change no show first</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>SGD 130, subject to currency conversion and your bank's exchange rate. If the ticket
+                            is cancelled, no show fee will not apply and cancellation/refund conditions will apply.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Disclaimer</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>If payment was made with a mix of cash and KrisFlyer miles, you will only earn miles on
+                            the part of the fare that was paid with a credit / debit card. Full fare rules and KrisFlyer
+                            terms and conditions apply.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Mixed fare type</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>Cancellation and no-show fees will follow the more restrictive fare type. If you change
+                            more than one flight in the same transaction, only the higher change fee will be applied.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Travel itinerary sequence</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>Fares are valid only if all flight coupons / sectors in the ticket are used in sequence.
+                            If you start your journey at any stopover or stopping place, Singapore Airlines will
+                            recompute the fares based on actual flight sequence flown and you will need to pay the fare
+                            difference, if any.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Fare Rule[SIN-SZX]</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>*Penalties: CANCELLATIONS: CHARGE SGD 130 CHANGES: CHARGE SGD 30 *BaggageAllowance:
+                            [856](30)KG
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>NO SHOW[SIN-SZX]</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>CANCELLATIONS AFTER DEPARTURE: FEE CHARGE SGD 130 CHANGES AFRER DEPARTURE: FEE CHARGE SGD
+                            130
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Singapore Airlines Terms and conditions</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/terms-conditions/#</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>General conditions of carriage</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/global_footer/conditions-carriage/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Conditions of use</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/global_footer/conditions-online-booking/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Privacy Policy</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/global_footer/privacy-policy/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Restrictions on carrying dangerous items</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/booking-flow.form?execution=e2s10#</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Terms and conditions for advance seat selection</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/global_footer/Advance-Seat-Selection-TC/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Terms and conditions for additional baggage</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/sg/travel-info/baggage/additional-baggage-tnc/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>The Use Notice for AdditionalEmailRecipients</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>Please note that AdditionalEmailRecipients only supports one extra email.</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Passport Details</DisplayName>
+                        <InfoType>remark</InfoType>
+                        <Info>In order for passport details to be supplied to the airline, please make sure the
+                            following fields are submitted at once: DateOfBirth, PassportExpiryDate, CountryOfResidence,
+                            PassportCountryOfIssue, and PassportNumber.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Booking-On-Hold expiry period</DisplayName>
+                        <InfoType>remark</InfoType>
+                        <Info>1d7h26m</Info>
+                    </SupplierInfo>
+                </SupplierInfoList>
+            </DetailsRouter>
+            <TermsRouter>
+                <Supplier>singaporeairlines</Supplier>
+                <Vendor>
+                    <Name>Singapore Airlines</Name>
+                    <Url>http://www.singaporeair.com/</Url>
+                </Vendor>
+                <Complete>true</Complete>
+                <RequestedLocations>
+                    <Origin>
+                        <Type>city</Type>
+                        <Code>SIN</Code>
+                    </Origin>
+                    <Destination>
+                        <Type>city</Type>
+                        <Code>SZX</Code>
+                    </Destination>
+                </RequestedLocations>
+                <GroupList>
+                    <Group>
+                        <Id>DNVZ6DHPYR9XXKTG</Id>
+                        <OutwardList>
+                            <Outward>
+                                <Id>AYOSGQY282NBK4W4</Id>
+                                <CacheInfo>
+                                    <CacheDataAgeSeconds>0</CacheDataAgeSeconds>
+                                </CacheInfo>
+                                <Duration>255</Duration>
+                                <SegmentList>
+                                    <Segment>
+                                        <Origin>
+                                            <Type>airport</Type>
+                                            <Code>SIN</Code>
+                                            <Terminal>T3</Terminal>
+                                        </Origin>
+                                        <Destination>
+                                            <Type>airport</Type>
+                                            <Code>SZX</Code>
+                                        </Destination>
+                                        <DepartDate>12/12/2024-20:45</DepartDate>
+                                        <ArriveDate>13/12/2024-01:00</ArriveDate>
+                                        <Duration>255</Duration>
+                                        <TfOperator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </TfOperator>
+                                        <TfVendingOperator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </TfVendingOperator>
+                                        <Operator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </Operator>
+                                        <VendingOperator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </VendingOperator>
+                                        <FlightId>
+                                            <Code>SQ856</Code>
+                                            <Number>856</Number>
+                                        </FlightId>
+                                        <TravelClass>
+                                            <TfClass>Economy With Restrictions</TfClass>
+                                            <SupplierClass>Economy Standard</SupplierClass>
+                                            <SupplierClassDescription>*AWARD_ACCRUAL:1208 *AWARD_ACCRUAL_FULL:SINGAPORE
+                                                AIRLINES OPERATED FLIGHTS KrisFlyer: 75% of actual flown distance.
+                                                Partner frequent flyer programmes: Accrual levels may differ on
+                                                Singapore Airlines operated flights. For ticket(s) partially paid for
+                                                using KrisFlyer miles, the miles earned are proportionate to the amount
+                                                paid using credit/debit card. These miles can only be credited to
+                                                KrisFlyer membership accounts. FLIGHTS OPERATED BY OTHER
+                                                AIRLINESKrisFlyer mileage accrual levels on flights operated by
+                                                KrisFlyer partner airlines may differ. Codeshare flights operated by
+                                                non-KrisFlyer partner airlines are not accruable to KrisFlyer. For
+                                                details, visit
+                                                http://www.singaporeair.com/en_UK/sg/ppsclub-krisflyer/earn-miles/earn-when-you-fly/
+                                                *AWARD_UPGRADE:Allowed *AWARD_UPGRADE_FULL:KrisFlyer Upgrade Awards on
+                                                Singapore Airlines: Allowed. Star Alliance Upgrade Awards on Singapore
+                                                Airlines: Not allowed. Codeshare flights are not eligible for upgrades.
+                                                *CANCEL_BEFOREDEPARTURE:SGD 130 *CANCEL_BEFOREDEPARTURE_FULL:With
+                                                payment of SGD 130, subject to currency conversion and your bank's
+                                                exchange rate. *CANCEL_NOSHOWFIRST:SGD 130 *CANCEL_NOSHOWFIRST_FULL:SGD
+                                                130, subject to currency conversion and your bank's exchange rate.
+                                                If the ticket is cancelled, no show fee will not apply and
+                                                cancellation/refund conditions will apply. *CHANGE_BEFOREDEPARTURE:SGD
+                                                30 *CHANGE_BEFOREDEPARTURE_FULL:With payment of SGD 30 and any fare
+                                                difference, subject to currency conversion and your bank's exchange
+                                                rate. *CHANGE_NOSHOWFIRST:SGD 130 *CHANGE_NOSHOWFIRST_FULL:SGD 130,
+                                                subject to currency conversion and your bank's exchange rate. If
+                                                the ticket is cancelled, no show fee will not apply and
+                                                cancellation/refund conditions will apply. *DISCLAIMER_FULL:If payment
+                                                was made with a mix of cash and KrisFlyer miles, you will only earn
+                                                miles on the part of the fare that was paid with a credit / debit card.
+                                                Full fare rules and KrisFlyer terms and conditions apply.
+                                                *MIXEDFARETYPE_FULL:Cancellation and no-show fees will follow the more
+                                                restrictive fare type. If you change more than one flight in the same
+                                                transaction, only the higher change fee will be applied.
+                                                *TRAVELITINERARYSEQUENCE_FULL:Fares are valid only if all flight coupons
+                                                / sectors in the ticket are used in sequence. If you start your journey
+                                                at any stopover or stopping place, Singapore Airlines will recompute the
+                                                fares based on actual flight sequence flown and you will need to pay the
+                                                fare difference, if any.
+                                            </SupplierClassDescription>
+                                            <SupplierFareBasisCode>W14SGO</SupplierFareBasisCode>
+                                            <SupplierRBDCode>W</SupplierRBDCode>
+                                        </TravelClass>
+                                        <AircraftType>
+                                            <AircraftCode>7M8</AircraftCode>
+                                        </AircraftType>
+                                        <SupplierInfoList>
+                                            <SupplierInfo>
+                                                <DisplayName>Supplier Fare Type</DisplayName>
+                                                <InfoType>text</InfoType>
+                                                <Info>NEGOTIATED FARE</Info>
+                                            </SupplierInfo>
+                                            <SupplierInfo>
+                                                <DisplayName>Fare Type</DisplayName>
+                                                <InfoType>remark</InfoType>
+                                                <Info>Private Fare</Info>
+                                            </SupplierInfo>
+                                        </SupplierInfoList>
+                                        <FareEligibilityType>Private Fare</FareEligibilityType>
+                                        <SegmentMayEndWithAStop>false</SegmentMayEndWithAStop>
+                                    </Segment>
+                                </SegmentList>
+                                <Vendor>
+                                    <Name>singaporeairlines</Name>
+                                    <Url>http://www.singaporeair.com/</Url>
+                                </Vendor>
+                            </Outward>
+                        </OutwardList>
+                        <Price>
+                            <Amount>509.20</Amount>
+                            <Currency>SGD</Currency>
+                        </Price>
+                    </Group>
+                </GroupList>
+                <SupplierInfoList>
+                    <SupplierInfo>
+                        <DisplayName>Award accrual</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>SINGAPORE AIRLINES OPERATED FLIGHTS KrisFlyer: 75% of actual flown distance. Partner
+                            frequent flyer programmes: Accrual levels may differ on Singapore Airlines operated flights.
+                            For ticket(s) partially paid for using KrisFlyer miles, the miles earned are proportionate
+                            to the amount paid using credit/debit card. These miles can only be credited to KrisFlyer
+                            membership accounts. FLIGHTS OPERATED BY OTHER AIRLINESKrisFlyer mileage accrual levels on
+                            flights operated by KrisFlyer partner airlines may differ. Codeshare flights operated by
+                            non-KrisFlyer partner airlines are not accruable to KrisFlyer. For details, visit
+                            http://www.singaporeair.com/en_UK/sg/ppsclub-krisflyer/earn-miles/earn-when-you-fly/
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Award upgrade</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>KrisFlyer Upgrade Awards on Singapore Airlines: Allowed. Star Alliance Upgrade Awards on
+                            Singapore Airlines: Not allowed. Codeshare flights are not eligible for upgrades.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Cancel before departure</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>With payment of SGD 130, subject to currency conversion and your bank's exchange
+                            rate.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Cancel no show first</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>SGD 130, subject to currency conversion and your bank's exchange rate. If the ticket
+                            is cancelled, no show fee will not apply and cancellation/refund conditions will apply.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Change before departure</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>With payment of SGD 30 and any fare difference, subject to currency conversion and your
+                            bank's exchange rate.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Change no show first</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>SGD 130, subject to currency conversion and your bank's exchange rate. If the ticket
+                            is cancelled, no show fee will not apply and cancellation/refund conditions will apply.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Disclaimer</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>If payment was made with a mix of cash and KrisFlyer miles, you will only earn miles on
+                            the part of the fare that was paid with a credit / debit card. Full fare rules and KrisFlyer
+                            terms and conditions apply.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Mixed fare type</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>Cancellation and no-show fees will follow the more restrictive fare type. If you change
+                            more than one flight in the same transaction, only the higher change fee will be applied.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Travel itinerary sequence</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>Fares are valid only if all flight coupons / sectors in the ticket are used in sequence.
+                            If you start your journey at any stopover or stopping place, Singapore Airlines will
+                            recompute the fares based on actual flight sequence flown and you will need to pay the fare
+                            difference, if any.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Fare Rule[SIN-SZX]</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>*Penalties: CANCELLATIONS: CHARGE SGD 130 CHANGES: CHARGE SGD 30 *BaggageAllowance:
+                            [856](30)KG
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>NO SHOW[SIN-SZX]</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>CANCELLATIONS AFTER DEPARTURE: FEE CHARGE SGD 130 CHANGES AFRER DEPARTURE: FEE CHARGE SGD
+                            130
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Singapore Airlines Terms and conditions</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/terms-conditions/#</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>General conditions of carriage</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/global_footer/conditions-carriage/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Conditions of use</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/global_footer/conditions-online-booking/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Privacy Policy</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/global_footer/privacy-policy/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Restrictions on carrying dangerous items</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/booking-flow.form?execution=e2s10#</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Terms and conditions for advance seat selection</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/global_footer/Advance-Seat-Selection-TC/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Terms and conditions for additional baggage</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/sg/travel-info/baggage/additional-baggage-tnc/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>The Use Notice for AdditionalEmailRecipients</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>Please note that AdditionalEmailRecipients only supports one extra email.</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Passport Details</DisplayName>
+                        <InfoType>remark</InfoType>
+                        <Info>In order for passport details to be supplied to the airline, please make sure the
+                            following fields are submitted at once: DateOfBirth, PassportExpiryDate, CountryOfResidence,
+                            PassportCountryOfIssue, and PassportNumber.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Cash payment</DisplayName>
+                        <InfoType>remark</InfoType>
+                        <Info>The booking will be settled by cash payment. The specified payment card will not be used
+                            to pay for the booking.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Booking on hold limit time</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>2024-12-10 15:00:00 GMT</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Booking-On-Hold expiry period</DisplayName>
+                        <InfoType>remark</InfoType>
+                        <Info>1d7h25m</Info>
+                    </SupplierInfo>
+                </SupplierInfoList>
+            </TermsRouter>
+            <TermsBookingProfile>
+                <CustomSupplierParameterList>
+                    <CustomSupplierParameter>
+                        <Name>UseCardPreRegisteredWithSupplier</Name>
+                        <Value>true</Value>
+                    </CustomSupplierParameter>
+                    <CustomSupplierParameter>
+                        <Name>OnHoldProfitsSkip</Name>
+                        <Value>true</Value>
+                    </CustomSupplierParameter>
+                    <CustomSupplierParameter>
+                        <Name>BookingOnHold</Name>
+                        <Value>true</Value>
+                    </CustomSupplierParameter>
+                </CustomSupplierParameterList>
+            </TermsBookingProfile>
+            <BookingRouter>
+                <Supplier>singaporeairlines</Supplier>
+                <Vendor>
+                    <Name>Singapore Airlines</Name>
+                    <Url>http://www.singaporeair.com/</Url>
+                </Vendor>
+                <Complete>true</Complete>
+                <RequestedLocations>
+                    <Origin>
+                        <Type>city</Type>
+                        <Code>SIN</Code>
+                    </Origin>
+                    <Destination>
+                        <Type>city</Type>
+                        <Code>SZX</Code>
+                    </Destination>
+                </RequestedLocations>
+                <GroupList>
+                    <Group>
+                        <Id>DNVZ6DHPYR9XXKTG</Id>
+                        <OutwardList>
+                            <Outward>
+                                <Id>AYOSGQY282NBK4W4</Id>
+                                <CacheInfo>
+                                    <CacheDataAgeSeconds>0</CacheDataAgeSeconds>
+                                </CacheInfo>
+                                <Duration>255</Duration>
+                                <SegmentList>
+                                    <Segment>
+                                        <Origin>
+                                            <Type>airport</Type>
+                                            <Code>SIN</Code>
+                                            <Terminal>T3</Terminal>
+                                        </Origin>
+                                        <Destination>
+                                            <Type>airport</Type>
+                                            <Code>SZX</Code>
+                                        </Destination>
+                                        <DepartDate>12/12/2024-20:45</DepartDate>
+                                        <ArriveDate>13/12/2024-01:00</ArriveDate>
+                                        <Duration>255</Duration>
+                                        <TfOperator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </TfOperator>
+                                        <TfVendingOperator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </TfVendingOperator>
+                                        <Operator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </Operator>
+                                        <VendingOperator>
+                                            <Name>Singapore Airlines</Name>
+                                            <Code>SQ</Code>
+                                        </VendingOperator>
+                                        <FlightId>
+                                            <Code>SQ856</Code>
+                                            <Number>856</Number>
+                                        </FlightId>
+                                        <TravelClass>
+                                            <TfClass>Economy With Restrictions</TfClass>
+                                            <SupplierClass>Economy Standard</SupplierClass>
+                                            <SupplierClassDescription>*AWARD_ACCRUAL:1208 *AWARD_ACCRUAL_FULL:SINGAPORE
+                                                AIRLINES OPERATED FLIGHTS KrisFlyer: 75% of actual flown distance.
+                                                Partner frequent flyer programmes: Accrual levels may differ on
+                                                Singapore Airlines operated flights. For ticket(s) partially paid for
+                                                using KrisFlyer miles, the miles earned are proportionate to the amount
+                                                paid using credit/debit card. These miles can only be credited to
+                                                KrisFlyer membership accounts. FLIGHTS OPERATED BY OTHER
+                                                AIRLINESKrisFlyer mileage accrual levels on flights operated by
+                                                KrisFlyer partner airlines may differ. Codeshare flights operated by
+                                                non-KrisFlyer partner airlines are not accruable to KrisFlyer. For
+                                                details, visit
+                                                http://www.singaporeair.com/en_UK/sg/ppsclub-krisflyer/earn-miles/earn-when-you-fly/
+                                                *AWARD_UPGRADE:Allowed *AWARD_UPGRADE_FULL:KrisFlyer Upgrade Awards on
+                                                Singapore Airlines: Allowed. Star Alliance Upgrade Awards on Singapore
+                                                Airlines: Not allowed. Codeshare flights are not eligible for upgrades.
+                                                *CANCEL_BEFOREDEPARTURE:SGD 130 *CANCEL_BEFOREDEPARTURE_FULL:With
+                                                payment of SGD 130, subject to currency conversion and your bank's
+                                                exchange rate. *CANCEL_NOSHOWFIRST:SGD 130 *CANCEL_NOSHOWFIRST_FULL:SGD
+                                                130, subject to currency conversion and your bank's exchange rate.
+                                                If the ticket is cancelled, no show fee will not apply and
+                                                cancellation/refund conditions will apply. *CHANGE_BEFOREDEPARTURE:SGD
+                                                30 *CHANGE_BEFOREDEPARTURE_FULL:With payment of SGD 30 and any fare
+                                                difference, subject to currency conversion and your bank's exchange
+                                                rate. *CHANGE_NOSHOWFIRST:SGD 130 *CHANGE_NOSHOWFIRST_FULL:SGD 130,
+                                                subject to currency conversion and your bank's exchange rate. If
+                                                the ticket is cancelled, no show fee will not apply and
+                                                cancellation/refund conditions will apply. *DISCLAIMER_FULL:If payment
+                                                was made with a mix of cash and KrisFlyer miles, you will only earn
+                                                miles on the part of the fare that was paid with a credit / debit card.
+                                                Full fare rules and KrisFlyer terms and conditions apply.
+                                                *MIXEDFARETYPE_FULL:Cancellation and no-show fees will follow the more
+                                                restrictive fare type. If you change more than one flight in the same
+                                                transaction, only the higher change fee will be applied.
+                                                *TRAVELITINERARYSEQUENCE_FULL:Fares are valid only if all flight coupons
+                                                / sectors in the ticket are used in sequence. If you start your journey
+                                                at any stopover or stopping place, Singapore Airlines will recompute the
+                                                fares based on actual flight sequence flown and you will need to pay the
+                                                fare difference, if any.
+                                            </SupplierClassDescription>
+                                            <SupplierFareBasisCode>W14SGO</SupplierFareBasisCode>
+                                            <SupplierRBDCode>W</SupplierRBDCode>
+                                        </TravelClass>
+                                        <AircraftType>
+                                            <AircraftCode>7M8</AircraftCode>
+                                        </AircraftType>
+                                        <SupplierInfoList>
+                                            <SupplierInfo>
+                                                <DisplayName>Supplier Fare Type</DisplayName>
+                                                <InfoType>text</InfoType>
+                                                <Info>NEGOTIATED FARE</Info>
+                                            </SupplierInfo>
+                                            <SupplierInfo>
+                                                <DisplayName>Fare Type</DisplayName>
+                                                <InfoType>remark</InfoType>
+                                                <Info>Private Fare</Info>
+                                            </SupplierInfo>
+                                        </SupplierInfoList>
+                                        <FareEligibilityType>Private Fare</FareEligibilityType>
+                                        <SegmentMayEndWithAStop>false</SegmentMayEndWithAStop>
+                                    </Segment>
+                                </SegmentList>
+                                <Vendor>
+                                    <Name>singaporeairlines</Name>
+                                    <Url>http://www.singaporeair.com/</Url>
+                                </Vendor>
+                            </Outward>
+                        </OutwardList>
+                        <Price>
+                            <Amount>509.20</Amount>
+                            <Currency>SGD</Currency>
+                        </Price>
+                    </Group>
+                </GroupList>
+                <SupplierInfoList>
+                    <SupplierInfo>
+                        <DisplayName>Award accrual</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>SINGAPORE AIRLINES OPERATED FLIGHTS KrisFlyer: 75% of actual flown distance. Partner
+                            frequent flyer programmes: Accrual levels may differ on Singapore Airlines operated flights.
+                            For ticket(s) partially paid for using KrisFlyer miles, the miles earned are proportionate
+                            to the amount paid using credit/debit card. These miles can only be credited to KrisFlyer
+                            membership accounts. FLIGHTS OPERATED BY OTHER AIRLINESKrisFlyer mileage accrual levels on
+                            flights operated by KrisFlyer partner airlines may differ. Codeshare flights operated by
+                            non-KrisFlyer partner airlines are not accruable to KrisFlyer. For details, visit
+                            http://www.singaporeair.com/en_UK/sg/ppsclub-krisflyer/earn-miles/earn-when-you-fly/
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Award upgrade</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>KrisFlyer Upgrade Awards on Singapore Airlines: Allowed. Star Alliance Upgrade Awards on
+                            Singapore Airlines: Not allowed. Codeshare flights are not eligible for upgrades.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Cancel before departure</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>With payment of SGD 130, subject to currency conversion and your bank's exchange
+                            rate.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Cancel no show first</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>SGD 130, subject to currency conversion and your bank's exchange rate. If the ticket
+                            is cancelled, no show fee will not apply and cancellation/refund conditions will apply.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Change before departure</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>With payment of SGD 30 and any fare difference, subject to currency conversion and your
+                            bank's exchange rate.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Change no show first</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>SGD 130, subject to currency conversion and your bank's exchange rate. If the ticket
+                            is cancelled, no show fee will not apply and cancellation/refund conditions will apply.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Disclaimer</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>If payment was made with a mix of cash and KrisFlyer miles, you will only earn miles on
+                            the part of the fare that was paid with a credit / debit card. Full fare rules and KrisFlyer
+                            terms and conditions apply.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Mixed fare type</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>Cancellation and no-show fees will follow the more restrictive fare type. If you change
+                            more than one flight in the same transaction, only the higher change fee will be applied.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Travel itinerary sequence</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>Fares are valid only if all flight coupons / sectors in the ticket are used in sequence.
+                            If you start your journey at any stopover or stopping place, Singapore Airlines will
+                            recompute the fares based on actual flight sequence flown and you will need to pay the fare
+                            difference, if any.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Fare Rule[SIN-SZX]</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>*Penalties: CANCELLATIONS: CHARGE SGD 130 CHANGES: CHARGE SGD 30 *BaggageAllowance:
+                            [856](30)KG
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>NO SHOW[SIN-SZX]</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>CANCELLATIONS AFTER DEPARTURE: FEE CHARGE SGD 130 CHANGES AFRER DEPARTURE: FEE CHARGE SGD
+                            130
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Singapore Airlines Terms and conditions</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/terms-conditions/#</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>General conditions of carriage</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/global_footer/conditions-carriage/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Conditions of use</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/global_footer/conditions-online-booking/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Privacy Policy</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/global_footer/privacy-policy/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Restrictions on carrying dangerous items</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/booking-flow.form?execution=e2s10#</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Terms and conditions for advance seat selection</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/global_footer/Advance-Seat-Selection-TC/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Terms and conditions for additional baggage</DisplayName>
+                        <InfoType>url</InfoType>
+                        <Info>https://www.singaporeair.com/en_UK/sg/travel-info/baggage/additional-baggage-tnc/</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>The Use Notice for AdditionalEmailRecipients</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>Please note that AdditionalEmailRecipients only supports one extra email.</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Passport Details</DisplayName>
+                        <InfoType>remark</InfoType>
+                        <Info>In order for passport details to be supplied to the airline, please make sure the
+                            following fields are submitted at once: DateOfBirth, PassportExpiryDate, CountryOfResidence,
+                            PassportCountryOfIssue, and PassportNumber.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Cash payment</DisplayName>
+                        <InfoType>remark</InfoType>
+                        <Info>The booking will be settled by cash payment. The specified payment card will not be used
+                            to pay for the booking.
+                        </Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Agent IATA or ID number</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>32300085</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Booking on hold limit time</DisplayName>
+                        <InfoType>text</InfoType>
+                        <Info>2024-12-10 15:00:00 GMT</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Booking-On-Hold expiry period</DisplayName>
+                        <InfoType>remark</InfoType>
+                        <Info>1d7h25m</Info>
+                    </SupplierInfo>
+                    <SupplierInfo>
+                        <DisplayName>Cancel Type</DisplayName>
+                        <InfoType>remark</InfoType>
+                        <Info>Cancel</Info>
+                    </SupplierInfo>
+                </SupplierInfoList>
+            </BookingRouter>
+        </RouterHistory>
+        <BookingProfile>
+            <TravellerList>
+                <Traveller>
+                    <Age>20</Age>
+                    <Name>
+                        <Title>Ms</Title>
+                        <NamePartList>
+                            <NamePart>ALEX</NamePart>
+                            <NamePart>BROWN</NamePart>
+                        </NamePartList>
+                    </Name>
+                    <CustomSupplierParameterList>
+                        <CustomSupplierParameter>
+                            <Name>DateOfBirth</Name>
+                            <Value>12/05/1234</Value>
+                        </CustomSupplierParameter>
+                    </CustomSupplierParameterList>
+                </Traveller>
+            </TravellerList>
+            <ContactDetails>
+                <Name>
+                    <Title>Mr</Title>
+                    <NamePartList>
+                        <NamePart>LEE</NamePart>
+                        <NamePart>LEE</NamePart>
+                    </NamePartList>
+                </Name>
+                <Address>
+                    <Company/>
+                    <Flat/>
+                    <BuildingName/>
+                    <BuildingNumber/>
+                    <Street>100 TEST STREET</Street>
+                    <Locality/>
+                    <City>TESTVILLE</City>
+                    <Province>TS</Province>
+                    <Postcode>10001</Postcode>
+                    <CountryCode>fdsfds</CountryCode>
+                </Address>
+                <HomePhone>
+                    <InternationalCode>fdsfds</InternationalCode>
+                    <AreaCode/>
+                    <Number>fdsfds</Number>
+                    <Extension/>
+                </HomePhone>
+                <WorkPhone>
+                    <InternationalCode>435r</InternationalCode>
+                    <AreaCode>fdsfds</AreaCode>
+                    <Number>fdsfds</Number>
+                    <Extension/>
+                </WorkPhone>
+                <MobilePhone>
+                    <InternationalCode>fdsfdsf</InternationalCode>
+                    <AreaCode/>
+                    <Number>fsdfdsf</Number>
+                    <Extension/>
+                </MobilePhone>
+                <Fax>
+                    <InternationalCode/>
+                    <AreaCode/>
+                    <Number/>
+                    <Extension/>
+                </Fax>
+                <Email>billing@example.test</Email>
+            </ContactDetails>
+            <BillingDetails>
+                <Name>
+                    <Title>Mr</Title>
+                    <NamePartList>
+                        <NamePart>LEE</NamePart>
+                        <NamePart>LEE</NamePart>
+                        <NamePart>LEE</NamePart>
+                    </NamePartList>
+                </Name>
+                <CreditCard>
+                    <Company>*****</Company>
+                    <NameOnCard>
+                        <NamePartList>
+                            <NamePart>LEE</NamePart>
+                            <NamePart>LEE</NamePart>
+                            <NamePart>LEE</NamePart>
+                        </NamePartList>
+                    </NameOnCard>
+                    <Number>4111111111111111</Number>
+                    <SecurityCode>123</SecurityCode>
+                    <ExpiryDate>12/30</ExpiryDate>
+                    <StartDate>01/25</StartDate>
+                    <CardType>MasterCard</CardType>
+                    <IssueNumber/>
+                </CreditCard>
+                <Address>
+                    <Company/>
+                    <Flat/>
+                    <BuildingName/>
+                    <BuildingNumber/>
+                    <Street/>
+                    <Locality/>
+                    <City>TESTVILLE</City>
+                    <Province>TS</Province>
+                    <Postcode>10001</Postcode>
+                    <CountryCode>A</CountryCode>
+                </Address>
+            </BillingDetails>
+        </BookingProfile>
+        <AirportNamePair>
+            <OriginAirport>Singapore,Changi International Airport</OriginAirport>
+            <DestinationAirport>Shenzhen,Zhenzhen (Shenzhen)</DestinationAirport>
+        </AirportNamePair>
+        <DateOfCancel>09/12/2024-07:34</DateOfCancel>
+        <SupplierConfirmationCancelDataItemList>
+            <SupplierConfirmationCancelDataItem>
+                <Name>Supplier Cancel Reference</Name>
+                <Value>ABCDEF</Value>
+            </SupplierConfirmationCancelDataItem>
+        </SupplierConfirmationCancelDataItemList>
+    </GetBookingDetails>
+    <GeneralInfoItemList>
+        <GeneralInfoItem>
+            <Name>StartTime</Name>
+            <Value>09/12/24-10:51:22</Value>
+        </GeneralInfoItem>
+        <GeneralInfoItem>
+            <Name>EndTime</Name>
+            <Value>09/12/24-10:51:22</Value>
+        </GeneralInfoItem>
+    </GeneralInfoItemList>
+</CommandList>

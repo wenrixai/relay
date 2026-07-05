@@ -13,7 +13,7 @@ Fail closed: every unexpected error is wrapped in :class:`RedactionError` /
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from lxml import etree
 
@@ -202,6 +202,17 @@ def select_rules(ruleset: RuleSet, channel: str, operation: str) -> list[Rule]:
     ]
 
 
+def _select_rules_for_channels(ruleset: RuleSet, channels: str | Sequence[str], operation: str) -> list[Rule]:
+    """Rules for the first channel alias matching this operation."""
+    if isinstance(channels, str):
+        return select_rules(ruleset, channels, operation)
+    for channel in channels:
+        selected = select_rules(ruleset, channel, operation)
+        if selected:
+            return selected
+    return []
+
+
 def _reference_pattern(rule: ReferenceRule, values: set[str]) -> re.Pattern[str] | None:
     """A case-insensitive alternation over guarded literal values, longest-first.
 
@@ -266,13 +277,14 @@ def _redact_field_rule(
     return rewrites
 
 
-def redact_response_body(
+def redact_response_body(  # pylint: disable=too-many-arguments,too-many-locals
     body: bytes,
     *,
-    channel: str,
+    channel: str | Sequence[str],
     ruleset: RuleSet,
     keyring: Keyring,
     max_bytes: int | None = None,
+    operation_parser: Callable[[etree._Element], str] = parse_operation,
 ) -> tuple[bytes, dict[str, int]]:
     """Redact a channel response per the matching rules (§8.5).
 
@@ -287,8 +299,10 @@ def redact_response_body(
     counts: dict[str, int] = {}
     collector: _Collector = {}
     try:
-        operation = parse_operation(root)
-        selected = select_rules(ruleset, channel, operation)
+        operation = operation_parser(root)
+        selected = _select_rules_for_channels(ruleset, channel, operation)
+        if not selected and operation_parser is not parse_operation:
+            selected = _select_rules_for_channels(ruleset, channel, parse_operation(root))
         # Phase 1: structured field rules — collect plaintext, then rewrite each node (D4).
         for rule in selected:
             if isinstance(rule, FieldRule):

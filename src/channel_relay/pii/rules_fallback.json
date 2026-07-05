@@ -1,13 +1,15 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre-baseline-2026-07-05",
+  "rules_version": "amadeus+sabre+travelfusion-baseline-2026-07-05",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
       "channel": "amadeus",
       "operation": "^PNR_Reply",
       "path": "//a:travellerInformation/a:traveller/a:surname",
-      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
       "pii_type": "person",
       "method": "encrypt"
     },
@@ -16,7 +18,9 @@
       "channel": "amadeus",
       "operation": "^PNR_Reply",
       "path": "//a:travellerInformation/a:passenger/a:firstName",
-      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
       "pii_type": "person",
       "method": "encrypt"
     },
@@ -25,7 +29,9 @@
       "channel": "amadeus",
       "operation": "^PNR_Reply",
       "path": "//a:otherPaxNamesDetails/a:surname",
-      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
       "pii_type": "person",
       "method": "encrypt"
     },
@@ -34,7 +40,9 @@
       "channel": "amadeus",
       "operation": "^PNR_Reply",
       "path": "//a:otherPaxNamesDetails/a:givenName",
-      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
       "pii_type": "person",
       "method": "encrypt"
     },
@@ -43,7 +51,9 @@
       "channel": "amadeus",
       "operation": "^PNR_Reply",
       "path": "//a:frequentTraveler/a:membershipNumber",
-      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
       "pii_type": "frequent_flyer",
       "method": "encrypt"
     },
@@ -52,7 +62,9 @@
       "channel": "amadeus",
       "operation": "^PNR_Reply",
       "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='AP']/a:otherDataFreetext/a:longFreetext",
-      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
       "pii_type": "phone",
       "method": "mask"
     },
@@ -61,7 +73,9 @@
       "channel": "amadeus",
       "operation": "^PNR_Reply",
       "path": "//a:ssr[a:type='CTCE']/a:freeText",
-      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
       "pii_type": "email",
       "method": "mask"
     },
@@ -70,7 +84,9 @@
       "channel": "amadeus",
       "operation": "^PNR_Reply",
       "path": "//a:ssr[a:type='CTCM']/a:freeText",
-      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
       "pii_type": "phone",
       "method": "mask"
     },
@@ -79,7 +95,9 @@
       "channel": "amadeus",
       "operation": "^PNR_Reply",
       "path": "//a:ssr[a:type='DOCS']/a:freeText",
-      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
       "pii_type": "passport_id",
       "method": "mask"
     },
@@ -88,7 +106,9 @@
       "channel": "amadeus",
       "operation": "^PNR_Reply",
       "path": "//a:ssr[a:type='FQTS']/a:freeText",
-      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
       "pii_type": "frequent_flyer",
       "method": "mask"
     },
@@ -97,7 +117,9 @@
       "channel": "amadeus",
       "operation": "^PNR_Reply",
       "path": "//a:ssr[not(a:type)]/a:freeText",
-      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
       "pii_type": "person",
       "method": "mask"
     },
@@ -106,7 +128,9 @@
       "channel": "sabre",
       "operation": "^GetReservationRS$",
       "path": "//s19:Passenger/s19:LastName | //s19:Passenger/s19:FirstName",
-      "namespaces": {"s19": "http://webservices.sabre.com/pnrbuilder/v1_19"},
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
       "pii_type": "person",
       "method": "encrypt"
     },
@@ -115,7 +139,9 @@
       "channel": "sabre",
       "operation": "^GetReservationRS$",
       "path": "//o14:NameAssociation/o14:LastName | //o14:NameAssociation/o14:FirstName",
-      "namespaces": {"o14": "http://services.sabre.com/res/or/v1_14"},
+      "namespaces": {
+        "o14": "http://services.sabre.com/res/or/v1_14"
+      },
       "pii_type": "person",
       "method": "encrypt"
     },
@@ -124,7 +150,9 @@
       "channel": "sabre",
       "operation": "^GetReservationRS$",
       "path": "//s19:TicketDetails/s19:PassengerName",
-      "namespaces": {"s19": "http://webservices.sabre.com/pnrbuilder/v1_19"},
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
       "pii_type": "person",
       "method": "encrypt"
     },
@@ -145,7 +173,9 @@
       "channel": "sabre",
       "operation": "^GetReservationRS$",
       "path": "//s19:PhoneNumber/s19:Number",
-      "namespaces": {"s19": "http://webservices.sabre.com/pnrbuilder/v1_19"},
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
       "pii_type": "phone",
       "method": "mask"
     },
@@ -154,7 +184,9 @@
       "channel": "sabre",
       "operation": "^GetReservationRS$",
       "path": "//s19:AddressLine/s19:Text",
-      "namespaces": {"s19": "http://webservices.sabre.com/pnrbuilder/v1_19"},
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
       "pii_type": "address",
       "method": "mask"
     },
@@ -211,7 +243,9 @@
       "channel": "sabre",
       "operation": "^GetReservationRS$",
       "path": "//o14:OtherSupplementaryInformation/o14:DocumentNumber",
-      "namespaces": {"o14": "http://services.sabre.com/res/or/v1_14"},
+      "namespaces": {
+        "o14": "http://services.sabre.com/res/or/v1_14"
+      },
       "pii_type": "passport_id",
       "method": "mask"
     },
@@ -232,7 +266,9 @@
       "channel": "sabre",
       "operation": "^GetReservationRS$",
       "path": "//o14:PaymentCard/o14:CardNumber",
-      "namespaces": {"o14": "http://services.sabre.com/res/or/v1_14"},
+      "namespaces": {
+        "o14": "http://services.sabre.com/res/or/v1_14"
+      },
       "pii_type": "payment",
       "method": "mask"
     },
@@ -241,7 +277,9 @@
       "channel": "sabre",
       "operation": "^GetReservationRS$",
       "path": "//o14:PaymentCard/o14:ExpiryMonth | //o14:PaymentCard/o14:ExpiryYear",
-      "namespaces": {"o14": "http://services.sabre.com/res/or/v1_14"},
+      "namespaces": {
+        "o14": "http://services.sabre.com/res/or/v1_14"
+      },
       "pii_type": "payment",
       "method": "mask"
     },
@@ -250,7 +288,9 @@
       "channel": "sabre",
       "operation": "^GetReservationRS$",
       "path": "//s19:Remark[@type='FOP']//s19:RemarkLine/s19:Text",
-      "namespaces": {"s19": "http://webservices.sabre.com/pnrbuilder/v1_19"},
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
       "pii_type": "payment",
       "method": "mask"
     },
@@ -260,8 +300,15 @@
       "operation": "^GetReservationRS$",
       "rule_type": "reference",
       "path": "//s19:RemarkLine/s19:Text | //s19:GenericSpecialRequest/s19:FreeText | //s19:GenericSpecialRequest/s19:FullText | //s19:GenericSpecialRequests/s19:FreeText | //s19:GenericSpecialRequests/s19:FullText | //s19:ETicketNumber | //s19:OriginalTicketDetails",
-      "namespaces": {"s19": "http://webservices.sabre.com/pnrbuilder/v1_19"},
-      "source_pii_types": ["person", "email", "phone", "frequent_flyer"],
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "source_pii_types": [
+        "person",
+        "email",
+        "phone",
+        "frequent_flyer"
+      ],
       "pii_type": "person",
       "method": "encrypt"
     },
@@ -271,8 +318,15 @@
       "operation": "^GetReservationRS$",
       "rule_type": "reference",
       "path": "//o14:ServiceRequest/o14:FreeText | //o14:ServiceRequest/o14:FullText",
-      "namespaces": {"o14": "http://services.sabre.com/res/or/v1_14"},
-      "source_pii_types": ["person", "email", "phone", "frequent_flyer"],
+      "namespaces": {
+        "o14": "http://services.sabre.com/res/or/v1_14"
+      },
+      "source_pii_types": [
+        "person",
+        "email",
+        "phone",
+        "frequent_flyer"
+      ],
       "pii_type": "person",
       "method": "encrypt"
     },
@@ -281,7 +335,9 @@
       "channel": "sabre",
       "operation": "^(GetPriceQuoteRS|GetReservationRS)$",
       "path": "//p:NameAssociation/@firstName | //p:NameAssociation/@lastName | //p:NameAssociationInfo/@firstName | //p:NameAssociationInfo/@lastName | //p:PassengerName/@firstName | //p:PassengerName/@lastName",
-      "namespaces": {"p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"},
+      "namespaces": {
+        "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
+      },
       "pii_type": "person",
       "method": "encrypt"
     },
@@ -290,7 +346,9 @@
       "channel": "sabre",
       "operation": "^(GetPriceQuoteRS|GetReservationRS)$",
       "path": "//p:PaymentInfo/p:Card/@number",
-      "namespaces": {"p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"},
+      "namespaces": {
+        "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
+      },
       "pii_type": "payment",
       "method": "mask"
     },
@@ -299,7 +357,9 @@
       "channel": "sabre",
       "operation": "^(GetPriceQuoteRS|GetReservationRS)$",
       "path": "//p:OBFee/p:BankIdentificationNumber",
-      "namespaces": {"p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"},
+      "namespaces": {
+        "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
+      },
       "pii_type": "payment",
       "method": "mask"
     },
@@ -308,17 +368,25 @@
       "channel": "sabre",
       "operation": "^(GetPriceQuoteRS|GetReservationRS)$",
       "path": "//p:OBFee/p:Description",
-      "namespaces": {"p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"},
+      "namespaces": {
+        "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
+      },
       "pii_type": "payment",
       "method": "mask",
-      "extract_patterns": [{"pattern": "BEGINS WITH (\\d{6})"}]
+      "extract_patterns": [
+        {
+          "pattern": "BEGINS WITH (\\d{6})"
+        }
+      ]
     },
     {
       "id": "sabre.tkt.name",
       "channel": "sabre",
       "operation": "^AirTicketRS$",
       "path": "//at:Summary/at:FirstName | //at:Summary/at:LastName",
-      "namespaces": {"at": "http://services.sabre.com/sp/air/ticket/v1"},
+      "namespaces": {
+        "at": "http://services.sabre.com/sp/air/ticket/v1"
+      },
       "pii_type": "person",
       "method": "encrypt"
     },
@@ -327,7 +395,9 @@
       "channel": "sabre",
       "operation": "^DailySalesReportRS$",
       "path": "//sx:IssuanceData/sx:PersonName",
-      "namespaces": {"sx": "http://webservices.sabre.com/sabreXML/2011/10"},
+      "namespaces": {
+        "sx": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
       "pii_type": "person",
       "method": "encrypt"
     },
@@ -336,7 +406,85 @@
       "channel": "sabre",
       "operation": "^TravelItineraryReadRS$",
       "path": "//t3:PassengerData",
-      "namespaces": {"t3": "http://services.sabre.com/res/tir/v3_10"},
+      "namespaces": {
+        "t3": "http://services.sabre.com/res/tir/v3_10"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.traveller_name",
+      "channel": "travelfusion",
+      "operation": "^(GetBookingDetails|GetLatestBookingDetails)$",
+      "path": "//*[local-name()='BookingProfile']/*[local-name()='TravellerList']/*[local-name()='Traveller']/*[local-name()='Name']/*[local-name()='NamePartList']/*[local-name()='NamePart']",
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.contact_name",
+      "channel": "travelfusion",
+      "operation": "^GetBookingDetails$",
+      "path": "//*[local-name()='BookingProfile']/*[local-name()='ContactDetails']/*[local-name()='Name']/*[local-name()='NamePartList']/*[local-name()='NamePart']",
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.billing_name",
+      "channel": "travelfusion",
+      "operation": "^GetBookingDetails$",
+      "path": "//*[local-name()='BookingProfile']/*[local-name()='BillingDetails']/*[local-name()='Name']/*[local-name()='NamePartList']/*[local-name()='NamePart']",
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.cardholder_name",
+      "channel": "travelfusion",
+      "operation": "^GetBookingDetails$",
+      "path": "//*[local-name()='BookingProfile']/*[local-name()='BillingDetails']/*[local-name()='CreditCard']/*[local-name()='NameOnCard']/*[local-name()='NamePartList']/*[local-name()='NamePart']",
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.email",
+      "channel": "travelfusion",
+      "operation": "^GetBookingDetails$",
+      "path": "//*[local-name()='BookingProfile']/*[local-name()='ContactDetails']/*[local-name()='Email']",
+      "pii_type": "email",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.phone",
+      "channel": "travelfusion",
+      "operation": "^GetBookingDetails$",
+      "path": "//*[local-name()='BookingProfile']/*[local-name()='ContactDetails']/*[local-name()='HomePhone' or local-name()='WorkPhone' or local-name()='MobilePhone']",
+      "pii_type": "phone",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.address",
+      "channel": "travelfusion",
+      "operation": "^GetBookingDetails$",
+      "path": "//*[local-name()='BookingProfile']//*[local-name()='Address']/*[local-name()!='CountryCode']",
+      "pii_type": "address",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.payment",
+      "channel": "travelfusion",
+      "operation": "^GetBookingDetails$",
+      "path": "//*[local-name()='BookingProfile']/*[local-name()='BillingDetails']/*[local-name()='CreditCard']/*[local-name()='Number' or local-name()='SecurityCode' or local-name()='ExpiryDate' or local-name()='StartDate' or local-name()='IssueNumber']",
+      "pii_type": "payment",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.display_name_reference",
+      "channel": "travelfusion",
+      "operation": "^(GetBookingDetails|GetLatestBookingDetails)$",
+      "rule_type": "reference",
+      "path": "//*[local-name()='DisplayName']",
+      "source_pii_types": [
+        "person"
+      ],
       "pii_type": "person",
       "method": "encrypt"
     }
