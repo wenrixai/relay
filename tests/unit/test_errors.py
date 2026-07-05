@@ -63,10 +63,10 @@ def test_upstream_error_returns_502_json_with_trace_id() -> None:
 
 
 def test_no_upstream_configured_returns_502() -> None:
-    # amadeus has no default host -> proxy_pass is None
-    channel = ChannelConfig(name="am", type=ChannelType.AMADEUS)
+    # travelport has no default host -> proxy_pass is None
+    channel = ChannelConfig(name="tp", type=ChannelType.TRAVELPORT)
     with _client(channel, httpx.MockTransport(lambda r: httpx.Response(200))) as client:
-        resp = client.get("/channel/am/op")
+        resp = client.get("/channel/tp/op")
 
     assert resp.status_code == 502
     assert resp.headers["x-wenrix-error"] == "internal_error"

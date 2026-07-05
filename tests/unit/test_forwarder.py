@@ -150,7 +150,7 @@ def test_channel_without_upstream_returns_internal_error(
     unreachable_transport: httpx.MockTransport,
     assert_proxy_error: ProxyErrorAssertion,
 ) -> None:
-    channel = ChannelConfig(name="gds", type=ChannelType.AMADEUS)
+    channel = ChannelConfig(name="gds", type=ChannelType.TRAVELPORT)
 
     with relay_client_factory(channel, unreachable_transport) as client:
         resp = client.get("/channel/gds/op", headers={"x-wenrix-trace-id": "trace-1"})

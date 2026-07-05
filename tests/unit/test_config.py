@@ -35,7 +35,7 @@ def test_explicit_proxy_pass_wins() -> None:
 
 
 def test_per_deployment_type_has_no_host_default() -> None:
-    channel = ChannelConfig(name="am", type=ChannelType.AMADEUS)
+    channel = ChannelConfig(name="tp", type=ChannelType.TRAVELPORT)
     assert channel.host is None
     assert channel.proxy_pass is None
 

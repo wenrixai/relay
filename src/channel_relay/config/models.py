@@ -36,8 +36,8 @@ _DEFAULT_HOSTS: dict[ChannelType, str | None] = {
     ChannelType.FARELOGIX_LH: "lhg.farelogix.com",
     ChannelType.FARELOGIX_UA: "ua.farelogix.com",
     ChannelType.FARELOGIX_EK: "ek.farelogix.com",
-    ChannelType.AMADEUS: None,
-    ChannelType.SABRE: None,
+    ChannelType.AMADEUS: "nodeD3.production.webservices.amadeus.com",
+    ChannelType.SABRE: "webservices.platform.sabre.com",
     ChannelType.TRAVELPORT: None,
 }
 
@@ -47,8 +47,8 @@ class Timeouts(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    connect: int = 30
-    read: int = 120
+    connect: int = Field(default=30, description="Upstream connect timeout, in seconds.")
+    read: int = Field(default=120, description="Upstream read timeout, in seconds.")
 
 
 class ChannelPII(BaseModel):
@@ -56,7 +56,7 @@ class ChannelPII(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    enabled: bool = False
+    enabled: bool = Field(default=False, description="Enable PII redaction/de-anonymization for this channel.")
 
 
 class AllowedOperation(BaseModel):
@@ -64,8 +64,8 @@ class AllowedOperation(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    operation: str
-    version: str
+    operation: str = Field(description="Operation name as parsed from the request body.")
+    version: str = Field(description="Semver match expression the operation's version must satisfy.")
 
 
 class ExternalAuthorization(BaseModel):
@@ -73,8 +73,8 @@ class ExternalAuthorization(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    url: str
-    strict: bool = False
+    url: str = Field(description="External authorization service endpoint.")
+    strict: bool = Field(default=False, description="Reject the request if the external check fails or errors.")
 
 
 class Authorization(BaseModel):
@@ -82,8 +82,10 @@ class Authorization(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    allowed_operations: list[AllowedOperation] = Field(default_factory=list)
-    external: ExternalAuthorization | None = None
+    allowed_operations: list[AllowedOperation] = Field(
+        default_factory=list, description="Operations allowed for this channel; empty allows all."
+    )
+    external: ExternalAuthorization | None = Field(default=None, description="Optional external authorization check.")
 
 
 class ChannelConfig(BaseModel):
@@ -95,10 +97,16 @@ class ChannelConfig(BaseModel):
     type: ChannelType = Field(description="Channel type; selects parser + swap behaviour.")
     host: str | None = Field(default=None, description="Upstream host; sets Host + SNI.")
     proxy_pass: str | None = Field(default=None, description="Full upstream base; overrides host.")
-    timeouts: Timeouts = Field(default_factory=Timeouts)
-    credentials: dict[str, str] = Field(default_factory=dict)
+    timeouts: Timeouts = Field(
+        default_factory=Timeouts, description="Connect/read timeouts for this channel's upstream."
+    )
+    credentials: dict[str, str] = Field(
+        default_factory=dict, description="Credential values used for structural swap into requests."
+    )
     pii: ChannelPII = Field(default_factory=ChannelPII)
-    authorization: Authorization = Field(default_factory=Authorization)
+    authorization: Authorization = Field(
+        default_factory=Authorization, description="Allowed operations and external auth checks."
+    )
 
     @model_validator(mode="after")
     def _apply_host_defaults(self) -> ChannelConfig:
@@ -115,4 +123,4 @@ class RelayConfig(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    channels: list[ChannelConfig] = Field(default_factory=list)
+    channels: list[ChannelConfig] = Field(default_factory=list, description="All configured upstream channels.")
