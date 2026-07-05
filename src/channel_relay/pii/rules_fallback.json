@@ -1,5 +1,105 @@
 {
   "schema_version": "1.0",
-  "rules_version": "baked-2026-07-04",
-  "rules": []
+  "rules_version": "amadeus-baseline-2026-07-05",
+  "rules": [
+    {
+      "id": "amadeus.pnr.surname",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:travellerInformation/a:traveller/a:surname",
+      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.pnr.firstname",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:travellerInformation/a:passenger/a:firstName",
+      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.pnr.enh_surname",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:otherPaxNamesDetails/a:surname",
+      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.pnr.enh_givenname",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:otherPaxNamesDetails/a:givenName",
+      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.pnr.ff_number",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:frequentTraveler/a:membershipNumber",
+      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "pii_type": "frequent_flyer",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.pnr.phone_ap",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='AP']/a:otherDataFreetext/a:longFreetext",
+      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "pii_type": "phone",
+      "method": "mask"
+    },
+    {
+      "id": "amadeus.pnr.ssr_email",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:ssr[a:type='CTCE']/a:freeText",
+      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "pii_type": "email",
+      "method": "mask"
+    },
+    {
+      "id": "amadeus.pnr.ssr_ctcm",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:ssr[a:type='CTCM']/a:freeText",
+      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "pii_type": "phone",
+      "method": "mask"
+    },
+    {
+      "id": "amadeus.pnr.ssr_docs",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:ssr[a:type='DOCS']/a:freeText",
+      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "pii_type": "passport_id",
+      "method": "mask"
+    },
+    {
+      "id": "amadeus.pnr.ssr_fqts",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:ssr[a:type='FQTS']/a:freeText",
+      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "pii_type": "frequent_flyer",
+      "method": "mask"
+    },
+    {
+      "id": "amadeus.pnr.ssr_restricted",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:ssr[not(a:type)]/a:freeText",
+      "namespaces": {"a": "http://xml.amadeus.com/PNRACC_17_1_1A"},
+      "pii_type": "person",
+      "method": "mask"
+    }
+  ]
 }
