@@ -200,7 +200,8 @@
         "o14": "http://services.sabre.com/res/or/v1_14"
       },
       "pii_type": "dob",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "1901-01-01"
     },
     {
       "id": "sabre.res.docs_gender",
@@ -212,7 +213,8 @@
         "o14": "http://services.sabre.com/res/or/v1_14"
       },
       "pii_type": "gender",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "M"
     },
     {
       "id": "sabre.res.docs_name",
@@ -281,7 +283,8 @@
         "o14": "http://services.sabre.com/res/or/v1_14"
       },
       "pii_type": "payment",
-      "method": "mask"
+      "method": "mask",
+      "mask_char": "0"
     },
     {
       "id": "sabre.res.fop_remark",

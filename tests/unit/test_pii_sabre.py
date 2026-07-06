@@ -177,9 +177,13 @@ class TestGetReservation:
             "SUPPLIER-CONTACT@ACMEX.COM",
             "SUPPLIER-CONTACT@TESTAGENCY.COM",
         }
-        for masked_local in ("DateOfBirth", "CardNumber", "DocumentNumber"):
+        for masked_local in ("CardNumber", "DocumentNumber"):
             values = [t for t in xml_texts(redacted, masked_local) if t]
             assert values and all(_MASKED_RE.fullmatch(v) for v in values), masked_local
+        # DateOfBirth is a typed field: one-way replaced with a schema-valid ISO sentinel
+        # (never a ``*`` mask that would crash the caller's date parser).
+        dobs = [t for t in xml_texts(redacted, "DateOfBirth") if t]
+        assert dobs and all(v == "1901-01-01" for v in dobs)
         assert counts["visa"] >= 3  # DOCO entry + or114 DOCO/DOCS free-text lines
 
     def test_name_echo_in_ticket_free_text_referenced(
