@@ -7,21 +7,37 @@ one-way-mask action policy, and non-PII preservation guarantees.
 ## Requirements
 ### Requirement: Sabre operations covered by the baked ruleset
 The baked ruleset (`rules_fallback.json`) SHALL contain field rules for channel `sabre` selected by
-body-derived operation, covering at least: `GetReservationRS`, `TravelItineraryReadRS`,
-`GetPriceQuoteRS` (plain and PQR variants share one operation name), `AirTicketRS`, and
-`DailySalesReportRS`. Rules SHALL bind every namespace they use explicitly (Sabre payloads use
-default namespaces — e.g. `http://webservices.sabre.com/pnrbuilder/v1_19`,
-`http://www.sabre.com/ns/Ticketing/pqs/1.0`, `http://services.sabre.com/res/tir/v3_10`,
-`http://webservices.sabre.com/sabreXML/2011/10`, `http://services.sabre.com/sp/air/ticket/v1`,
-`http://services.sabre.com/res/or/v1_14` — each rule declares its own prefix→URI map).
+body-derived operation, covering the original baseline (`GetReservationRS`, `TravelItineraryReadRS`,
+`GetPriceQuoteRS` — plain and PQR variants share one operation name, `AirTicketRS`,
+`DailySalesReportRS`) plus the high-priority PII-bearing operations used by Wenrix handlers,
+identified by their real SOAP body element name (what `parse_operation` returns), which differs from
+the Wenrix service's conceptual API names: `RefundRS` (ticket refund), `DailyRefundReportRS`,
+`eTicketCouponRS` (e-ticket details, incl. the exchange-context variant), `GetElectronicDocumentRS`
+(ticket info from airline), `GetTicketingDocumentRS`, `TravelItineraryHistoryRS`, and `Trip_SearchRS`
+(past-date PNR details). XPaths SHALL be sourced from the Wenrix parsing models
+(`sources/itinerary.py`, `ticketing.py`, `pnr.py`, `history.py`, `queue.py`, `sales_report.py`),
+which enumerate the elements/attributes carrying names, contact details, documents, and payment data.
+Rules SHALL bind every namespace they use explicitly (Sabre payloads use default namespaces — each
+rule declares its own prefix→URI map).
+
+Operations whose real responses carry no PII SHALL NOT receive rules and are handled by the coverage
+metric (`covered=False`, forwarded unchanged): `QueueAccessRS` (record locators / agent sines / PCC
+only), `PassengerDetailsRS` (status-only acknowledgment — passenger data is in the request), and
+`AutomatedExchangesRS` (fare/penalty comparison). `CreatePassengerNameRecordRS` has no corpus payload
+(the PNR-create operation is `EnhancedAirBookRS`).
 
 #### Scenario: Rules select per operation
 - **WHEN** a Sabre response body's SOAP Body first-child local-name is one of the covered operations
 - **THEN** only that operation's rules (plus shared-pattern rules whose operation regex matches) apply
 
-#### Scenario: Uncovered operation applies no rules
+#### Scenario: Newly covered operation redacts names
+- **WHEN** a `RefundRS`, `eTicketCouponRS`, or `Trip_SearchRS` response carries passenger names
+- **THEN** those names are redacted per the rule's action and no plaintext name is forwarded
+
+#### Scenario: Uncovered operation forwarded with coverage metric
 - **WHEN** a Sabre response carries an operation with no baseline rules
-- **THEN** redaction rewrites nothing and the body is returned unchanged
+- **THEN** the relay forwards the body unchanged and emits `pii_uncovered_operation_total{channel,
+  operation}` so the gap is discoverable
 
 ### Requirement: Name redaction in both element text and attributes
 Passenger names SHALL be redacted reversibly (`encrypt`) wherever they appear: element text
@@ -120,12 +136,30 @@ codes, DK numbers, seat numbers, itinerary segments, and ebXML `MessageHeader` r
 - **THEN** `RecordLocator` and `TicketNumber` values are byte-identical to the input
 
 ### Requirement: Golden coverage from sanitized fixtures
-Sanitized fixtures for each covered operation SHALL live in `tests/fixtures/sabre/` and drive
-golden unit tests (rule-level: counts, reversibility, one-way masks, non-PII preservation) plus
-relay integration tests (full pipeline: credential swap ordering, `BinarySecurityToken`
-encryption via the existing `SabreHandler`, PII redaction). All tests finish within the configured
-pytest timeout with no network.
+Sanitized fixtures for each covered operation (original and newly added) SHALL live in
+`tests/fixtures/sabre/` and drive golden unit tests (rule-level: counts, reversibility, one-way masks,
+non-PII preservation) plus relay integration tests (full pipeline: credential swap ordering,
+`BinarySecurityToken` encryption via the existing `SabreHandler`, PII redaction). All tests finish
+within the configured pytest timeout with no network.
 
 #### Scenario: Golden suite green
 - **WHEN** the Sabre golden unit and integration suites run against the baked ruleset
-- **THEN** every covered operation redacts per the scenarios above and encrypted fields round-trip
+- **THEN** every covered operation redacts per its rules and encrypted fields round-trip
+
+#### Scenario: New-operation fixtures present
+- **WHEN** a newly covered operation is added to the baseline
+- **THEN** a sanitized fixture for it exists under `tests/fixtures/sabre/` and drives a golden test
+
+### Requirement: Required anchor rules fail closed on schema drift
+Each PII-heavy Sabre operation SHALL have one anchor rule (the passenger-name rule) set
+`required: true`, so that if Sabre schema drift (element/attribute renames on version bumps) causes
+the anchor to locate no nodes or rewrite no values, redaction fails closed (`RedactionError` → 502
+`pii_redaction_failed`) rather than forwarding an unredacted response.
+
+#### Scenario: Anchor present and drift fails closed
+- **WHEN** a covered operation's response no longer contains the anchor rule's target nodes
+- **THEN** redaction raises and the relay returns 502 `pii_redaction_failed`, forwarding nothing
+
+#### Scenario: Anchor matches normally
+- **WHEN** the anchor rule locates and rewrites the passenger name as expected
+- **THEN** redaction proceeds and the response is forwarded with names redacted

@@ -47,8 +47,8 @@
 
 - [x] 6.1 `just test-fast` green
 - [x] 6.2 `just ci` green (ruff, mypy, pylint, pytest)
-- [ ] 6.3 Manual check via `just up`: request through a `pii.force_redact: true` channel with no
+- [x] 6.3 Focused integration check: request through a `pii.force_redact: true` channel with no
       `PII_KEYRING` set — response contains `"REDACTED"` instead of `ENC_...` tokens, no 500/502
       (covered end-to-end by `test_force_redact_channel_needs_no_keyring` in
       `tests/integration/test_pii_roundtrip.py`, which exercises this exact scenario through the
-      real FastAPI app; not separately run against `just up`)
+      real FastAPI app)

@@ -14,11 +14,14 @@ rules where `channel` matches the configured channel type value (falling back to
 no type-scoped rule matches that operation) and the `operation` regex matches, locate nodes by XPath
 using rule-declared namespaces, skip values matching `ignored_content_patterns`, collect the located
 plaintext value into the rule's `pii_type` bucket BEFORE rewriting, then apply the rule's action
-(`encrypt` → `ENC_` token, `mask`, `replace`, `remove`).
+(`encrypt` → `ENC_` token, `mask`, `replace`, `remove`). When the channel has `pii.force_redact: true`,
+an `encrypt` action SHALL instead replace the value with the fixed literal `"REDACTED"`; no crypto
+codec call and no keyring are required for that field.
 
 Phase 2 (`reference` rules): for each selected `reference` rule, locate its target nodes by XPath
 and replace occurrences of the values collected under its `source_pii_types` per the referential
-matching rules, using its `encrypt` action.
+matching rules, using its `encrypt` action (or, for a `pii.force_redact: true` channel, the same
+`"REDACTED"` substitution as phase 1).
 
 The relay SHALL then re-serialize once, preserving structure, namespaces, and declarations. Channels
 without PII enabled SHALL pass through untouched. Rules with `path_type: jsonpath` are loaded but
@@ -62,6 +65,19 @@ no-op).
 
 - **WHEN** a channel without `pii.enabled` returns a response containing PII
 - **THEN** the body is relayed byte-identical
+
+#### Scenario: force_redact substitutes a fixed placeholder
+
+- **WHEN** a channel has `pii.enabled: true` and `pii.force_redact: true`, and a matched field's
+  rule action is `encrypt`
+- **THEN** the field's value in the response is the literal `"REDACTED"`, not an `ENC_` token, and
+  no keyring is consulted for that field
+
+#### Scenario: force_redact channel needs no keyring
+
+- **WHEN** a deployment has no other channel requiring real encryption, and the only PII-enabled
+  channel has `pii.force_redact: true`
+- **THEN** response redaction for that channel succeeds with no `RELAY_PII_KEYRING` configured
 
 ### Requirement: Request de-anonymization
 
@@ -131,3 +147,32 @@ non-SOAP XML. Operations SHALL never be taken from client headers.
 #### Scenario: Header ignored
 - **WHEN** a client supplies an operation-naming header contradicting the body
 - **THEN** rule selection uses only the body-derived operation
+
+### Requirement: Intra-pass token reuse
+Within a single response-redaction pass the relay SHALL maintain a plaintext→token cache so that
+encrypting the same exact plaintext under the same encryption mode yields the same `ENC_` token
+everywhere it occurs in that response — across repeated field-rule matches and reference-rule hits
+alike. The cache SHALL be keyed on the exact plaintext plus the action's deterministic flag (tokens
+are never shared between deterministic and non-deterministic rules), SHALL live only for the
+duration of the single redaction pass, and SHALL NOT be persisted, logged, or shared across
+requests or documents. Redaction counts SHALL count every rewritten occurrence, including
+cache-served ones.
+
+#### Scenario: Repeated field value shares one token
+- **WHEN** two nodes matched by encrypt field rules in one response hold the identical plaintext
+- **THEN** both are rewritten to the same `ENC_` token, and it decrypts to that plaintext
+
+#### Scenario: Distinct values get distinct tokens
+- **WHEN** two nodes hold different plaintexts
+- **THEN** their tokens differ
+
+#### Scenario: No cross-response reuse in default mode
+- **WHEN** the same plaintext appears in two separate responses redacted by non-deterministic
+  encrypt rules
+- **THEN** the two responses carry different tokens (the cache does not outlive a pass)
+
+#### Scenario: Mode isolation
+- **WHEN** a deterministic encrypt rule and a non-deterministic encrypt rule both match the same
+  plaintext in one response
+- **THEN** the deterministic rule's nodes and the non-deterministic rule's nodes carry different
+  tokens, each valid for decryption

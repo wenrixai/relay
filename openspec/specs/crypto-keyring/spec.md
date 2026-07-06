@@ -8,7 +8,9 @@ The relay SHALL load a PII master keyring of the form `{epoch_int: base64(32 byt
 `RELAY_PII_KEYRING` setting (inline JSON) or a mounted secret file (file takes precedence when both
 are set). Epochs MUST be integers in the range 0–15 (the token control byte carries 4 epoch bits);
 keys MUST decode to exactly 32 bytes. Invalid keyring material SHALL abort startup when any channel
-has `pii.enabled: true`.
+has `pii.enabled: true` and `pii.force_redact` is not also true, or when any channel's credentials
+require a response-auth keyring. A channel with `pii.enabled: true` and `pii.force_redact: true`
+SHALL NOT, by itself, require a configured keyring.
 
 #### Scenario: Valid keyring loads
 - **WHEN** the keyring source contains `{"0": "<base64 32B>", "1": "<base64 32B>"}`
@@ -23,21 +25,38 @@ has `pii.enabled: true`.
 - **THEN** keyring loading fails with a validation error
 
 #### Scenario: PII enabled without keyring aborts startup
-- **WHEN** a channel sets `pii.enabled: true` and no keyring is configured
+- **WHEN** a channel sets `pii.enabled: true` (and `pii.force_redact` is false or unset) and no
+  keyring is configured
 - **THEN** startup aborts with a clear error (readiness never reached)
 
+#### Scenario: force_redact-only channel does not require a keyring
+- **WHEN** the only channel with `pii.enabled: true` also has `pii.force_redact: true`, no other
+  channel's credentials require a response-auth keyring, and no keyring is configured
+- **THEN** startup succeeds and readiness is reached
+
 ### Requirement: HKDF key derivation
-The relay SHALL derive the field-encryption key `K_enc[epoch]` from each epoch's master key using
-HKDF-SHA256 with a fixed domain-separation info string. Master keys SHALL never be used directly as
-cipher keys, and no derived or master key material SHALL ever be logged.
+The relay SHALL derive two keys from each epoch's master key using HKDF-SHA256 with fixed,
+distinct domain-separation info strings: the 32-byte field-encryption key `K_enc[epoch]` (existing
+info label) and the 64-byte deterministic-encryption key `K_siv[epoch]` (a distinct `siv` info
+label, sized for AES-256-SIV). Master keys SHALL never be used directly as cipher keys, and no
+derived or master key material SHALL ever be logged. Keyring format, epoch semantics, and rotation
+behavior are unchanged — rotating a master key rotates both derived keys.
 
 #### Scenario: Derivation is deterministic
 - **WHEN** the same master key and epoch are loaded twice
-- **THEN** the derived `K_enc` is identical
+- **THEN** the derived `K_enc` and `K_siv` are identical across loads
 
 #### Scenario: Different epochs derive different keys
 - **WHEN** two epochs hold different master keys
-- **THEN** their derived `K_enc` values differ
+- **THEN** their derived `K_enc` values differ and their derived `K_siv` values differ
+
+#### Scenario: Domain separation between derived keys
+- **WHEN** `K_enc` and `K_siv` are derived from the same master key
+- **THEN** neither is a prefix of or equal to the other (distinct HKDF info labels)
+
+#### Scenario: Unknown epoch fails for SIV key
+- **WHEN** `K_siv` is requested for an epoch not present in the keyring
+- **THEN** the same typed unknown-epoch error is raised as for `K_enc`
 
 ### Requirement: Active epoch selection
 The relay SHALL encrypt new tokens with the epoch given by `RELAY_PII_KEY_EPOCH_ACTIVE`, defaulting

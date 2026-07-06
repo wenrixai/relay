@@ -13,7 +13,9 @@ discriminated union on `method`: `encrypt` (no params), `mask` (`mask_char`, `ke
 (prefix → URI) used to evaluate its XPath; a prefix used in `path` but not declared is a
 no-match at evaluation time, never an error. The wire format stays flat (§8.1 style:
 `method` plus its params at rule level). The rules JSON Schema SHALL be generated from the models,
-never hand-written.
+never hand-written. A channel's `pii.force_redact` config (see `relay-configuration`) MAY override
+the effective outcome of an `encrypt` action at apply time without changing the rule's stored
+`method` — the rules document itself is unaffected by this override.
 
 #### Scenario: Valid encrypt rule loads
 - **WHEN** a rule provides id/channel/operation/path/pii_type with `method: encrypt`
@@ -65,7 +67,10 @@ regex), `path`, `path_type` (`xpath` default | `jsonpath`), optional `namespaces
 default 3) and `word_boundary` (bool, default true), and an `action`. In v1 the reference action
 SHALL be `encrypt`. A `RuleSet.rules[]` SHALL accept a mixed list of `field` and `reference` rules,
 discriminated on `rule_type`. The rules JSON Schema SHALL be generated from the models, never
-hand-written, and SHALL encode the `rule_type` discriminator and per-kind required parameters.
+hand-written, and SHALL encode the `rule_type` discriminator and per-kind required parameters. As
+with `field` rules, a channel's `pii.force_redact` config MAY override a reference rule's `encrypt`
+outcome to the fixed `"REDACTED"` literal at apply time (see `referential-redaction`); the rule's
+stored `action` remains `encrypt` regardless.
 
 #### Scenario: Valid reference rule loads
 - **WHEN** a rule provides `rule_type: reference`, id/channel/operation/path, a non-empty
@@ -87,10 +92,6 @@ hand-written, and SHALL encode the `rule_type` discriminator and per-kind requir
 #### Scenario: Bad regex in reference operation rejected at load
 - **WHEN** a `reference` rule's `operation` is not a compilable regex
 - **THEN** validation fails at load time, never at request time
-
-#### Scenario: Generated schema documents the rule_type discriminator
-- **WHEN** the JSON Schema is generated from the rule models
-- **THEN** it encodes the `rule_type` discriminator and the reference kind's required parameters
 
 ### Requirement: Redaction actions must preserve type validity for typed fields
 Rule action choice SHALL preserve the consuming parser's type contract. `encrypt` (which emits an

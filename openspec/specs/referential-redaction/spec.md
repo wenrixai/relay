@@ -4,9 +4,7 @@
 Redact PII that appears inside bounded free-text nodes by referencing the plaintext values collected
 from structured `field` rules during the same response-redaction pass, so that names and other
 identifiers embedded in remarks and prose are scrubbed reversibly without scanning the whole document.
-
 ## Requirements
-
 ### Requirement: Within-document value collection
 
 During response redaction the relay SHALL collect the plaintext values matched by `field` rules,
@@ -30,11 +28,12 @@ bucket is empty.
 For channels with `pii.enabled: true`, a `reference` rule SHALL search the text of the nodes located
 by its own `path` (using its declared `namespaces`) for occurrences of the values collected under
 its `source_pii_types`, and SHALL replace each matched span in place using its action (reversible
-`encrypt`). The search SHALL be confined to those located nodes — never the whole document — and
-SHALL run in a second phase, after value collection, within the same pass. The rewrite SHALL be
-structural: it edits the parsed node's text, never the raw body, and treats each collected value as
-a fixed literal (never a regex). A reference rule whose `source_pii_types` buckets are all empty
-SHALL match nothing.
+`encrypt`, unless the channel has `pii.force_redact: true`, in which case each matched span is
+replaced with the fixed literal `"REDACTED"` instead — no crypto codec call, no keyring required).
+The search SHALL be confined to those located nodes — never the whole document — and SHALL run in a
+second phase, after value collection, within the same pass. The rewrite SHALL be structural: it
+edits the parsed node's text, never the raw body, and treats each collected value as a fixed literal
+(never a regex). A reference rule whose `source_pii_types` buckets are all empty SHALL match nothing.
 
 #### Scenario: Name scrubbed from remark
 - **WHEN** `person` was collected as {"John", "Smith"} and a `reference` rule targets
@@ -49,6 +48,12 @@ SHALL match nothing.
 #### Scenario: Unknown namespace prefix is a no-match
 - **WHEN** a reference rule's `path` uses a namespace prefix absent from its declarations
 - **THEN** it matches nothing, a warning metric is emitted, and processing continues
+
+#### Scenario: force_redact substitutes a fixed placeholder in free text
+- **WHEN** a channel has `pii.force_redact: true` and a reference rule matches "John" inside
+  `//Remark/Text` = "PSGR JOHN SMITH RQ WHEELCHAIR"
+- **THEN** each matched name is replaced with the literal `"REDACTED"`, the surrounding text is
+  preserved, and no `ENC_` token is produced
 
 ### Requirement: Match guards against over-redaction
 
@@ -83,3 +88,37 @@ toward `pii_fields_redacted_total` attributed to the rule's `pii_type`.
 #### Scenario: Reference redaction counted
 - **WHEN** a reference rule replaces two name occurrences in a remark
 - **THEN** `pii_fields_redacted_total` for that `pii_type` increases by two
+
+### Requirement: Reference hits reuse collected-value tokens
+A reference-rule hit SHALL reuse the token already minted during the same pass for the identical
+exact plaintext under the same encryption mode (the phase-1 field-rule token, or an earlier
+reference hit's token), instead of re-encrypting with a fresh IV. When no token exists yet for that
+exact plaintext and mode, the reference rule SHALL encrypt per its own action and the result SHALL
+join the pass-scoped cache. Because reference matching is case-insensitive while encryption
+preserves the matched casing, a case-variant occurrence SHALL be encrypted as its own exact
+plaintext (round-trip casing fidelity outranks cross-casing token equality).
+
+#### Scenario: Remark occurrence shares the field token
+- **WHEN** a field rule encrypts `//Passenger/Last` holding "SMITH" and a reference rule then hits
+  "SMITH" inside a remark in the same response
+- **THEN** the remark span is replaced with the same `ENC_` token the field received
+
+#### Scenario: Repeated remark hits share one token
+- **WHEN** the same collected value occurs twice inside reference-rule target text
+- **THEN** both spans receive the identical token and the redaction count increases by two
+
+#### Scenario: Case variant gets its own token
+- **WHEN** "Smith" was collected and tokenized, and a remark contains "SMITH"
+- **THEN** "SMITH" is matched (case-insensitive) but encrypted as "SMITH", yielding a token that
+  decrypts to "SMITH", distinct from the "Smith" token
+
+### Requirement: force_redact needs no keyring for reference redaction
+
+When a channel has `pii.force_redact: true`, reference-rule redaction SHALL NOT require a
+configured keyring — the substitution is the fixed literal `"REDACTED"`, never a call to the crypto
+codec.
+
+#### Scenario: Reference redaction succeeds without a keyring
+- **WHEN** a `pii.force_redact: true` channel's reference rule matches free text and no
+  `RELAY_PII_KEYRING` is configured
+- **THEN** the matched spans are replaced with `"REDACTED"` and no error is raised
