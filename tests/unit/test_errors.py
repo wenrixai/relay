@@ -9,6 +9,7 @@ from channel_relay.config.models import ChannelConfig, ChannelType, RelayConfig
 from channel_relay.main import create_app
 from channel_relay.proxy.errors import (
     ErrorReason,
+    forbidden_operation_response,
     internal_error_response,
     upstream_timeout_response,
 )
@@ -18,6 +19,13 @@ def test_internal_error_response_shape() -> None:
     resp = internal_error_response(ErrorReason.INTERNAL_ERROR, "boom", "trace-123")
     assert resp.status_code == 502
     assert resp.headers["X-Wenrix-Error"] == "internal_error"
+
+
+def test_forbidden_operation_response_shape() -> None:
+    resp = forbidden_operation_response("trace-777")
+    assert resp.status_code == 403
+    assert resp.headers["X-Wenrix-Error"] == "operation_not_allowed"
+    assert resp.media_type == "application/json"
 
 
 def test_upstream_timeout_response_shape() -> None:

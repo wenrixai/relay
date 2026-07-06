@@ -69,7 +69,10 @@ def clean_response_headers(items: Iterable[tuple[str, str]]) -> list[tuple[str, 
     """Return client-safe response headers: no hop-by-hop, no ``Server``.
 
     ``content-length`` is dropped so the response framework recomputes it from the body.
+    ``content-encoding`` is dropped because the upstream client transparently decompresses
+    the body the relay forwards, so the upstream encoding never describes the served bytes;
+    relaying it would mislabel the (now identity) body and break client decoding.
     """
     items = list(items)
-    drop = set(HOP_BY_HOP) | _connection_tokens(items) | {"server", "content-length"}
+    drop = set(HOP_BY_HOP) | _connection_tokens(items) | {"server", "content-length", "content-encoding"}
     return [(k, v) for k, v in items if k.lower() not in drop]

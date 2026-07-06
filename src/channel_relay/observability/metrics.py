@@ -34,6 +34,7 @@ class _MetricTotals:
     pii_redacted: dict[str, dict[str, int]] = field(default_factory=dict)
     pii_decrypted: dict[str, int] = field(default_factory=dict)
     xml_parse_errors: dict[str, dict[str, int]] = field(default_factory=dict)
+    operations_denied: dict[str, int] = field(default_factory=dict)
 
     @staticmethod
     def increment(values: dict[str, int], key: str, count: int = 1) -> None:
@@ -59,6 +60,7 @@ class _MetricTotals:
             "xml_parse_errors_total": {
                 channel: dict(sorted(counts.items())) for channel, counts in sorted(self.xml_parse_errors.items())
             },
+            "operations_denied_total": dict(sorted(self.operations_denied.items())),
         }
 
 
@@ -81,8 +83,8 @@ def build_meter_provider(
     return MeterProvider(metric_readers=readers)
 
 
-class RelayMetrics:
-    """Custom relay instruments (§11.1)."""
+class RelayMetrics:  # pylint: disable=too-many-instance-attributes
+    """Custom relay instruments (§11.1); one attribute per instrument, so the count is expected."""
 
     def __init__(self, meter: Meter) -> None:
         self._channels_configured = 0
@@ -119,6 +121,11 @@ class RelayMetrics:
             _metric_name("xml_parse_errors_total"),
             unit="1",
             description="Hardened XML parse/structure rejections.",
+        )
+        self._operations_denied: OtelCounter = meter.create_counter(
+            _metric_name("operations_denied_total"),
+            unit="1",
+            description="Requests rejected by operation authorization (403).",
         )
 
     def _observe_channels(
@@ -167,6 +174,11 @@ class RelayMetrics:
         """Record a hardened-parser rejection with its stable ``kind``."""
         self._totals.increment_nested(self._totals.xml_parse_errors, channel, kind, 1)
         self._xml_parse_errors.add(1, {"channel": channel, "kind": kind})
+
+    def record_operation_denied(self, channel: str) -> None:
+        """Record a request rejected by operation authorization (403)."""
+        self._totals.increment(self._totals.operations_denied, channel)
+        self._operations_denied.add(1, {"channel": channel})
 
     def snapshot(self) -> dict[str, object]:
         """Return safe in-process metric totals for admin diagnostics."""

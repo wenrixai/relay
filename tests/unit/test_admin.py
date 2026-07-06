@@ -114,6 +114,7 @@ def test_admin_flare_includes_in_process_statistics() -> None:
     app.state.metrics.record_pii_redacted("sabre-prod", {"person": 2, "email": 1})
     app.state.metrics.record_pii_decrypted("sabre-prod", 3)
     app.state.metrics.record_xml_parse_error("sabre-prod", "invalid_xml")
+    app.state.metrics.record_operation_denied("sabre-prod")
 
     with client:
         resp = client.get("/admin/flare", headers={"authorization": _basic("admin", "secret-pass")})
@@ -127,4 +128,5 @@ def test_admin_flare_includes_in_process_statistics() -> None:
         "pii_fields_redacted_total": {"sabre-prod": {"email": 1, "person": 2}},
         "pii_fields_decrypted_total": {"sabre-prod": 3},
         "xml_parse_errors_total": {"sabre-prod": {"invalid_xml": 1}},
+        "operations_denied_total": {"sabre-prod": 1},
     }

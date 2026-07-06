@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 from collections.abc import Callable
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from lxml import etree
 
 from channel_relay.channels import get_handler
 from channel_relay.channels.base import CredentialSwapError, SwapContext
+from channel_relay.channels.wsse import password_digest
 from channel_relay.config.models import ChannelConfig, ChannelType
 from channel_relay.pii.crypto import Keyring
 from channel_relay.pii.xml_ops import parse_bytes, serialize
@@ -242,6 +244,49 @@ def test_soap_security_fragment_replaces_header_for_gds_channels() -> None:
         assert "relay-token" in xml
         assert "caller" not in xml
         assert "caller-token" not in xml
+
+
+def test_dynamic_username_token_built_when_soap_username_set() -> None:
+    handler = get_handler(ChannelType.AMADEUS)
+    channel = _gds_channel(
+        ChannelType.AMADEUS,
+        {"soap_username": "1000001", "soap_password": "S3cret!"},  # no static soap_security
+    )
+    root = _root("amadeus/request.xml")
+
+    assert handler.swap_request_body(root, _ctx(channel)) is True
+    swapped = parse_bytes(serialize(root))
+    fields = {node.tag.split("}")[-1]: node for node in swapped.iter("*")}
+    assert fields["Username"].text == "1000001"
+    assert fields["Password"].get("Type").endswith("#PasswordDigest")
+    # The digest recomputes from the emitted Nonce + Created.
+    nonce = base64.b64decode(fields["Nonce"].text)
+    created = fields["Created"].text
+    assert fields["Password"].text == password_digest("S3cret!", nonce, created)
+    # Client-sent credentials are gone.
+    assert b"caller" not in serialize(root)
+
+
+def test_dynamic_username_token_uses_fresh_nonce_each_request() -> None:
+    handler = get_handler(ChannelType.AMADEUS)
+    channel = _gds_channel(ChannelType.AMADEUS, {"soap_username": "u", "soap_password": "p"})
+
+    def _nonce() -> str:
+        root = _root("amadeus/request.xml")
+        handler.swap_request_body(root, _ctx(channel))
+        swapped = parse_bytes(serialize(root))
+        return next(n.text or "" for n in swapped.iter("*") if n.tag.endswith("}Nonce"))
+
+    assert _nonce() != _nonce()
+
+
+def test_dynamic_username_token_rejects_bad_password_type() -> None:
+    handler = get_handler(ChannelType.AMADEUS)
+    channel = _gds_channel(
+        ChannelType.AMADEUS,
+        {"soap_username": "u", "soap_password": "p", "soap_password_type": "bogus"},
+    )
+    _assert_swap_error("soap_password_type", handler.swap_request_body, _root("amadeus/request.xml"), _ctx(channel))
 
 
 def test_soap_security_xpath_target_variant_replaces_header() -> None:

@@ -60,11 +60,12 @@ def test_clean_response_strips_server_and_hop_by_hop() -> None:
         ("connection", "close"),
         ("transfer-encoding", "chunked"),
         ("content-length", "123"),
+        ("content-encoding", "gzip"),
     ]
     cleaned = clean_response_headers(incoming)
     keys = _keys(cleaned)
     assert "content-type" in keys
-    for gone in ("server", "connection", "transfer-encoding", "content-length"):
+    for gone in ("server", "connection", "transfer-encoding", "content-length", "content-encoding"):
         assert gone not in keys
 
 

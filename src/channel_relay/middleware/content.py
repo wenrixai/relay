@@ -43,11 +43,14 @@ def requires_inspection(channel: ChannelConfig) -> bool:
     PII-enabled channels require inspection for request de-anonymization/response
     redaction. Slice 3 credential swap adds body inspection for channels whose
     configured credentials require structural XML mutation or response auth encryption.
+    Operation authorization adds body inspection for channels with a configured
+    allow-list, so the inspectable-body size cap applies uniformly.
     """
     return (
         channel.pii.enabled
         or credentials_require_body_inspection(channel)
         or credentials_require_response_keyring(channel)
+        or bool(channel.authorization.allowed_operations)
     )
 
 

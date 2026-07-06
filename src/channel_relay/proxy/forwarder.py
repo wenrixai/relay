@@ -42,6 +42,7 @@ from channel_relay.pii.xml_ops import parse_bytes, serialize
 from channel_relay.proxy.errors import (
     TRACE_ID_HEADER,
     ErrorReason,
+    forbidden_operation_response,
     internal_error_response,
     payload_too_large_response,
     upstream_timeout_response,
@@ -143,6 +144,21 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     keyring: Keyring | None = request.app.state.keyring
     handler = get_handler(channel.type)
 
+    # [6] Operation authorization: reject a disallowed operation before any credential injection
+    # or upstream call, so a blocked operation never reaches the channel (§operation-authorization).
+    if channel.authorization.allowed_operations:
+        auth_outcome = _authorization_stage(
+            handler=handler,
+            channel=channel,
+            body=body,
+            kind=kind,
+            max_inspect_bytes=max_inspect_bytes,
+            trace_id=trace_id,
+            metrics=metrics,
+        )
+        if auth_outcome is not None:
+            return auth_outcome
+
     # [8a] Credential header injection needs no body and runs for every credentialed channel;
     # header-only channels (NDC) forward the body byte-for-byte (§spec: body left unchanged).
     if channel.credentials:
@@ -153,8 +169,13 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     # [7]/[8b] Body stages operate on decoded plaintext; gzip is decoded/re-encoded once here
     # so PII de-anonymization and credential-body swap never round-trip it twice.
     need_pii = channel.pii.enabled and keyring is not None and kind is ContentKind.XML
+    # De-anonymize replayed session tokens whenever credential-swap response-auth encryption is
+    # active for this channel, even with PII disabled — otherwise an ENC_ session token the relay
+    # itself issued would round-trip back to the channel undecrypted (§credential-swap symmetry).
+    need_session_deanon = handler.requires_response_keyring(channel) and keyring is not None and kind is ContentKind.XML
+    need_deanon = need_pii or need_session_deanon
     need_cred_body = bool(channel.credentials) and handler.requires_body_inspection(channel)
-    if body and (need_pii or need_cred_body):
+    if body and (need_deanon or need_cred_body):
         gzipped = request.headers.get("content-encoding", "").lower() == "gzip"
         try:
             working = _gzip_decode(body) if gzipped else body
@@ -164,7 +185,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
         changed = False
         # [7] De-anonymize: the channel must always receive plaintext (§8.6). Envelope-driven,
         # keyring-only; fail closed — an undecryptable token never reaches the channel.
-        if need_pii and keyring is not None:
+        if need_deanon and keyring is not None:
             pii_outcome = _request_pii_stage(
                 channel=channel,
                 keyring=keyring,
@@ -260,6 +281,49 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
         status_code=upstream.status_code,
         headers=response_headers,
     )
+
+
+def _authorization_stage(  # pylint: disable=too-many-arguments
+    *,
+    handler: ChannelHandler,
+    channel: ChannelConfig,
+    body: bytes,
+    kind: ContentKind,
+    max_inspect_bytes: int,
+    trace_id: str | None,
+    metrics: RelayMetrics | None = None,
+) -> Response | None:
+    """Pipeline stage [6]: enforce the operation-name allow-list; disallowed → 403.
+
+    Only reached when ``allowed_operations`` is non-empty. The operation is derived from the
+    body (never a header, §5.3/D6). An operation that cannot be determined — non-XML body or a
+    body that does not parse as XML — fails closed: an unverifiable operation is not allowed.
+    """
+    allowed = {entry.operation for entry in channel.authorization.allowed_operations}
+    if kind is not ContentKind.XML:
+        logger.bind(channel=channel.name, content_kind=kind).warning("Operation unverifiable: non-XML body")
+        return _deny_operation(channel, trace_id, metrics)
+    try:
+        root = parse_bytes(body, max_bytes=max_inspect_bytes)
+    except XmlOversizeError as exc:
+        _record_xml_error(metrics, channel.name, exc.kind)
+        return payload_too_large_response()
+    except XmlOpsError as exc:
+        _record_xml_error(metrics, channel.name, exc.kind)
+        logger.bind(channel=channel.name).warning("Request XML rejected during operation authorization")
+        return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not parseable XML", trace_id)
+    operation = handler.parse_operation(root)
+    if operation not in allowed:
+        logger.bind(channel=channel.name, operation=operation).warning("Operation not allowed")
+        return _deny_operation(channel, trace_id, metrics)
+    return None
+
+
+def _deny_operation(channel: ChannelConfig, trace_id: str | None, metrics: RelayMetrics | None) -> Response:
+    """Emit the 403 operation-not-allowed response and count the denial."""
+    if metrics is not None:
+        metrics.record_operation_denied(channel.name)
+    return forbidden_operation_response(trace_id)
 
 
 def _request_header_swap(

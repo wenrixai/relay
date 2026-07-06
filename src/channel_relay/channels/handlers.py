@@ -6,15 +6,26 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import ClassVar
 
 from lxml import etree
 
 from channel_relay.channels.base import CredentialSwapError, SwapContext
+from channel_relay.channels.wsse import (
+    PASSWORD_TYPE_DIGEST,
+    PASSWORD_TYPE_TEXT,
+    WSSE_NS,
+    WSU_NS,
+    build_username_token_security,
+)
 from channel_relay.config.models import ChannelConfig, ChannelType
 from channel_relay.pii.codec import TOKEN_RE, encrypt
 from channel_relay.pii.xml_ops import parse_bytes
+
+_NONCE_BYTES = 16
 
 _SOAP_ENVELOPE = "Envelope"
 _SOAP_HEADER = "Header"
@@ -96,6 +107,26 @@ def _replace_with_fragment(target: etree._Element, fragment_text: str) -> None:
 
 def _namespaces(root: etree._Element) -> dict[str, str]:
     return {prefix: uri for prefix, uri in root.nsmap.items() if prefix is not None}
+
+
+def _dynamic_security_fragment(credentials: dict[str, str]) -> str:
+    """Build a fresh WS-Security UsernameToken fragment for stateless SOAP auth (Amadeus).
+
+    Generates a new nonce and UTC ``Created`` per call so the digest is never stale.
+    """
+    password_type = credentials.get("soap_password_type", PASSWORD_TYPE_DIGEST)
+    if password_type not in {PASSWORD_TYPE_DIGEST, PASSWORD_TYPE_TEXT}:
+        raise CredentialSwapError("soap_password_type must be 'digest' or 'text'")
+    created = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return build_username_token_security(
+        username=_require_credential(credentials, "soap_username"),
+        password=_require_credential(credentials, "soap_password"),
+        password_type=password_type,
+        nonce=os.urandom(_NONCE_BYTES),
+        created=created,
+        wsse_ns=credentials.get("soap_wsse_ns", WSSE_NS),
+        wsu_ns=credentials.get("soap_wsu_ns", WSU_NS),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -277,8 +308,11 @@ class SoapSecurityHandler(NoHeaderSwapMixin):
         credentials = context.channel.credentials
         if not credentials:
             return False
-        fragment = _require_credential(credentials, "soap_security")
         target = self._security_target(root, credentials)
+        if credentials.get("soap_username"):
+            fragment = _dynamic_security_fragment(credentials)
+        else:
+            fragment = _require_credential(credentials, "soap_security")
         _replace_with_fragment(target, fragment)
         return True
 

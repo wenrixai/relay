@@ -22,13 +22,17 @@ _TIMEOUT_HTML = (
 
 
 class ErrorReason(StrEnum):
-    """``reason`` values for 502 responses (§10.3)."""
+    """``reason`` values for relay error responses (§10).
+
+    Most are 502 (§10.3); ``OPERATION_NOT_ALLOWED`` is a 403 authorization rejection.
+    """
 
     INTERNAL_ERROR = "internal_error"
     PII_REDACTION_FAILED = "pii_redaction_failed"
     PII_DEANONYMIZATION_FAILED = "pii_deanonymization_failed"
     XML_PARSE_ERROR = "xml_parse_error"
     CREDENTIAL_SWAP_FAILED = "credential_swap_failed"
+    OPERATION_NOT_ALLOWED = "operation_not_allowed"
 
 
 def upstream_timeout_response() -> Response:
@@ -58,6 +62,23 @@ def internal_error_response(
             "trace_id": trace_id,
         },
         headers={WENRIX_ERROR_HEADER: reason.value},
+    )
+
+
+def forbidden_operation_response(trace_id: str | None) -> Response:
+    """403 JSON for an operation not permitted on a channel (§10, operation authorization).
+
+    ``detail`` is fixed and carries no PII, credentials, or key material.
+    """
+    return JSONResponse(
+        status_code=403,
+        content={
+            "error": "forbidden",
+            "reason": ErrorReason.OPERATION_NOT_ALLOWED.value,
+            "detail": "operation not allowed for this channel",
+            "trace_id": trace_id,
+        },
+        headers={WENRIX_ERROR_HEADER: ErrorReason.OPERATION_NOT_ALLOWED.value},
     )
 
 
