@@ -99,6 +99,43 @@ def test_derived_key_differs_from_master() -> None:
     assert keyring.enc_key(0) != bytes([1]) * 32
 
 
+def test_siv_key_is_64_bytes() -> None:
+    keyring = Keyring.from_json(keyring_json({0: b64key(1)}))
+    assert len(keyring.siv_key(0)) == 64
+
+
+def test_siv_key_derivation_deterministic() -> None:
+    ring_a = Keyring.from_json(keyring_json({0: b64key(1)}))
+    ring_b = Keyring.from_json(keyring_json({0: b64key(1)}))
+    assert ring_a.siv_key(0) == ring_b.siv_key(0)
+
+
+def test_different_epoch_siv_keys_derive_differently() -> None:
+    keyring = Keyring.from_json(keyring_json({0: b64key(1), 1: b64key(2)}))
+    assert keyring.siv_key(0) != keyring.siv_key(1)
+
+
+def test_siv_key_domain_separated_from_enc_key() -> None:
+    keyring = Keyring.from_json(keyring_json({0: b64key(1)}))
+    enc, siv = keyring.enc_key(0), keyring.siv_key(0)
+    assert enc != siv
+    assert not siv.startswith(enc)
+
+
+def test_siv_key_differs_from_master() -> None:
+    keyring = Keyring.from_json(keyring_json({0: b64key(1)}))
+    assert not keyring.siv_key(0).startswith(bytes([1]) * 32)
+
+
+def test_siv_key_unknown_epoch_raises_with_epoch_only() -> None:
+    keyring = Keyring.from_json(keyring_json({0: b64key(7)}))
+    with pytest.raises(UnknownEpochError) as excinfo:
+        keyring.siv_key(9)
+    message = str(excinfo.value)
+    assert "9" in message
+    assert b64key(7) not in message
+
+
 def test_unknown_epoch_raises_with_epoch_only() -> None:
     keyring = Keyring.from_json(keyring_json({0: b64key(7)}))
     with pytest.raises(UnknownEpochError) as excinfo:

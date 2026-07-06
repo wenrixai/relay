@@ -210,6 +210,19 @@ entries; documented as deprecated but functional. Parity tested against a v1 con
 `path_type`: `xpath` (default) | `jsonpath` (§5.4). `method`: `encrypt` (default) | `mask`.
 `rule_type`: `field` (default) | `reference`.
 
+**`deterministic` (encrypt only, default `false`).** Random-IV `encrypt` yields a *different*
+token per occurrence, so any caller logic comparing PII values by equality (matching a passenger
+across responses, deduplicating names) breaks. Setting `"deterministic": true` switches that rule
+to AES-SIV (§8.4): same plaintext + same key epoch → same token, preserving equality for the
+caller. Authoring guidance: enable it only for pii_types the caller genuinely correlates by value
+(coordinate with the consuming team — `person` is the expected first case); it deliberately
+reveals equality patterns (the same passenger is recognizable across responses within an epoch),
+an accepted, bounded leak. Rollout order matters: deploy relays that understand the flag
+everywhere *before* flipping it in rules — older relays reject deterministic tokens fail-closed.
+Within one response no flag is needed: the engine reuses the same token for every occurrence of
+the same exact plaintext (per encryption mode) in a single redaction pass, including reference-rule
+hits, so intra-response equality always holds.
+
 A **reference** rule redacts occurrences of PII values that `field` rules already extracted this
 same pass — the name that also appears inside a free-text remark (Amadeus/Sabre `RM`/`OSI`/`SSR`).
 It declares `source_pii_types` (which extracted buckets to hunt), a bounded target `path` (the
@@ -231,7 +244,8 @@ Detect channel from route; parse operation from body; select rules where `channe
 re-serialize preserving structure/namespaces.
 
 ### 8.3 Keys
-Master key per **key-epoch**; HKDF domain separation (`K_enc`; `K_ref` only for optional §8.9).
+Master key per **key-epoch**; HKDF domain separation (`K_enc`; `K_siv` for deterministic §8.4;
+`K_ref` only for optional §8.9).
 Master key from a Helm **create-if-absent Secret** (§13.5) so restarts/upgrades never orphan tokens.
 Rotation via the 1-byte epoch keyring: add a new epoch's key, retain prior epochs for decryption.
 
@@ -240,15 +254,22 @@ Rotation via the 1-byte epoch keyring: add a new epoch's key, retain prior epoch
 plaintext  = utf8(field_value)
 comp       = smaz(plaintext)
 payload    = comp if len(comp) < len(plaintext) else plaintext
-control    = (key_epoch & 0x0F) | (compressed << 4)   # 1 byte; bits 5-7 reserved
+control    = (key_epoch & 0x0F) | (compressed << 4) | (deterministic << 5)  # bits 6-7 reserved
+# default mode (deterministic bit clear):
 iv         = random 12 bytes (96-bit)
 ciphertext = AES-256-CTR(K_enc[key_epoch], counter=iv||0x00000000, payload)
 token      = "ENC_" + base64url_nopad(control || iv || ciphertext)
+# deterministic mode (bit 5 set, opt-in per rule):
+token      = "ENC_" + base64url_nopad(control || AES-256-SIV(K_siv[key_epoch], payload))
 ```
-Regex `^ENC_([A-Za-z0-9_-]+)$`. IV prepended in clear (CTR cannot encrypt its own IV); unique per
-(key,field); random IV prevents ciphertext-equality correlation. **Confidentiality-only in v1**
-(TLS provides transport integrity; threat model = a party *reading* the XML, not tampering, per
-`SECURITY.md`). Format is versioned; an authenticated mode can be added later without breaking it.
+Regex `^ENC_([A-Za-z0-9_-]+)$`. Default mode: IV prepended in clear (CTR cannot encrypt its own
+IV); unique per (key,field); random IV prevents ciphertext-equality correlation.
+**Confidentiality-only in v1** (TLS provides transport integrity; threat model = a party *reading*
+the XML, not tampering, per `SECURITY.md`). Deterministic mode (RFC 5297, no nonce): the 16-byte
+synthetic IV doubles as an authentication tag, so those tokens are additionally
+tamper-evident; equality across responses is the intended, documented leak (§8.1). Decrypt routes
+on bit 5 — de-anonymization stays envelope-driven and mode-blind. Format is versioned via the
+remaining reserved bits; an authenticated default mode can be added later without breaking it.
 Size note: for short names the fixed 13-byte overhead dominates, so smaz gains are largest on longer
 PII; IV length is tunable in `codec.py` (never below 96-bit).
 

@@ -41,6 +41,11 @@ _EMBEDDED_TOKEN_RE = re.compile(r"ENC_[A-Za-z0-9_-]+")
 # Type alias for the collector: pii_type value → set of plaintext values seen this pass.
 _Collector = dict[str, set[str]]
 
+# Per-pass (plaintext, deterministic) → token cache: the same value encrypted under the same
+# mode reuses one token within a single redaction pass, so intra-response equality survives
+# tokenization. Like the collector, it lives only for one pass and is never persisted or logged.
+_TokenCache = dict[tuple[str, bool], str]
+
 _SOAP_LOCAL_ENVELOPE = "Envelope"
 _SOAP_LOCAL_BODY = "Body"
 _Span = tuple[int, int]
@@ -91,7 +96,19 @@ def parse_operation(root: etree._Element) -> str:
 _FORCE_REDACT_PLACEHOLDER = "REDACTED"
 
 
-def _apply_action(rule: FieldRule, value: str, keyring: Keyring | None, force_redact: bool) -> str | None:
+def _encrypt_cached(value: str, keyring: Keyring, deterministic: bool, token_cache: _TokenCache) -> str:
+    """Encrypt via the pass-scoped cache: same (plaintext, mode) → same token within one pass."""
+    key = (value, deterministic)
+    token = token_cache.get(key)
+    if token is None:
+        token = encrypt(value, keyring, deterministic=deterministic)
+        token_cache[key] = token
+    return token
+
+
+def _apply_action(
+    rule: FieldRule, value: str, keyring: Keyring | None, token_cache: _TokenCache, force_redact: bool
+) -> str | None:
     """The replacement for ``value`` under this rule's action (``None`` = remove)."""
     action = rule.action
     match action:
@@ -106,7 +123,7 @@ def _apply_action(rule: FieldRule, value: str, keyring: Keyring | None, force_re
             if force_redact:
                 return _FORCE_REDACT_PLACEHOLDER
             assert keyring is not None
-            return encrypt(value, keyring)
+            return _encrypt_cached(value, keyring, action.deterministic, token_cache)
         case _:
             assert_never(action)
 
@@ -167,6 +184,7 @@ def _apply_extracted_actions(  # pylint: disable=too-many-arguments,too-many-pos
     rule: FieldRule,
     keyring: Keyring | None,
     collector: _Collector,
+    token_cache: _TokenCache,
     force_redact: bool,
 ) -> tuple[str, int]:
     """Rewrite extracted spans inside ``value`` while preserving surrounding text."""
@@ -174,13 +192,18 @@ def _apply_extracted_actions(  # pylint: disable=too-many-arguments,too-many-pos
     for start, end in reversed(spans):
         plaintext = value[start:end]
         _collect(collector, rule, plaintext)
-        replacement = _apply_action(rule, plaintext, keyring, force_redact) or ""
+        replacement = _apply_action(rule, plaintext, keyring, token_cache, force_redact) or ""
         rewritten = f"{rewritten[:start]}{replacement}{rewritten[end:]}"
     return rewritten, len(spans)
 
 
-def _rewrite_value(
-    value: str, rule: FieldRule, keyring: Keyring | None, collector: _Collector, force_redact: bool
+def _rewrite_value(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    value: str,
+    rule: FieldRule,
+    keyring: Keyring | None,
+    collector: _Collector,
+    token_cache: _TokenCache,
+    force_redact: bool,
 ) -> tuple[str | None, int]:
     """Apply a field rule to one text/attribute value."""
     if _ignored(rule, value):
@@ -189,13 +212,18 @@ def _rewrite_value(
         spans = _extract_spans(rule, value)
         if not spans:
             return value, 0
-        return _apply_extracted_actions(value, spans, rule, keyring, collector, force_redact)
+        return _apply_extracted_actions(value, spans, rule, keyring, collector, token_cache, force_redact)
     _collect(collector, rule, value)
-    return _apply_action(rule, value, keyring, force_redact), 1
+    return _apply_action(rule, value, keyring, token_cache, force_redact), 1
 
 
-def _rewrite_node(
-    node: object, rule: FieldRule, keyring: Keyring | None, collector: _Collector, force_redact: bool
+def _rewrite_node(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    node: object,
+    rule: FieldRule,
+    keyring: Keyring | None,
+    collector: _Collector,
+    token_cache: _TokenCache,
+    force_redact: bool,
 ) -> int:
     """Apply the rule's action to one located node. Returns the number of changed fields/spans.
 
@@ -206,7 +234,7 @@ def _rewrite_node(
         value = node.text
         if value is None:
             return 0
-        replacement, count = _rewrite_value(value, rule, keyring, collector, force_redact)
+        replacement, count = _rewrite_value(value, rule, keyring, collector, token_cache, force_redact)
         if count:
             node.text = replacement
         return count
@@ -216,7 +244,7 @@ def _rewrite_node(
         attrname = getattr(node, "attrname", None)
         if parent is None or attrname is None:
             return 0
-        replacement, count = _rewrite_value(str(node), rule, keyring, collector, force_redact)
+        replacement, count = _rewrite_value(str(node), rule, keyring, collector, token_cache, force_redact)
         if count:
             if replacement is None:
                 del parent.attrib[attrname]
@@ -271,10 +299,15 @@ def _redact_reference_rule(  # pylint: disable=too-many-arguments,too-many-posit
     rule: ReferenceRule,
     keyring: Keyring | None,
     collector: _Collector,
+    token_cache: _TokenCache,
     counts: dict[str, int],
     force_redact: bool,
 ) -> None:
-    """Phase 2: encrypt occurrences of collected source values inside the rule's target nodes."""
+    """Phase 2: encrypt occurrences of collected source values inside the rule's target nodes.
+
+    Each hit goes through the pass-scoped token cache, so a value already tokenized by a
+    phase-1 field rule (or an earlier hit) reuses that token instead of a fresh IV.
+    """
     values: set[str] = set()
     for pii_type in rule.source_pii_types:
         values |= collector.get(pii_type.value, set())
@@ -283,6 +316,7 @@ def _redact_reference_rule(  # pylint: disable=too-many-arguments,too-many-posit
         return
     if not force_redact:
         assert keyring is not None
+    deterministic = rule.action.deterministic
     for node in _locate(root, rule):
         if not isinstance(node, etree._Element):  # pylint: disable=protected-access  # lxml public-in-practice
             continue
@@ -292,17 +326,21 @@ def _redact_reference_rule(  # pylint: disable=too-many-arguments,too-many-posit
         if force_redact:
             new_text, hits = pattern.subn(_FORCE_REDACT_PLACEHOLDER, text)
         else:
-            new_text, hits = pattern.subn(lambda m: encrypt(m.group(0), keyring), text)  # type: ignore[arg-type]
+            new_text, hits = pattern.subn(
+                lambda m: _encrypt_cached(m.group(0), keyring, deterministic, token_cache),  # type: ignore[arg-type]
+                text,
+            )
         if hits:
             node.text = new_text
             counts[rule.pii_type.value] = counts.get(rule.pii_type.value, 0) + hits
 
 
-def _redact_field_rule(
+def _redact_field_rule(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     root: etree._Element,
     rule: FieldRule,
     keyring: Keyring | None,
     collector: _Collector,
+    token_cache: _TokenCache,
     force_redact: bool,
 ) -> int:
     """Apply one field rule and return the number of rewritten fields/spans."""
@@ -310,7 +348,7 @@ def _redact_field_rule(
     if rule.required and not located:
         msg = f"required rule {rule.id!r} matched no nodes"
         raise RedactionError(msg)
-    rewrites = sum(_rewrite_node(node, rule, keyring, collector, force_redact) for node in located)
+    rewrites = sum(_rewrite_node(node, rule, keyring, collector, token_cache, force_redact) for node in located)
     if rule.required and not rewrites:
         msg = f"required rule {rule.id!r} rewrote no values"
         raise RedactionError(msg)
@@ -345,6 +383,7 @@ def redact_response(  # pylint: disable=too-many-arguments,too-many-locals
     root = parse_bytes(body, **kwargs)
     counts: dict[str, int] = {}
     collector: _Collector = {}
+    token_cache: _TokenCache = {}
     try:
         operation = operation_parser(root)
         selected = _select_rules_for_channels(ruleset, channel, operation)
@@ -354,13 +393,13 @@ def redact_response(  # pylint: disable=too-many-arguments,too-many-locals
         # Phase 1: structured field rules — collect plaintext, then rewrite each node (D4).
         for rule in selected:
             if isinstance(rule, FieldRule):
-                rewrites = _redact_field_rule(root, rule, keyring, collector, force_redact)
+                rewrites = _redact_field_rule(root, rule, keyring, collector, token_cache, force_redact)
                 if rewrites:
                     counts[rule.pii_type.value] = counts.get(rule.pii_type.value, 0) + rewrites
         # Phase 2: reference rules — search free text for the values collected in phase 1.
         for rule in selected:
             if isinstance(rule, ReferenceRule):
-                _redact_reference_rule(root, rule, keyring, collector, counts, force_redact)
+                _redact_reference_rule(root, rule, keyring, collector, token_cache, counts, force_redact)
         return RedactionOutcome(serialize(root), counts, operation, covered)
     except Exception as exc:
         # Never propagate partially processed output; message carries the type only.

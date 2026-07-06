@@ -289,7 +289,7 @@ class TestReferenceRedaction:
         body = _doc("John Smith", "PSGR JOHN SMITH")
         calls = {"n": 0}
 
-        def sometimes_boom(value: str, kr: Keyring) -> str:
+        def sometimes_boom(value: str, kr: Keyring, *, deterministic: bool = False) -> str:
             calls["n"] += 1
             if calls["n"] > 1:  # let phase-1 field encrypt succeed, blow up in phase 2
                 raise ValueError("boom")
@@ -298,6 +298,120 @@ class TestReferenceRedaction:
         monkeypatch.setattr("channel_relay.pii.engine.encrypt", sometimes_boom)
         with pytest.raises(RedactionError):
             redact_response_body(body, channel="mock", ruleset=_ref_ruleset(), keyring=keyring)
+
+
+def _cache_ruleset(*rules: dict[str, object]) -> RuleSet:
+    return RuleSet.model_validate({"schema_version": "1.0", "rules_version": "t", "rules": list(rules)})
+
+
+def _encrypt_rule(rule_id: str, path: str, **extra: object) -> dict[str, object]:
+    return {
+        "id": rule_id,
+        "channel": "mock",
+        "operation": "^PNR_Retrieve",
+        "path": path,
+        "namespaces": {"m": NS},
+        "pii_type": "person",
+        "method": "encrypt",
+        **extra,
+    }
+
+
+class TestIntraPassTokenReuse:
+    def test_repeated_field_value_shares_one_token(self, keyring: Keyring) -> None:
+        body = (
+            f'<PNR_Retrieve xmlns="{NS}"><Traveler><Name>SMITH</Name></Traveler>'
+            "<Traveler><Name>SMITH</Name></Traveler></PNR_Retrieve>"
+        ).encode()
+        ruleset = _cache_ruleset(_encrypt_rule("r.name", "//m:Traveler/m:Name"))
+        redacted, counts = redact_response_body(body, channel="mock", ruleset=ruleset, keyring=keyring)
+        tokens = [n.text for n in parse_bytes(redacted).xpath("//*[local-name()='Name']")]
+        assert tokens[0] == tokens[1]
+        assert TOKEN_RE.fullmatch(tokens[0]) and decrypt(tokens[0], keyring) == "SMITH"
+        assert counts["person"] == 2  # every occurrence counted, cache-served included
+
+    def test_distinct_values_get_distinct_tokens(self, keyring: Keyring) -> None:
+        body = (
+            f'<PNR_Retrieve xmlns="{NS}"><Traveler><Name>SMITH</Name></Traveler>'
+            "<Traveler><Name>JONES</Name></Traveler></PNR_Retrieve>"
+        ).encode()
+        ruleset = _cache_ruleset(_encrypt_rule("r.name", "//m:Traveler/m:Name"))
+        redacted, _ = redact_response_body(body, channel="mock", ruleset=ruleset, keyring=keyring)
+        tokens = [n.text for n in parse_bytes(redacted).xpath("//*[local-name()='Name']")]
+        assert tokens[0] != tokens[1]
+
+    def test_reference_hit_reuses_field_token(self, keyring: Keyring) -> None:
+        body = _doc("SMITH", "PSGR SMITH OK")
+        redacted, _ = redact_response_body(body, channel="mock", ruleset=_ref_ruleset(), keyring=keyring)
+        root = parse_bytes(redacted)
+        field_token = root.xpath("//*[local-name()='Name']")[0].text
+        remark = _remark_texts(redacted)[0]
+        assert remark == f"PSGR {field_token} OK"
+
+    def test_repeated_reference_hits_share_token_and_count_each(self, keyring: Keyring) -> None:
+        body = _doc("SMITH", "SMITH AND SMITH")
+        redacted, counts = redact_response_body(body, channel="mock", ruleset=_ref_ruleset(), keyring=keyring)
+        remark = _remark_texts(redacted)[0]
+        left, right = remark.split(" AND ")
+        assert left == right
+        assert decrypt(left, keyring) == "SMITH"
+        assert counts["person"] == 3  # field + two remark occurrences
+
+    def test_case_variant_gets_own_token_with_matched_casing(self, keyring: Keyring) -> None:
+        body = _doc("Smith", "MR SMITH HERE")
+        redacted, _ = redact_response_body(body, channel="mock", ruleset=_ref_ruleset(), keyring=keyring)
+        root = parse_bytes(redacted)
+        field_token = root.xpath("//*[local-name()='Name']")[0].text
+        remark_token = _remark_texts(redacted)[0].removeprefix("MR ").removesuffix(" HERE")
+        assert remark_token != field_token
+        assert decrypt(remark_token, keyring) == "SMITH"
+        assert decrypt(field_token, keyring) == "Smith"
+
+    def test_deterministic_and_default_modes_never_share_tokens(self, keyring: Keyring) -> None:
+        body = (
+            f'<PNR_Retrieve xmlns="{NS}"><Traveler><Name>SMITH</Name></Traveler>'
+            "<Contact><Alias>SMITH</Alias></Contact></PNR_Retrieve>"
+        ).encode()
+        ruleset = _cache_ruleset(
+            _encrypt_rule("r.name", "//m:Traveler/m:Name", deterministic=True),
+            _encrypt_rule("r.alias", "//m:Contact/m:Alias"),
+        )
+        redacted, _ = redact_response_body(body, channel="mock", ruleset=ruleset, keyring=keyring)
+        root = parse_bytes(redacted)
+        det = root.xpath("//*[local-name()='Name']")[0].text
+        rand = root.xpath("//*[local-name()='Alias']")[0].text
+        assert det != rand
+        assert decrypt(det, keyring) == "SMITH"
+        assert decrypt(rand, keyring) == "SMITH"
+
+    def test_no_cross_pass_reuse_in_default_mode(self, keyring: Keyring) -> None:
+        body = _doc("SMITH")
+        ruleset = _cache_ruleset(_encrypt_rule("r.name", "//m:Traveler/m:Name"))
+        tokens = set()
+        for _ in range(2):
+            redacted, _ = redact_response_body(body, channel="mock", ruleset=ruleset, keyring=keyring)
+            tokens.add(parse_bytes(redacted).xpath("//*[local-name()='Name']")[0].text)
+        assert len(tokens) == 2
+
+    def test_deterministic_rule_stable_across_passes(self, keyring: Keyring) -> None:
+        body = _doc("SMITH")
+        ruleset = _cache_ruleset(_encrypt_rule("r.name", "//m:Traveler/m:Name", deterministic=True))
+        tokens = set()
+        for _ in range(2):
+            redacted, _ = redact_response_body(body, channel="mock", ruleset=ruleset, keyring=keyring)
+            tokens.add(parse_bytes(redacted).xpath("//*[local-name()='Name']")[0].text)
+        assert len(tokens) == 1
+        assert decrypt(tokens.pop(), keyring) == "SMITH"
+
+    def test_deterministic_token_deanonymizes_on_request_path(self, keyring: Keyring) -> None:
+        # The envelope-driven request path needs no mode knowledge: a deterministic token
+        # in a follow-up request decrypts exactly like a random-IV one.
+        body = _doc("SMITH")
+        ruleset = _cache_ruleset(_encrypt_rule("r.name", "//m:Traveler/m:Name", deterministic=True))
+        redacted, _ = redact_response_body(body, channel="mock", ruleset=ruleset, keyring=keyring)
+        restored, count = deanonymize_request_body(redacted, keyring=keyring)
+        assert count == 1
+        assert b"SMITH" in restored
 
 
 class TestExtractPatternRedaction:

@@ -29,7 +29,7 @@ from pydantic import (
 SUPPORTED_SCHEMA_MAJOR = 1
 
 # Wire keys that belong to the action, folded out of the flat rule (§8.1 format).
-_ACTION_PARAM_KEYS = ("mask_char", "keep_prefix", "replacement")
+_ACTION_PARAM_KEYS = ("mask_char", "keep_prefix", "replacement", "deterministic")
 
 
 class PiiType(StrEnum):
@@ -54,6 +54,13 @@ class EncryptAction(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     method: Literal["encrypt"] = "encrypt"
+    deterministic: bool = Field(
+        default=False,
+        description=(
+            "Use deterministic (AES-SIV) encryption: the same plaintext under the same key "
+            "epoch always yields the same token, preserving value equality for the caller."
+        ),
+    )
 
 
 class MaskAction(BaseModel):

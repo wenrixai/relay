@@ -68,6 +68,39 @@ def test_method_defaults_to_encrypt() -> None:
     assert isinstance(loaded.rules[0].action, EncryptAction)
 
 
+def test_encrypt_deterministic_defaults_false() -> None:
+    action = RuleSet.model_validate(ruleset(rule())).rules[0].action
+    assert isinstance(action, EncryptAction)
+    assert action.deterministic is False
+
+
+def test_encrypt_deterministic_flag_loads_on_field_rule() -> None:
+    action = RuleSet.model_validate(ruleset(rule(deterministic=True))).rules[0].action
+    assert isinstance(action, EncryptAction)
+    assert action.deterministic is True
+
+
+def test_encrypt_deterministic_flag_loads_on_reference_rule() -> None:
+    ref = RuleSet.model_validate(ruleset(ref_rule(deterministic=True))).rules[0]
+    assert isinstance(ref, ReferenceRule)
+    assert ref.action.deterministic is True
+
+
+@pytest.mark.parametrize("method", ["mask", "remove"])
+def test_deterministic_on_non_encrypt_method_rejected(method: str) -> None:
+    with pytest.raises(ValidationError):
+        RuleSet.model_validate(ruleset(rule(method=method, deterministic=True)))
+
+
+def test_deterministic_on_replace_rejected() -> None:
+    with pytest.raises(ValidationError):
+        RuleSet.model_validate(ruleset(rule(method="replace", replacement="X", deterministic=True)))
+
+
+def test_generated_schema_documents_deterministic_flag() -> None:
+    assert "deterministic" in str(generate_rules_json_schema())
+
+
 def test_mask_rule_with_params() -> None:
     loaded = RuleSet.model_validate(ruleset(rule(method="mask", mask_char="#", keep_prefix=2)))
     action = loaded.rules[0].action

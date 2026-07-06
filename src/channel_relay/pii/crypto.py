@@ -17,8 +17,10 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 _KEY_BYTES = 32
+_SIV_KEY_BYTES = 64  # AES-256-SIV takes a double-length key (RFC 5297)
 _MAX_EPOCH = 15
 _HKDF_INFO_ENC = b"wenrix-pii-enc-v1"
+_HKDF_INFO_SIV = b"wenrix-pii-siv-v1"
 
 
 class KeyringError(ValueError):
@@ -38,11 +40,17 @@ def _derive_enc_key(master: bytes) -> bytes:
     return hkdf.derive(master)
 
 
-class Keyring:
-    """Validated epoch→``K_enc`` keyring with an active epoch for new encryptions."""
+def _derive_siv_key(master: bytes) -> bytes:
+    hkdf = HKDF(algorithm=hashes.SHA256(), length=_SIV_KEY_BYTES, salt=None, info=_HKDF_INFO_SIV)
+    return hkdf.derive(master)
 
-    def __init__(self, enc_keys: dict[int, bytes], active_epoch: int) -> None:
+
+class Keyring:
+    """Validated epoch→(``K_enc``, ``K_siv``) keyring with an active epoch for new encryptions."""
+
+    def __init__(self, enc_keys: dict[int, bytes], siv_keys: dict[int, bytes], active_epoch: int) -> None:
         self._enc_keys = enc_keys
+        self._siv_keys = siv_keys
         self._active_epoch = active_epoch
 
     @classmethod
@@ -62,6 +70,7 @@ class Keyring:
             raise KeyringError("keyring must be a non-empty JSON object")
 
         enc_keys: dict[int, bytes] = {}
+        siv_keys: dict[int, bytes] = {}
         for epoch_text, key_b64 in raw.items():
             try:
                 epoch = int(epoch_text)
@@ -78,12 +87,13 @@ class Keyring:
             if len(master) != _KEY_BYTES:
                 raise KeyringError(f"keyring epoch {epoch} key must decode to {_KEY_BYTES} bytes")
             enc_keys[epoch] = _derive_enc_key(master)
+            siv_keys[epoch] = _derive_siv_key(master)
 
         if active_epoch is None:
             active_epoch = max(enc_keys)
         elif active_epoch not in enc_keys:
             raise KeyringError(f"active key epoch {active_epoch} not present in keyring")
-        return cls(enc_keys, active_epoch)
+        return cls(enc_keys, siv_keys, active_epoch)
 
     @property
     def epochs(self) -> tuple[int, ...]:
@@ -103,6 +113,17 @@ class Keyring:
         """
         try:
             return self._enc_keys[epoch]
+        except KeyError:
+            raise UnknownEpochError(epoch) from None
+
+    def siv_key(self, epoch: int) -> bytes:
+        """The derived ``K_siv`` (64 bytes, AES-256-SIV) for ``epoch``.
+
+        Raises:
+            UnknownEpochError: the epoch is not in the keyring.
+        """
+        try:
+            return self._siv_keys[epoch]
         except KeyError:
             raise UnknownEpochError(epoch) from None
 
