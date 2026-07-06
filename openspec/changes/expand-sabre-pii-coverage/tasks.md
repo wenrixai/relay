@@ -1,21 +1,21 @@
 ## 1. Engine coverage outcome (redaction-engine)
 
-- [ ] 1.1 Write failing tests: `redact_response_body` reports (a) covered=True when ≥1 rule matches even with zero rewrites, (b) covered=False + parsed operation when no rule matches
-- [ ] 1.2 Extend `redact_response_body` to return the coverage outcome (covered flag + operation) alongside body+counts; compute from the existing `_select_rules_for_channels` result
-- [ ] 1.3 Update all existing callers/tests for the new return shape
-- [ ] 1.4 Green: engine unit tests pass, existing redaction tests still pass; uncovered op still returns body unchanged (no error)
+- [x] 1.1 Write failing tests: `redact_response_body` reports (a) covered=True when ≥1 rule matches even with zero rewrites, (b) covered=False + parsed operation when no rule matches
+- [x] 1.2 Extend `redact_response_body` to return the coverage outcome (covered flag + operation) alongside body+counts; compute from the existing `_select_rules_for_channels` result
+- [x] 1.3 Update all existing callers/tests for the new return shape
+- [x] 1.4 Green: engine unit tests pass, existing redaction tests still pass; uncovered op still returns body unchanged (no error)
 
 ## 2. Coverage metric (observability)
 
-- [ ] 2.1 Write failing test: `record_uncovered_operation(channel, operation)` increments `pii_uncovered_operation_total{channel, operation}` and appears in totals
-- [ ] 2.2 Add the counter instrument + `record_uncovered_operation` to `RelayMetrics`, extend `_MetricTotals`
-- [ ] 2.3 Satisfy pylint (attribute count) as done for prior counters; green
+- [x] 2.1 Write failing test: `record_uncovered_operation(channel, operation)` increments `pii_uncovered_operation_total{channel, operation}` and appears in totals
+- [x] 2.2 Add the counter instrument + `record_uncovered_operation` to `RelayMetrics`, extend `_MetricTotals`
+- [x] 2.3 Satisfy pylint (attribute count) as done for prior counters; green
 
 ## 3. Forwarder emits metric (observability)
 
-- [ ] 3.1 Write failing tests: PII-enabled uncovered response → forwarded unchanged AND `pii_uncovered_operation_total` increments; covered op → no increment; non-PII channel → no increment
-- [ ] 3.2 In `_response_pii_stage`, when the engine coverage outcome is uncovered, call `record_uncovered_operation` and forward unchanged (no error, no config)
-- [ ] 3.3 Green: forwarder tests pass
+- [x] 3.1 Write failing tests: PII-enabled uncovered response → forwarded unchanged AND `pii_uncovered_operation_total` increments; covered op → no increment; non-PII channel → no increment
+- [x] 3.2 In `_response_pii_stage`, when the engine coverage outcome is uncovered, call `record_uncovered_operation` and forward unchanged (no error, no config)
+- [x] 3.3 Green: forwarder tests pass
 
 ## 4. Sabre baseline rules (sabre-pii-baseline)
 

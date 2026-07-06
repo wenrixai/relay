@@ -60,6 +60,24 @@ def test_xml_parse_errors_by_kind() -> None:
     assert by_kind == {"doctype": 2, "malformed": 1}
 
 
+def test_uncovered_operation_by_operation() -> None:
+    reader, metrics = _build()
+    metrics.record_uncovered_operation("sabre", "PassengerDetailsRS")
+    metrics.record_uncovered_operation("sabre", "PassengerDetailsRS")
+    metrics.record_uncovered_operation("sabre", "QueueAccessRS")
+    points = _metric_points(reader, "channel_relay_pii_uncovered_operation_total")
+    by_op = {p.attributes["operation"]: p.value for p in points}
+    assert by_op == {"PassengerDetailsRS": 2, "QueueAccessRS": 1}
+    assert all(p.attributes["channel"] == "sabre" for p in points)
+
+
+def test_uncovered_operation_in_snapshot() -> None:
+    _, metrics = _build()
+    metrics.record_uncovered_operation("sabre", "PassengerDetailsRS")
+    snap = metrics.snapshot()
+    assert snap["pii_uncovered_operation_total"] == {"sabre": {"PassengerDetailsRS": 1}}
+
+
 def test_rule_version_info_gauge() -> None:
     reader, metrics = _build()
     metrics.set_rule_version("2026-07-01")

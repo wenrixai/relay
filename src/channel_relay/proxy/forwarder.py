@@ -34,7 +34,7 @@ from channel_relay.pii.engine import (
     DeanonymizationError,
     RedactionError,
     deanonymize_request_body,
-    redact_response_body,
+    redact_response,
 )
 from channel_relay.pii.rules import RuleSet
 from channel_relay.pii.xml_ops import XmlOpsError, XmlOversizeError
@@ -452,10 +452,14 @@ def _response_pii_stage(  # pylint: disable=too-many-arguments
     trace_id: str | None,
     metrics: RelayMetrics | None = None,
 ) -> bytes | Response:
-    """Pipeline stage [9]: redact the response body; error → contract Response."""
+    """Pipeline stage [9]: redact the response body; error → contract Response.
+
+    An operation with no matching rules is still forwarded unchanged (coverage is not a gate);
+    the coverage-gap metric is emitted so the gap is discoverable (§pii-coverage-policy, D1).
+    """
     try:
         # httpx already decoded any content-encoding, so `content` is plain XML.
-        redacted, counts = redact_response_body(
+        outcome = redact_response(
             content,
             channel=(channel.type.value, channel.name),
             ruleset=rules,
@@ -474,8 +478,14 @@ def _response_pii_stage(  # pylint: disable=too-many-arguments
     except RedactionError:
         logger.bind(channel=channel.name).warning("PII redaction failed")
         return internal_error_response(ErrorReason.PII_REDACTION_FAILED, "response redaction failed", trace_id)
-    if counts:
-        logger.bind(channel=channel.name, counts=counts).debug("Redacted fields")
+    if outcome.counts:
+        logger.bind(channel=channel.name, counts=outcome.counts).debug("Redacted fields")
         if metrics is not None:
-            metrics.record_pii_redacted(channel.name, counts)
-    return redacted
+            metrics.record_pii_redacted(channel.name, outcome.counts)
+    if not outcome.covered:
+        logger.bind(channel=channel.name, operation=outcome.operation).warning(
+            "Response operation has no PII rules; forwarded unredacted"
+        )
+        if metrics is not None:
+            metrics.record_uncovered_operation(channel.name, outcome.operation)
+    return outcome.body

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from typing import assert_never
 
 from lxml import etree
@@ -43,6 +44,21 @@ _Collector = dict[str, set[str]]
 _SOAP_LOCAL_ENVELOPE = "Envelope"
 _SOAP_LOCAL_BODY = "Body"
 _Span = tuple[int, int]
+
+
+@dataclass(frozen=True)
+class RedactionOutcome:
+    """Result of a response redaction pass.
+
+    Exposes the redacted ``body``, per-``pii_type`` ``counts``, the parsed ``operation``, and
+    whether any rule matched it (``covered``) so callers can surface a coverage-gap metric — an
+    uncovered operation is still forwarded, not blocked (D1).
+    """
+
+    body: bytes
+    counts: dict[str, int]
+    operation: str
+    covered: bool
 
 
 class RedactionError(Exception):
@@ -301,7 +317,7 @@ def _redact_field_rule(
     return rewrites
 
 
-def redact_response_body(  # pylint: disable=too-many-arguments,too-many-locals
+def redact_response(  # pylint: disable=too-many-arguments,too-many-locals
     body: bytes,
     *,
     channel: str | Sequence[str],
@@ -310,10 +326,13 @@ def redact_response_body(  # pylint: disable=too-many-arguments,too-many-locals
     force_redact: bool = False,
     max_bytes: int | None = None,
     operation_parser: Callable[[etree._Element], str] = parse_operation,
-) -> tuple[bytes, dict[str, int]]:
+) -> RedactionOutcome:
     """Redact a channel response per the matching rules (§8.5).
 
-    Returns the re-serialized body and per-``pii_type`` counts of actioned fields.
+    Returns a :class:`RedactionOutcome` — the re-serialized body, per-``pii_type`` counts of
+    actioned fields, the parsed operation, and whether any rule matched it (``covered``).
+    :func:`redact_response_body` is the ``(body, counts)`` wrapper for callers that don't need
+    the coverage outcome.
 
     ``keyring`` may be ``None`` only when ``force_redact`` is ``True`` for every selected
     ``encrypt`` action (no crypto codec call is made on that path).
@@ -331,6 +350,7 @@ def redact_response_body(  # pylint: disable=too-many-arguments,too-many-locals
         selected = _select_rules_for_channels(ruleset, channel, operation)
         if not selected and operation_parser is not parse_operation:
             selected = _select_rules_for_channels(ruleset, channel, parse_operation(root))
+        covered = bool(selected)
         # Phase 1: structured field rules — collect plaintext, then rewrite each node (D4).
         for rule in selected:
             if isinstance(rule, FieldRule):
@@ -341,11 +361,34 @@ def redact_response_body(  # pylint: disable=too-many-arguments,too-many-locals
         for rule in selected:
             if isinstance(rule, ReferenceRule):
                 _redact_reference_rule(root, rule, keyring, collector, counts, force_redact)
-        return serialize(root), counts
+        return RedactionOutcome(serialize(root), counts, operation, covered)
     except Exception as exc:
         # Never propagate partially processed output; message carries the type only.
         msg = f"redaction failed: {type(exc).__name__}"
         raise RedactionError(msg) from exc
+
+
+def redact_response_body(  # pylint: disable=too-many-arguments
+    body: bytes,
+    *,
+    channel: str | Sequence[str],
+    ruleset: RuleSet,
+    keyring: Keyring | None,
+    force_redact: bool = False,
+    max_bytes: int | None = None,
+    operation_parser: Callable[[etree._Element], str] = parse_operation,
+) -> tuple[bytes, dict[str, int]]:
+    """``(body, counts)`` wrapper over :func:`redact_response` (see it for full semantics)."""
+    outcome = redact_response(
+        body,
+        channel=channel,
+        ruleset=ruleset,
+        keyring=keyring,
+        force_redact=force_redact,
+        max_bytes=max_bytes,
+        operation_parser=operation_parser,
+    )
+    return outcome.body, outcome.counts
 
 
 def _deanonymize_value(value: str, keyring: Keyring) -> tuple[str, int]:

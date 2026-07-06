@@ -41,6 +41,7 @@ class _CountingMetrics:
         self.xml_errors: list[tuple[str, str]] = []
         self.decrypted: list[tuple[str, int]] = []
         self.redacted: list[tuple[str, dict[str, int]]] = []
+        self.uncovered: list[tuple[str, str]] = []
 
     def record_xml_parse_error(self, channel: str, kind: str) -> None:
         self.xml_errors.append((channel, kind))
@@ -50,6 +51,28 @@ class _CountingMetrics:
 
     def record_pii_redacted(self, channel: str, counts: dict[str, int]) -> None:
         self.redacted.append((channel, counts))
+
+    def record_uncovered_operation(self, channel: str, operation: str) -> None:
+        self.uncovered.append((channel, operation))
+
+
+def _person_ruleset(operation: str) -> RuleSet:
+    return RuleSet.model_validate(
+        {
+            "schema_version": "1.0",
+            "rules_version": "t",
+            "rules": [
+                {
+                    "id": "person",
+                    "channel": "travelfusion",
+                    "operation": f"^{operation}$",
+                    "path": "//Name",
+                    "pii_type": "person",
+                    "method": "encrypt",
+                }
+            ],
+        }
+    )
 
 
 def _keyring() -> Keyring:
@@ -367,6 +390,47 @@ def test_response_pii_stage_failures(content: bytes, status: int, reason: str, m
     assert isinstance(resp, StarletteResponse)
     assert resp.status_code == status
     assert resp.headers[WENRIX_ERROR_HEADER] == reason
+
+
+def test_response_pii_stage_uncovered_forwards_and_records_metric() -> None:
+    metrics = _CountingMetrics()
+    ruleset = _person_ruleset("Other")  # no rule matches parsed operation "Search"
+    content = b"<Root><Search><Name>Jane</Name></Search></Root>"
+
+    result = _response_pii_stage(
+        channel=ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION),
+        keyring=_keyring(),
+        rules=ruleset,
+        content=content,
+        max_inspect_bytes=1024,
+        trace_id=None,
+        metrics=cast(Any, metrics),
+    )
+
+    assert isinstance(result, bytes)
+    assert b"Jane" in result  # forwarded unchanged, not blocked
+    assert metrics.uncovered == [("tf", "Search")]
+    assert metrics.redacted == []
+
+
+def test_response_pii_stage_covered_does_not_record_uncovered() -> None:
+    metrics = _CountingMetrics()
+    ruleset = _person_ruleset("Search")  # rule matches parsed operation "Search"
+    content = b"<Root><Search><Name>Jane</Name></Search></Root>"
+
+    result = _response_pii_stage(
+        channel=ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION),
+        keyring=_keyring(),
+        rules=ruleset,
+        content=content,
+        max_inspect_bytes=1024,
+        trace_id=None,
+        metrics=cast(Any, metrics),
+    )
+
+    assert isinstance(result, bytes)
+    assert metrics.uncovered == []
+    assert metrics.redacted == [("tf", {"person": 1})]
 
 
 @pytest.mark.parametrize("method", ["GET", "POST", "PUT", "DELETE", "PATCH"])

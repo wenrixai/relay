@@ -35,6 +35,7 @@ class _MetricTotals:
     pii_decrypted: dict[str, int] = field(default_factory=dict)
     xml_parse_errors: dict[str, dict[str, int]] = field(default_factory=dict)
     operations_denied: dict[str, int] = field(default_factory=dict)
+    uncovered_operations: dict[str, dict[str, int]] = field(default_factory=dict)
 
     @staticmethod
     def increment(values: dict[str, int], key: str, count: int = 1) -> None:
@@ -61,6 +62,9 @@ class _MetricTotals:
                 channel: dict(sorted(counts.items())) for channel, counts in sorted(self.xml_parse_errors.items())
             },
             "operations_denied_total": dict(sorted(self.operations_denied.items())),
+            "pii_uncovered_operation_total": {
+                channel: dict(sorted(counts.items())) for channel, counts in sorted(self.uncovered_operations.items())
+            },
         }
 
 
@@ -127,6 +131,11 @@ class RelayMetrics:  # pylint: disable=too-many-instance-attributes
             unit="1",
             description="Requests rejected by operation authorization (403).",
         )
+        self._uncovered_operations: OtelCounter = meter.create_counter(
+            _metric_name("pii_uncovered_operation_total"),
+            unit="1",
+            description="PII-enabled responses whose operation matched no redaction rules (forwarded).",
+        )
 
     def _observe_channels(
         self,
@@ -179,6 +188,11 @@ class RelayMetrics:  # pylint: disable=too-many-instance-attributes
         """Record a request rejected by operation authorization (403)."""
         self._totals.increment(self._totals.operations_denied, channel)
         self._operations_denied.add(1, {"channel": channel})
+
+    def record_uncovered_operation(self, channel: str, operation: str) -> None:
+        """Record a PII-enabled response forwarded with no matching redaction rules."""
+        self._totals.increment_nested(self._totals.uncovered_operations, channel, operation, 1)
+        self._uncovered_operations.add(1, {"channel": channel, "operation": operation})
 
     def snapshot(self) -> dict[str, object]:
         """Return safe in-process metric totals for admin diagnostics."""

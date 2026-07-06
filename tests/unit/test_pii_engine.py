@@ -15,6 +15,7 @@ from channel_relay.pii.engine import (
     RedactionError,
     deanonymize_request_body,
     parse_operation,
+    redact_response,
     redact_response_body,
 )
 from channel_relay.pii.rules import RuleSet
@@ -137,6 +138,35 @@ class TestRedaction:
         monkeypatch.setattr("channel_relay.pii.engine.encrypt", boom)
         with pytest.raises(RedactionError):
             redact_response_body(response_body, channel="mock", ruleset=ruleset, keyring=keyring)
+
+
+class TestCoverageOutcome:
+    def test_covered_operation_reports_covered(self, response_body: bytes, ruleset: RuleSet, keyring: Keyring) -> None:
+        outcome = redact_response(response_body, channel="mock", ruleset=ruleset, keyring=keyring)
+        assert outcome.operation == "PNR_RetrieveResponse"
+        assert outcome.covered is True
+
+    def test_covered_with_zero_rewrites_still_covered(self, ruleset: RuleSet, keyring: Keyring) -> None:
+        # Operation has rules but the body carries none of their target nodes.
+        body = b"<PNR_RetrieveResponse/>"
+        outcome = redact_response(body, channel="mock", ruleset=ruleset, keyring=keyring)
+        assert outcome.covered is True
+        assert not outcome.counts
+
+    def test_uncovered_operation_reports_uncovered(self, ruleset: RuleSet, keyring: Keyring) -> None:
+        body = b"<UnmappedResponse><X>1</X></UnmappedResponse>"
+        outcome = redact_response(body, channel="mock", ruleset=ruleset, keyring=keyring)
+        assert outcome.operation == "UnmappedResponse"
+        assert outcome.covered is False
+        # Uncovered still forwarded unchanged (no error).
+        assert find_text(outcome.body, "X") == "1"
+
+    def test_body_wrapper_returns_body_and_counts(
+        self, response_body: bytes, ruleset: RuleSet, keyring: Keyring
+    ) -> None:
+        redacted, counts = redact_response_body(response_body, channel="mock", ruleset=ruleset, keyring=keyring)
+        assert isinstance(redacted, bytes)
+        assert counts["person"] == 1
 
 
 NS = "urn:mock:pnr"
