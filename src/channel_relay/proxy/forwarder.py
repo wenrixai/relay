@@ -236,13 +236,8 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
 
     # [9] Redact: encrypt/mask PII fields per rules before the client sees them (§8.5).
     rules: RuleSet | None = request.app.state.rules
-    if (
-        channel.pii.enabled
-        and keyring is not None
-        and rules is not None
-        and content
-        and response_kind is ContentKind.XML
-    ):
+    redaction_ready = keyring is not None or channel.pii.force_redact
+    if channel.pii.enabled and redaction_ready and rules is not None and content and response_kind is ContentKind.XML:
         redaction_outcome = _response_pii_stage(
             channel=channel,
             keyring=keyring,
@@ -386,7 +381,7 @@ def _request_pii_stage(  # pylint: disable=too-many-arguments
 def _response_pii_stage(  # pylint: disable=too-many-arguments
     *,
     channel: ChannelConfig,
-    keyring: Keyring,
+    keyring: Keyring | None,
     rules: RuleSet,
     content: bytes,
     max_inspect_bytes: int,
@@ -401,6 +396,7 @@ def _response_pii_stage(  # pylint: disable=too-many-arguments
             channel=(channel.type.value, channel.name),
             ruleset=rules,
             keyring=keyring,
+            force_redact=channel.pii.force_redact,
             max_bytes=max_inspect_bytes,
             operation_parser=get_handler(channel.type).parse_operation,
         )

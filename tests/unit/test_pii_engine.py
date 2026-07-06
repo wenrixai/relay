@@ -112,6 +112,22 @@ class TestRedaction:
         body = root[0]
         assert body[0].tag == "{urn:mock:pnr}PNR_RetrieveResponse"
 
+    def test_force_redact_overrides_encrypt(self, response_body: bytes, ruleset: RuleSet) -> None:
+        redacted, _ = redact_response_body(
+            response_body, channel="mock", ruleset=ruleset, keyring=None, force_redact=True
+        )
+        name = find_text(redacted, "Name")
+        email = find_text(redacted, "Email")
+        assert name == "REDACTED"
+        assert email == "REDACTED"
+
+    def test_force_redact_leaves_other_actions_unchanged(self, response_body: bytes, ruleset: RuleSet) -> None:
+        redacted, _ = redact_response_body(
+            response_body, channel="mock", ruleset=ruleset, keyring=None, force_redact=True
+        )
+        assert find_text(redacted, "Card") == "4111" + "*" * 12
+        assert not find_text(redacted, "Passport")
+
     def test_failure_raises_redaction_error(
         self, response_body: bytes, ruleset: RuleSet, keyring: Keyring, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -230,6 +246,14 @@ class TestReferenceRedaction:
         body = f'<PNR_Retrieve xmlns="{NS}"><Remark><Text>JOHN SMITH</Text></Remark></PNR_Retrieve>'.encode()
         redacted, _ = redact_response_body(body, channel="mock", ruleset=_ref_ruleset(), keyring=keyring)
         assert _remark_texts(redacted)[0] == "JOHN SMITH"
+
+    def test_force_redact_overrides_reference_encrypt(self) -> None:
+        body = _doc("John Smith", "PSGR JOHN SMITH RQ WHEELCHAIR")
+        redacted, _ = redact_response_body(
+            body, channel="mock", ruleset=_ref_ruleset(), keyring=None, force_redact=True
+        )
+        text = _remark_texts(redacted)[0]
+        assert text == "PSGR REDACTED RQ WHEELCHAIR"
 
     def test_reference_encrypt_failure_fails_closed(self, keyring: Keyring, monkeypatch: pytest.MonkeyPatch) -> None:
         body = _doc("John Smith", "PSGR JOHN SMITH")

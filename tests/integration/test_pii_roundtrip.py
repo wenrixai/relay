@@ -180,6 +180,33 @@ def test_pii_disabled_channel_passes_through(mock_channel: MockChannel) -> None:
     assert b"John Smith" in response.content  # untouched: PII off for this channel
 
 
+def test_force_redact_channel_needs_no_keyring(mock_channel: MockChannel, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("RELAY_PII_KEYRING", raising=False)
+    monkeypatch.setenv("RELAY_RULES_API_URL", RULES_URL)
+    config = RelayConfig(
+        channels=[
+            ChannelConfig(
+                name="mock",
+                type=ChannelType.TRAVELFUSION,
+                host="channel.test",
+                pii=ChannelPII(enabled=True, force_redact=True),
+            )
+        ]
+    )
+    app = create_app(
+        config=config,
+        http_client=httpx.AsyncClient(transport=httpx.MockTransport(mock_channel.handler)),
+    )
+    with TestClient(app) as test_client:
+        response = test_client.post("/channel/mock/op", content=b"<Ping/>")
+    assert response.status_code == 200
+    assert b"John Smith" not in response.content
+    assert b"john.smith@example.com" not in response.content
+    assert b"ENC_" not in response.content
+    name = parse_bytes(response.content).xpath("//*[local-name()='Name']")[0].text
+    assert name == "REDACTED"
+
+
 def test_logs_never_contain_pii_or_tokens(client: TestClient, mock_channel: MockChannel) -> None:
     import io
 

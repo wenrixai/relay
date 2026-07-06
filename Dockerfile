@@ -2,7 +2,7 @@
 # Multi-stage Alpine image (§13.1): non-root, musllinux wheels for lxml/cryptography,
 # no compiler in the final stage.
 
-FROM ghcr.io/astral-sh/uv:0.5.11 AS uv
+FROM ghcr.io/astral-sh/uv:0.11.26 AS uv
 
 FROM python:3.13-alpine AS builder
 COPY --from=uv /uv /usr/local/bin/uv

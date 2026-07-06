@@ -57,6 +57,11 @@ class ChannelPII(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = Field(default=False, description="Enable PII redaction/de-anonymization for this channel.")
+    force_redact: bool = Field(
+        default=False,
+        description="Replace `encrypt` actions with a fixed REDACTED placeholder instead of "
+        "encrypting; no reversible token is produced. For customers who do not want encryption.",
+    )
 
 
 class AllowedOperation(BaseModel):

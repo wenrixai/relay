@@ -72,7 +72,10 @@ def parse_operation(root: etree._Element) -> str:
     return _local_name(root)
 
 
-def _apply_action(rule: FieldRule, value: str, keyring: Keyring) -> str | None:
+_FORCE_REDACT_PLACEHOLDER = "REDACTED"
+
+
+def _apply_action(rule: FieldRule, value: str, keyring: Keyring | None, force_redact: bool) -> str | None:
     """The replacement for ``value`` under this rule's action (``None`` = remove)."""
     action = rule.action
     match action:
@@ -84,6 +87,9 @@ def _apply_action(rule: FieldRule, value: str, keyring: Keyring) -> str | None:
         case RemoveAction():
             return None
         case EncryptAction():
+            if force_redact:
+                return _FORCE_REDACT_PLACEHOLDER
+            assert keyring is not None
             return encrypt(value, keyring)
         case _:
             assert_never(action)
@@ -139,24 +145,27 @@ def _extract_spans(rule: FieldRule, value: str) -> list[_Span]:
     return sorted(spans)
 
 
-def _apply_extracted_actions(
+def _apply_extracted_actions(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     value: str,
     spans: Sequence[_Span],
     rule: FieldRule,
-    keyring: Keyring,
+    keyring: Keyring | None,
     collector: _Collector,
+    force_redact: bool,
 ) -> tuple[str, int]:
     """Rewrite extracted spans inside ``value`` while preserving surrounding text."""
     rewritten = value
     for start, end in reversed(spans):
         plaintext = value[start:end]
         _collect(collector, rule, plaintext)
-        replacement = _apply_action(rule, plaintext, keyring) or ""
+        replacement = _apply_action(rule, plaintext, keyring, force_redact) or ""
         rewritten = f"{rewritten[:start]}{replacement}{rewritten[end:]}"
     return rewritten, len(spans)
 
 
-def _rewrite_value(value: str, rule: FieldRule, keyring: Keyring, collector: _Collector) -> tuple[str | None, int]:
+def _rewrite_value(
+    value: str, rule: FieldRule, keyring: Keyring | None, collector: _Collector, force_redact: bool
+) -> tuple[str | None, int]:
     """Apply a field rule to one text/attribute value."""
     if _ignored(rule, value):
         return value, 0
@@ -164,12 +173,14 @@ def _rewrite_value(value: str, rule: FieldRule, keyring: Keyring, collector: _Co
         spans = _extract_spans(rule, value)
         if not spans:
             return value, 0
-        return _apply_extracted_actions(value, spans, rule, keyring, collector)
+        return _apply_extracted_actions(value, spans, rule, keyring, collector, force_redact)
     _collect(collector, rule, value)
-    return _apply_action(rule, value, keyring), 1
+    return _apply_action(rule, value, keyring, force_redact), 1
 
 
-def _rewrite_node(node: object, rule: FieldRule, keyring: Keyring, collector: _Collector) -> int:
+def _rewrite_node(
+    node: object, rule: FieldRule, keyring: Keyring | None, collector: _Collector, force_redact: bool
+) -> int:
     """Apply the rule's action to one located node. Returns the number of changed fields/spans.
 
     The pre-rewrite plaintext is collected first, so reference rules (phase 2) can search
@@ -179,7 +190,7 @@ def _rewrite_node(node: object, rule: FieldRule, keyring: Keyring, collector: _C
         value = node.text
         if value is None:
             return 0
-        replacement, count = _rewrite_value(value, rule, keyring, collector)
+        replacement, count = _rewrite_value(value, rule, keyring, collector, force_redact)
         if count:
             node.text = replacement
         return count
@@ -189,7 +200,7 @@ def _rewrite_node(node: object, rule: FieldRule, keyring: Keyring, collector: _C
         attrname = getattr(node, "attrname", None)
         if parent is None or attrname is None:
             return 0
-        replacement, count = _rewrite_value(str(node), rule, keyring, collector)
+        replacement, count = _rewrite_value(str(node), rule, keyring, collector, force_redact)
         if count:
             if replacement is None:
                 del parent.attrib[attrname]
@@ -239,12 +250,13 @@ def _reference_pattern(rule: ReferenceRule, values: set[str]) -> re.Pattern[str]
     return re.compile(alternation, re.IGNORECASE)
 
 
-def _redact_reference_rule(
+def _redact_reference_rule(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     root: etree._Element,
     rule: ReferenceRule,
-    keyring: Keyring,
+    keyring: Keyring | None,
     collector: _Collector,
     counts: dict[str, int],
+    force_redact: bool,
 ) -> None:
     """Phase 2: encrypt occurrences of collected source values inside the rule's target nodes."""
     values: set[str] = set()
@@ -253,13 +265,18 @@ def _redact_reference_rule(
     pattern = _reference_pattern(rule, values)
     if pattern is None:
         return
+    if not force_redact:
+        assert keyring is not None
     for node in _locate(root, rule):
         if not isinstance(node, etree._Element):  # pylint: disable=protected-access  # lxml public-in-practice
             continue
         text = node.text
         if text is None:
             continue
-        new_text, hits = pattern.subn(lambda m: encrypt(m.group(0), keyring), text)
+        if force_redact:
+            new_text, hits = pattern.subn(_FORCE_REDACT_PLACEHOLDER, text)
+        else:
+            new_text, hits = pattern.subn(lambda m: encrypt(m.group(0), keyring), text)  # type: ignore[arg-type]
         if hits:
             node.text = new_text
             counts[rule.pii_type.value] = counts.get(rule.pii_type.value, 0) + hits
@@ -268,15 +285,16 @@ def _redact_reference_rule(
 def _redact_field_rule(
     root: etree._Element,
     rule: FieldRule,
-    keyring: Keyring,
+    keyring: Keyring | None,
     collector: _Collector,
+    force_redact: bool,
 ) -> int:
     """Apply one field rule and return the number of rewritten fields/spans."""
     located = _locate(root, rule)
     if rule.required and not located:
         msg = f"required rule {rule.id!r} matched no nodes"
         raise RedactionError(msg)
-    rewrites = sum(_rewrite_node(node, rule, keyring, collector) for node in located)
+    rewrites = sum(_rewrite_node(node, rule, keyring, collector, force_redact) for node in located)
     if rule.required and not rewrites:
         msg = f"required rule {rule.id!r} rewrote no values"
         raise RedactionError(msg)
@@ -288,13 +306,17 @@ def redact_response_body(  # pylint: disable=too-many-arguments,too-many-locals
     *,
     channel: str | Sequence[str],
     ruleset: RuleSet,
-    keyring: Keyring,
+    keyring: Keyring | None,
+    force_redact: bool = False,
     max_bytes: int | None = None,
     operation_parser: Callable[[etree._Element], str] = parse_operation,
 ) -> tuple[bytes, dict[str, int]]:
     """Redact a channel response per the matching rules (§8.5).
 
     Returns the re-serialized body and per-``pii_type`` counts of actioned fields.
+
+    ``keyring`` may be ``None`` only when ``force_redact`` is ``True`` for every selected
+    ``encrypt`` action (no crypto codec call is made on that path).
 
     Raises:
         XmlOpsError: hardened-parse failure (caller maps to 413/502 ``xml_parse_error``).
@@ -312,13 +334,13 @@ def redact_response_body(  # pylint: disable=too-many-arguments,too-many-locals
         # Phase 1: structured field rules — collect plaintext, then rewrite each node (D4).
         for rule in selected:
             if isinstance(rule, FieldRule):
-                rewrites = _redact_field_rule(root, rule, keyring, collector)
+                rewrites = _redact_field_rule(root, rule, keyring, collector, force_redact)
                 if rewrites:
                     counts[rule.pii_type.value] = counts.get(rule.pii_type.value, 0) + rewrites
         # Phase 2: reference rules — search free text for the values collected in phase 1.
         for rule in selected:
             if isinstance(rule, ReferenceRule):
-                _redact_reference_rule(root, rule, keyring, collector, counts)
+                _redact_reference_rule(root, rule, keyring, collector, counts, force_redact)
         return serialize(root), counts
     except Exception as exc:
         # Never propagate partially processed output; message carries the type only.

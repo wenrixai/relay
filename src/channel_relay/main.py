@@ -41,7 +41,9 @@ def build_keyring(settings: Settings, config: RelayConfig | None) -> Keyring | N
     """Load the PII keyring; abort startup when PII is enabled without a valid one.
 
     Invalid keyring material raises regardless of PII flags (misconfiguration must be
-    loud); a missing keyring raises only when some channel has ``pii.enabled`` (§8.3).
+    loud); a missing keyring raises only when some channel has ``pii.enabled`` and needs
+    real encryption — a channel with ``pii.force_redact`` never encrypts, so it alone
+    does not require a keyring (§8.3).
     """
     keyring = load_keyring(
         inline=settings.pii_keyring,
@@ -49,7 +51,8 @@ def build_keyring(settings: Settings, config: RelayConfig | None) -> Keyring | N
         active_epoch=settings.pii_key_epoch_active,
     )
     keyring_required = config is not None and any(
-        channel.pii.enabled or credentials_require_response_keyring(channel) for channel in config.channels
+        (channel.pii.enabled and not channel.pii.force_redact) or credentials_require_response_keyring(channel)
+        for channel in config.channels
     )
     if keyring is None and keyring_required:
         msg = "PII or response auth encryption is enabled for a channel but no keyring is configured"

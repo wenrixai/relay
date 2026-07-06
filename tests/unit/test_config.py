@@ -51,6 +51,11 @@ def test_pii_off_by_default() -> None:
     assert channel.pii.enabled is False
 
 
+def test_pii_force_redact_off_by_default() -> None:
+    channel = ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION)
+    assert channel.pii.force_redact is False
+
+
 def test_unknown_channel_type_rejected() -> None:
     with pytest.raises(ValidationError):
         ChannelConfig(name="x", type="not-a-channel")  # type: ignore[arg-type]

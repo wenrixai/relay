@@ -171,3 +171,17 @@ def test_startup_rejects_invalid_keyring_even_without_pii() -> None:
     settings = Settings(pii_keyring="{not json")
     with pytest.raises(KeyringError):
         build_keyring(settings, _config_with_pii(enabled=False))
+
+
+def test_startup_tolerates_missing_keyring_when_only_force_redact_channel() -> None:
+    settings = Settings(pii_keyring=None, pii_keyring_file=None)
+    config = RelayConfig(
+        channels=[
+            ChannelConfig(
+                name="mock",
+                type=ChannelType.TRAVELFUSION,
+                pii=ChannelPII(enabled=True, force_redact=True),
+            )
+        ]
+    )
+    assert build_keyring(settings, config) is None
