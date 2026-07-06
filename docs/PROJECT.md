@@ -100,7 +100,7 @@ channel-relay/
 ├── pyproject.toml  uv.lock  .python-version  .pre-commit-config.yaml
 ├── ruff.toml       .pylintrc (or pyproject)  justfile
 ├── Dockerfile (Alpine)  docker-compose.yml  Dockerfile.mockserver
-├── README.md  docs/PROJECT.md  CONTRIBUTING.md  SECURITY.md  LICENSE.md
+├── README.md  docs/PROJECT.md  CONTRIBUTING.md  SECURITY.md  LICENSE
 ├── openspec/                 # project.md + templates (TDD), specs/, changes/
 ├── src/channel_relay/
 │   ├── main.py  settings.py  health.py  admin.py     # /admin/status (§12.7)
