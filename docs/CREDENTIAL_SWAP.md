@@ -3,6 +3,7 @@
 Wenrix Relay replaces caller-provided supplier credentials with relay-managed credentials before
 forwarding a request to the upstream supplier. Relay API basic authentication is separate from this
 process; supplier credentials come from each channel's `credentials` object in the relay JSON config.
+Credential swap runs only when `credentials.enabled` is explicitly set to `true`.
 
 ## Request flow
 
@@ -10,7 +11,7 @@ process; supplier credentials come from each channel's `credentials` object in t
 2. `{name}` selects one configured channel from the JSON config.
 3. Header hygiene rewrites the upstream `Host` and strips relay/forwarding headers.
 4. If PII is enabled, request de-anonymization runs first.
-5. If channel credentials are configured, the channel handler parses the XML body when needed,
+5. If channel credential swap is enabled, the channel handler parses the XML body when needed,
    derives the operation from the body, and structurally swaps only the configured credential
    locations.
 6. The upstream request is sent to `{channel.proxy_pass}/{path}` with no retries.
@@ -28,8 +29,9 @@ process; supplier credentials come from each channel's `credentials` object in t
 | `sabre` | `soap_security`, optional `soap_security_target_xpath` | Replaces SOAP `Header/Security`; response auth fields are encrypted. |
 | `travelport` | `soap_security`, optional `soap_security_target_xpath` | Replaces SOAP `Header/Security`. |
 
-Credential swap is opt-in. If `credentials` is empty, the request and response remain transparent
-apart from the relay's normal header hygiene and any separately enabled PII processing.
+Credential swap is opt-in. If `credentials.enabled` is omitted or false, the request and response
+remain transparent apart from the relay's normal header hygiene and any separately enabled PII
+processing, even if credential fields are present.
 
 ## Failure modes
 

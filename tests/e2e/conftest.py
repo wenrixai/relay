@@ -130,7 +130,7 @@ def make_channel(
     pii_enabled: bool = True,
 ) -> ChannelConfig:
     """Build a channel config for a GDS with/without credentials and PII."""
-    credentials = {"soap_security": SOAP_SECURITY} if credentialed else {}
+    credentials: dict[str, object] = {"enabled": True, "soap_security": SOAP_SECURITY} if credentialed else {}
     return ChannelConfig(
         name=gds.name,
         type=gds.channel_type,

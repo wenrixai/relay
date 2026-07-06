@@ -31,7 +31,7 @@ def _admin_client(*, settings: Settings | None = None) -> TestClient:
         type=ChannelType.SABRE,
         host="sabre.example.test",
         proxy_pass="https://api-user:api-pass@sabre.example.test/v1",
-        credentials={"soap_security": "<Security>secret</Security>", "agency": "ABC123"},
+        credentials={"enabled": True, "soap_security": "<Security>secret</Security>", "agency": "ABC123"},
         pii=ChannelPII(enabled=True),
     )
     app = create_app(
@@ -95,7 +95,13 @@ def test_admin_flare_returns_redacted_diagnostics_snapshot() -> None:
     assert channel["proxy_pass"] == "https://sabre.example.test/v1"
     assert channel["credential_keys"] == ["agency", "soap_security"]
     assert channel["credential_count"] == 2
+    assert channel["credential_swap_enabled"] is True
     assert channel["pii_enabled"] is True
+    assert channel["authorization"] == {
+        "enabled": False,
+        "allowed_operations_count": 0,
+        "external_configured": False,
+    }
 
     serialized = resp.text
     assert "secret-pass" not in serialized

@@ -146,7 +146,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
 
     # [6] Operation authorization: reject a disallowed operation before any credential injection
     # or upstream call, so a blocked operation never reaches the channel (§operation-authorization).
-    if channel.authorization.allowed_operations:
+    if channel.operation_authorization_enabled:
         auth_outcome = _authorization_stage(
             handler=handler,
             channel=channel,
@@ -161,7 +161,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
 
     # [8a] Credential header injection needs no body and runs for every credentialed channel;
     # header-only channels (NDC) forward the body byte-for-byte (§spec: body left unchanged).
-    if channel.credentials:
+    if channel.credential_swap_enabled:
         header_outcome = _request_header_swap(handler, channel, headers, keyring, trace_id)
         if header_outcome is not None:
             return header_outcome
@@ -174,7 +174,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     # itself issued would round-trip back to the channel undecrypted (§credential-swap symmetry).
     need_session_deanon = handler.requires_response_keyring(channel) and keyring is not None and kind is ContentKind.XML
     need_deanon = need_pii or need_session_deanon
-    need_cred_body = bool(channel.credentials) and handler.requires_body_inspection(channel)
+    need_cred_body = channel.credential_swap_enabled and handler.requires_body_inspection(channel)
     if body and (need_deanon or need_cred_body):
         gzipped = request.headers.get("content-encoding", "").lower() == "gzip"
         try:
@@ -239,7 +239,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     response_headers = _headers_to_dict(clean_response_headers(upstream.headers.items()))
     response_kind = classify_content(upstream.headers.get("content-type"))
 
-    if channel.credentials and content and response_kind is ContentKind.XML:
+    if channel.credential_swap_enabled and content and response_kind is ContentKind.XML:
         response_swap_outcome = _response_credential_swap_stage(
             channel=channel,
             content=content,

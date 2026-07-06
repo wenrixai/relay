@@ -35,7 +35,7 @@ def _client(mock: MockTravelfusion, monkeypatch: pytest.MonkeyPatch) -> TestClie
     channel = ChannelConfig(
         name="tf",
         type=ChannelType.TRAVELFUSION,
-        credentials={"login_id": "relay-login", "xml_login_id": "relay-xml"},
+        credentials={"enabled": True, "login_id": "relay-login", "xml_login_id": "relay-xml"},
         pii=ChannelPII(enabled=True),
     )
     app = create_app(

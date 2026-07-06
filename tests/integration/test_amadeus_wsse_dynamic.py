@@ -42,7 +42,7 @@ def _client(mock: MockAmadeus) -> TestClient:
         name="amadeus",
         type=ChannelType.AMADEUS,
         host="amadeus.test",
-        credentials={"soap_username": "1000001", "soap_password": _PASSWORD},
+        credentials={"enabled": True, "soap_username": "1000001", "soap_password": _PASSWORD},
     )
     return TestClient(
         create_app(

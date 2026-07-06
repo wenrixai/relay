@@ -64,6 +64,27 @@ class ChannelPII(BaseModel):
     )
 
 
+class Credentials(BaseModel):
+    """Per-channel credential swap config. Credential values are extra string keys."""
+
+    model_config = ConfigDict(extra="allow")
+
+    enabled: bool = Field(default=False, description="Enable credential swap for this channel.")
+
+    @model_validator(mode="after")
+    def _validate_values(self) -> Credentials:
+        for key, value in (self.model_extra or {}).items():
+            if not isinstance(value, str):
+                msg = f"credential {key!r} must be a string"
+                raise ValueError(msg)
+        return self
+
+    @property
+    def values(self) -> dict[str, str]:
+        """Channel-specific credential fields, excluding control fields."""
+        return {key: value for key, value in (self.model_extra or {}).items() if isinstance(value, str)}
+
+
 class AllowedOperation(BaseModel):
     """An operation permitted for a channel, with a semver match expression."""
 
@@ -83,10 +104,11 @@ class ExternalAuthorization(BaseModel):
 
 
 class Authorization(BaseModel):
-    """Per-channel authorization. Empty ``allowed_operations`` = allow all."""
+    """Per-channel authorization. Disabled by default; empty ``allowed_operations`` = allow all."""
 
     model_config = ConfigDict(extra="forbid")
 
+    enabled: bool = Field(default=False, description="Enable operation allow-list enforcement.")
     allowed_operations: list[AllowedOperation] = Field(
         default_factory=list, description="Operations allowed for this channel; empty allows all."
     )
@@ -105,8 +127,8 @@ class ChannelConfig(BaseModel):
     timeouts: Timeouts = Field(
         default_factory=Timeouts, description="Connect/read timeouts for this channel's upstream."
     )
-    credentials: dict[str, str] = Field(
-        default_factory=dict, description="Credential values used for structural swap into requests."
+    credentials: Credentials = Field(
+        default_factory=Credentials, description="Credential values used for structural swap into requests."
     )
     pii: ChannelPII = Field(default_factory=ChannelPII)
     authorization: Authorization = Field(
@@ -121,6 +143,25 @@ class ChannelConfig(BaseModel):
         if self.proxy_pass is None and self.host is not None:
             self.proxy_pass = f"https://{self.host}"
         return self
+
+    @property
+    def credential_values(self) -> dict[str, str]:
+        """Enabled channel credential values used by handlers."""
+        # pylint: disable=no-member
+        if not self.credentials.enabled:
+            return {}
+        return self.credentials.values
+
+    @property
+    def credential_swap_enabled(self) -> bool:
+        """True when credential swap is explicitly enabled and values are present."""
+        return bool(self.credential_values)
+
+    @property
+    def operation_authorization_enabled(self) -> bool:
+        """True when operation approval is explicitly enabled and has rules to enforce."""
+        # pylint: disable=no-member
+        return self.authorization.enabled and bool(self.authorization.allowed_operations)
 
 
 class RelayConfig(BaseModel):

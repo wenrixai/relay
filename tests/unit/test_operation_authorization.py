@@ -1,8 +1,8 @@
 """Operation-name allow-list enforcement (fix #6).
 
-A channel with a non-empty `authorization.allowed_operations` forwards only listed operations;
-anything else — or an operation that cannot be determined — is rejected 403 before the upstream is
-contacted. An empty list allows all.
+A channel with `authorization.enabled=true` and a non-empty `authorization.allowed_operations`
+forwards only listed operations; anything else — or an operation that cannot be determined — is
+rejected 403 before the upstream is contacted. Omitted enablement or an empty list allows all.
 """
 
 from __future__ import annotations
@@ -37,7 +37,10 @@ def _client(upstream: _Upstream, allowed: list[str]) -> TestClient:
     channel = ChannelConfig(
         name="tf",
         type=ChannelType.TRAVELFUSION,
-        authorization=Authorization(allowed_operations=[AllowedOperation(operation=op, version="*") for op in allowed]),
+        authorization=Authorization(
+            enabled=bool(allowed),
+            allowed_operations=[AllowedOperation(operation=op, version="*") for op in allowed],
+        ),
     )
     return TestClient(
         create_app(
@@ -72,6 +75,26 @@ def test_disallowed_operation_rejected_before_upstream() -> None:
 def test_empty_list_allows_all() -> None:
     upstream = _Upstream()
     with _client(upstream, []) as client:
+        resp = client.post("/channel/tf/op", content=_DISALLOWED_BODY, headers={"content-type": "application/xml"})
+    assert resp.status_code == 200
+    assert upstream.calls == 1
+
+
+def test_allowed_operations_without_enabled_allows_all() -> None:
+    upstream = _Upstream()
+    channel = ChannelConfig(
+        name="tf",
+        type=ChannelType.TRAVELFUSION,
+        authorization=Authorization(
+            allowed_operations=[AllowedOperation(operation="CheckFareRequest", version="*")],
+        ),
+    )
+    with TestClient(
+        create_app(
+            config=RelayConfig(channels=[channel]),
+            http_client=httpx.AsyncClient(transport=httpx.MockTransport(upstream.handler)),
+        )
+    ) as client:
         resp = client.post("/channel/tf/op", content=_DISALLOWED_BODY, headers={"content-type": "application/xml"})
     assert resp.status_code == 200
     assert upstream.calls == 1

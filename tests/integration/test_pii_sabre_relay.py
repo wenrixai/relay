@@ -44,7 +44,7 @@ def _client(mock: MockSabre, monkeypatch: pytest.MonkeyPatch) -> TestClient:
         name="sabre",
         type=ChannelType.SABRE,
         host="sabre.test",
-        credentials={"soap_security": SOAP_SECURITY},
+        credentials={"enabled": True, "soap_security": SOAP_SECURITY},
         pii=ChannelPII(enabled=True),
     )
     app = create_app(

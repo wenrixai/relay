@@ -136,12 +136,13 @@ channel-relay/
 ## 5. Channels & content
 
 ### 5.1 Config model (zero-config default)
-Only `name` and `type` are required; `host` defaults per type. Credential swap runs only when that
-channel's credentials are present; otherwise the request passes through untouched. PII is off unless
-`pii.enabled: true`. Full reference in `the relay-configuration spec`.
+Only `name` and `type` are required; `host` defaults per type. Credential swap runs only when
+`credentials.enabled: true`; otherwise the request passes through untouched even if credential
+fields are present. PII is off unless `pii.enabled: true`. Full reference in
+`openspec/specs/relay-configuration/spec.md`.
 
 ### 5.2 Credential swap table (opt-in)
-| Channel | Swap (only if configured) |
+| Channel | Swap (only if `credentials.enabled: true`) |
 |---|---|
 | Travelfusion | Structural set of `CommandList/<op>/LoginId`, `/XmlLoginId` in request; strip login fields from response. |
 | BA NDC | Add `Client-Key` header. |
@@ -401,9 +402,11 @@ inspectable-size cap when inspection is required → **413**.
 ## 12. Authorization, sessions, admin
 
 ### 12.1 API authorization
-Per-channel `authorization.allowed_operations` with semver `version` match; operation parsed from
-body; not-allowed → 401 (§10.4). **Advanced (external) authorization is a later phase**: forward to
-an authz API; non-200 → 407; `strict` flag fails closed on timeout.
+Per-channel `authorization.enabled` plus `authorization.allowed_operations` with semver `version`
+match; operation parsed from body; not-allowed → 401 (§10.4). Omitted `authorization.enabled`
+defaults false, so configured rules are inert until explicitly enabled. **Advanced (external)
+authorization is a later phase**: forward to an authz API; non-200 → 407; `strict` flag fails
+closed on timeout.
 
 ### 12.6 Upstream stateful sessions (design decision)
 The motivation mentions "stateful connections for Amadeus/Sabre." The relay app stays **stateless**;

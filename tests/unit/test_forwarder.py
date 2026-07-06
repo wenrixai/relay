@@ -189,7 +189,7 @@ def test_header_credential_swap_failure_returns_bad_gateway(
     channel = ChannelConfig(
         name="ba",
         type=ChannelType.BA_NDC_DIRECT,
-        credentials={"api_key_header": "X-Client-Key"},
+        credentials={"enabled": True, "api_key_header": "X-Client-Key"},
     )
 
     with relay_client_factory(channel, unreachable_transport) as client:
@@ -206,7 +206,7 @@ def test_bad_gzip_request_body_returns_xml_parse_error(
     channel = ChannelConfig(
         name="tf",
         type=ChannelType.TRAVELFUSION,
-        credentials={"login_id": "login", "xml_login_id": "xml"},
+        credentials={"enabled": True, "login_id": "login", "xml_login_id": "xml"},
     )
 
     with relay_client_factory(channel, unreachable_transport) as client:
@@ -227,7 +227,7 @@ def test_malformed_request_xml_during_credential_swap_returns_xml_parse_error(
     channel = ChannelConfig(
         name="tf",
         type=ChannelType.TRAVELFUSION,
-        credentials={"login_id": "login", "xml_login_id": "xml"},
+        credentials={"enabled": True, "login_id": "login", "xml_login_id": "xml"},
     )
 
     with relay_client_factory(channel, unreachable_transport) as client:
@@ -246,7 +246,7 @@ def test_response_credential_cleanup_parse_failure_returns_xml_parse_error(
         name="amadeus",
         type=ChannelType.AMADEUS,
         host="gds.test",
-        credentials={"soap_security": "<Security/>"},
+        credentials={"enabled": True, "soap_security": "<Security/>"},
     )
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -263,7 +263,7 @@ def test_response_credential_cleanup_failure_returns_bad_gateway() -> None:
         name="amadeus",
         type=ChannelType.AMADEUS,
         host="gds.test",
-        credentials={"soap_security": "<Security/>"},
+        credentials={"enabled": True, "soap_security": "<Security/>"},
     )
 
     resp = _response_credential_swap_stage(
@@ -284,7 +284,7 @@ def test_request_credential_swap_oversize_records_metric() -> None:
     channel = ChannelConfig(
         name="tf",
         type=ChannelType.TRAVELFUSION,
-        credentials={"login_id": "login", "xml_login_id": "xml"},
+        credentials={"enabled": True, "login_id": "login", "xml_login_id": "xml"},
     )
 
     resp = _request_credential_swap_stage(
@@ -308,7 +308,7 @@ def test_response_credential_cleanup_oversize_records_metric() -> None:
         name="amadeus",
         type=ChannelType.AMADEUS,
         host="gds.test",
-        credentials={"soap_security": "<Security/>"},
+        credentials={"enabled": True, "soap_security": "<Security/>"},
     )
 
     resp = _response_credential_swap_stage(

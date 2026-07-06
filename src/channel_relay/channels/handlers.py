@@ -169,13 +169,13 @@ class TravelfusionHandler(NoHeaderSwapMixin):
         return _local_name(root)
 
     def requires_body_inspection(self, channel: ChannelConfig) -> bool:
-        return bool(channel.credentials)
+        return bool(channel.credential_values)
 
     def requires_response_keyring(self, channel: ChannelConfig) -> bool:  # pylint: disable=unused-argument
         return False
 
     def swap_request_body(self, root: etree._Element, context: SwapContext) -> bool:
-        credentials = context.channel.credentials
+        credentials = context.channel.credential_values
         if not credentials:
             return False
         operation_name = self.parse_operation(root)
@@ -201,7 +201,7 @@ class TravelfusionHandler(NoHeaderSwapMixin):
         return True
 
     def swap_response(self, root: etree._Element, context: SwapContext) -> bool:
-        if not context.channel.credentials:
+        if not context.channel.credential_values:
             return False
         changed = False
         for element in list(root.iter("*")):
@@ -242,7 +242,7 @@ class NdcHeaderHandler(NoBodySwapMixin, NoopResponseMixin):
         return False
 
     def swap_request_headers(self, context: SwapContext) -> None:
-        credentials = context.channel.credentials
+        credentials = context.channel.credential_values
         if not credentials:
             return
         header_name = credentials.get("api_key_header", self.header_name)
@@ -259,10 +259,10 @@ class FarelogixHandler(NoopResponseMixin):
         return _soap_operation(root)
 
     def requires_body_inspection(self, channel: ChannelConfig) -> bool:
-        return bool(channel.credentials)
+        return bool(channel.credential_values)
 
     def swap_request_headers(self, context: SwapContext) -> None:
-        credentials = context.channel.credentials
+        credentials = context.channel.credential_values
         if not credentials:
             return
         subscription_key = credentials.get("subscription_key") or credentials.get("api_key")
@@ -271,7 +271,7 @@ class FarelogixHandler(NoopResponseMixin):
         _set_header(context.headers, "Ocp-Apim-Subscription-Key", subscription_key)
 
     def swap_request_body(self, root: etree._Element, context: SwapContext) -> bool:
-        credentials = context.channel.credentials
+        credentials = context.channel.credential_values
         if not credentials:
             return False
         iden = _find_first_by_local(root, "iden")
@@ -299,13 +299,13 @@ class SoapSecurityHandler(NoHeaderSwapMixin):
         return _soap_operation(root)
 
     def requires_body_inspection(self, channel: ChannelConfig) -> bool:
-        return bool(channel.credentials)
+        return bool(channel.credential_values)
 
     def requires_response_keyring(self, channel: ChannelConfig) -> bool:
-        return self.channel_type in {ChannelType.AMADEUS, ChannelType.SABRE} and bool(channel.credentials)
+        return self.channel_type in {ChannelType.AMADEUS, ChannelType.SABRE} and bool(channel.credential_values)
 
     def swap_request_body(self, root: etree._Element, context: SwapContext) -> bool:
-        credentials = context.channel.credentials
+        credentials = context.channel.credential_values
         if not credentials:
             return False
         target = self._security_target(root, credentials)

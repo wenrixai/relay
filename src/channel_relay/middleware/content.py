@@ -50,7 +50,7 @@ def requires_inspection(channel: ChannelConfig) -> bool:
         channel.pii.enabled
         or credentials_require_body_inspection(channel)
         or credentials_require_response_keyring(channel)
-        or bool(channel.authorization.allowed_operations)
+        or channel.operation_authorization_enabled
     )
 
 

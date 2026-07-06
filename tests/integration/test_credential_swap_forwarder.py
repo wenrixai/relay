@@ -31,7 +31,7 @@ def test_forwarder_applies_travelfusion_swap_before_upstream() -> None:
     channel = ChannelConfig(
         name="tf",
         type=ChannelType.TRAVELFUSION,
-        credentials={"login_id": "relay-login", "xml_login_id": "relay-xml"},
+        credentials={"enabled": True, "login_id": "relay-login", "xml_login_id": "relay-xml"},
     )
     body = b"<CommandList><StartRouting><LoginId>caller</LoginId><XmlLoginId>caller</XmlLoginId></StartRouting></CommandList>"
 
@@ -54,7 +54,7 @@ def test_forwarder_returns_credential_swap_failed_without_forwarding() -> None:
     channel = ChannelConfig(
         name="tf",
         type=ChannelType.TRAVELFUSION,
-        credentials={"login_id": "relay-login", "xml_login_id": "relay-xml"},
+        credentials={"enabled": True, "login_id": "relay-login", "xml_login_id": "relay-xml"},
     )
 
     with _client(channel, httpx.MockTransport(handler)) as client:
@@ -77,7 +77,9 @@ def test_forwarder_sets_ndc_header_without_body_mutation() -> None:
         captured["req"] = request
         return httpx.Response(204)
 
-    channel = ChannelConfig(name="ba", type=ChannelType.BA_NDC_DIRECT, credentials={"client_key": "ba-key"})
+    channel = ChannelConfig(
+        name="ba", type=ChannelType.BA_NDC_DIRECT, credentials={"enabled": True, "client_key": "ba-key"}
+    )
     body = b"<IATA_AirShoppingRQ><Payload>same</Payload></IATA_AirShoppingRQ>"
 
     with _client(channel, httpx.MockTransport(handler)) as client:
@@ -98,7 +100,7 @@ def test_gzip_body_is_reencoded_when_credential_swap_requires_inspection() -> No
     channel = ChannelConfig(
         name="tf",
         type=ChannelType.TRAVELFUSION,
-        credentials={"login_id": "relay-login", "xml_login_id": "relay-xml"},
+        credentials={"enabled": True, "login_id": "relay-login", "xml_login_id": "relay-xml"},
     )
     body = gzip.compress(
         b"<CommandList><StartRouting><LoginId>caller</LoginId><XmlLoginId>caller</XmlLoginId></StartRouting></CommandList>"
@@ -126,7 +128,7 @@ def test_request_deanonymization_runs_before_credential_swap() -> None:
     channel = ChannelConfig(
         name="tf",
         type=ChannelType.TRAVELFUSION,
-        credentials={"login_id": "relay-login", "xml_login_id": "relay-xml"},
+        credentials={"enabled": True, "login_id": "relay-login", "xml_login_id": "relay-xml"},
         pii=ChannelPII(enabled=True),
     )
     # Token is not on a credential field; it proves de-anonymization still happens before swap.
@@ -155,7 +157,9 @@ def test_ndc_oversize_body_is_forwarded_unchanged() -> None:
         captured["req"] = request
         return httpx.Response(204)
 
-    channel = ChannelConfig(name="ba", type=ChannelType.BA_NDC_DIRECT, credentials={"client_key": "ba-key"})
+    channel = ChannelConfig(
+        name="ba", type=ChannelType.BA_NDC_DIRECT, credentials={"enabled": True, "client_key": "ba-key"}
+    )
     body = b"<IATA_AirShoppingRQ>" + b"<Filler>x</Filler>" * 200 + b"</IATA_AirShoppingRQ>"
 
     with _client(channel, httpx.MockTransport(handler)) as client:
@@ -175,7 +179,9 @@ def test_ndc_malformed_body_is_forwarded_unchanged() -> None:
         captured["req"] = request
         return httpx.Response(204)
 
-    channel = ChannelConfig(name="ba", type=ChannelType.BA_NDC_DIRECT, credentials={"client_key": "ba-key"})
+    channel = ChannelConfig(
+        name="ba", type=ChannelType.BA_NDC_DIRECT, credentials={"enabled": True, "client_key": "ba-key"}
+    )
     body = b"<IATA_AirShoppingRQ><unclosed>"
 
     with _client(channel, httpx.MockTransport(handler)) as client:
@@ -196,7 +202,7 @@ def test_gzip_body_deanonymized_and_swapped_in_single_round_trip() -> None:
     channel = ChannelConfig(
         name="tf",
         type=ChannelType.TRAVELFUSION,
-        credentials={"login_id": "relay-login", "xml_login_id": "relay-xml"},
+        credentials={"enabled": True, "login_id": "relay-login", "xml_login_id": "relay-xml"},
         pii=ChannelPII(enabled=True),
     )
     from channel_relay.pii.codec import encrypt
@@ -241,7 +247,7 @@ def test_sabre_response_auth_is_encrypted_before_returning_to_client() -> None:
         name="sabre",
         type=ChannelType.SABRE,
         host="sabre.test",
-        credentials={"soap_security": "<Security/>"},
+        credentials={"enabled": True, "soap_security": "<Security/>"},
     )
     request_body = (
         b'<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Header>'

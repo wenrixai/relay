@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from channel_relay.config.json_schema import generate_json_schema
 from channel_relay.config.loader import load_config
-from channel_relay.config.models import ChannelConfig, ChannelType, RelayConfig
+from channel_relay.config.models import AllowedOperation, Authorization, ChannelConfig, ChannelType, RelayConfig
 
 
 def test_minimal_channel_applies_type_host_default() -> None:
@@ -54,6 +54,60 @@ def test_pii_off_by_default() -> None:
 def test_pii_force_redact_off_by_default() -> None:
     channel = ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION)
     assert channel.pii.force_redact is False
+
+
+def test_credentials_are_disabled_by_default_even_when_values_exist() -> None:
+    channel = ChannelConfig(
+        name="tf",
+        type=ChannelType.TRAVELFUSION,
+        credentials={"login_id": "relay-login", "xml_login_id": "relay-xml"},
+    )
+    assert channel.credentials.enabled is False
+    assert channel.credentials.values == {"login_id": "relay-login", "xml_login_id": "relay-xml"}
+    assert channel.credential_values == {}
+    assert channel.credential_swap_enabled is False
+
+
+def test_credentials_must_be_explicitly_enabled() -> None:
+    channel = ChannelConfig(
+        name="tf",
+        type=ChannelType.TRAVELFUSION,
+        credentials={"enabled": True, "login_id": "relay-login", "xml_login_id": "relay-xml"},
+    )
+    assert channel.credentials.enabled is True
+    assert channel.credential_values == {"login_id": "relay-login", "xml_login_id": "relay-xml"}
+    assert channel.credential_swap_enabled is True
+
+
+def test_credential_values_must_be_strings() -> None:
+    with pytest.raises(ValidationError):
+        ChannelConfig(
+            name="tf",
+            type=ChannelType.TRAVELFUSION,
+            credentials={"enabled": True, "login_id": 123},
+        )
+
+
+def test_operation_authorization_is_disabled_by_default_even_with_rules() -> None:
+    channel = ChannelConfig(
+        name="tf",
+        type=ChannelType.TRAVELFUSION,
+        authorization=Authorization(allowed_operations=[AllowedOperation(operation="Fare_GetFareRules", version="*")]),
+    )
+    assert channel.authorization.enabled is False
+    assert channel.operation_authorization_enabled is False
+
+
+def test_operation_authorization_must_be_explicitly_enabled() -> None:
+    channel = ChannelConfig(
+        name="tf",
+        type=ChannelType.TRAVELFUSION,
+        authorization=Authorization(
+            enabled=True,
+            allowed_operations=[AllowedOperation(operation="Fare_GetFareRules", version="*")],
+        ),
+    )
+    assert channel.operation_authorization_enabled is True
 
 
 def test_unknown_channel_type_rejected() -> None:

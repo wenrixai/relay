@@ -71,6 +71,7 @@ PII behavior, and authorization rules.
         "force_redact": false
       },
       "authorization": {
+        "enabled": true,
         "allowed_operations": [
           {
             "operation": "GetReservationRQ",
@@ -93,10 +94,12 @@ PII behavior, and authorization rules.
 | `proxy_pass` | No | Full upstream base URL. If omitted and `host` is known, defaults to `https://{host}`. |
 | `timeouts.connect` | No | Upstream connect timeout in seconds. Default: `30`. |
 | `timeouts.read` | No | Upstream read timeout in seconds. Default: `120`. |
-| `credentials` | No | Channel-specific credential fields used for credential swap. Treat real values as secrets. |
+| `credentials.enabled` | No | Enables channel-specific credential swap. Default: `false`. |
+| `credentials.<key>` | No | Channel-specific credential fields used for credential swap when enabled. Treat real values as secrets. |
 | `pii.enabled` | No | Enables response redaction and request de-anonymization for the channel. Default: `false`. |
 | `pii.force_redact` | No | Replaces encrypted PII actions with a fixed redacted value. Default: `false`. |
-| `authorization.allowed_operations` | No | Optional allow-list of body-parsed operations. Empty means all operations are allowed. |
+| `authorization.enabled` | No | Enables operation allow-list enforcement. Default: `false`. |
+| `authorization.allowed_operations` | No | Optional allow-list of body-parsed operations when authorization is enabled. Empty means all operations are allowed. |
 
 ## Supported Channel Types
 
@@ -113,8 +116,9 @@ PII behavior, and authorization rules.
 | `sabre` | `soap_security`, optional `soap_security_target_xpath` |
 | `travelport` | `soap_security`, optional `soap_security_target_xpath` |
 
-Credential swap is opt-in. If a channel has no `credentials` object, requests are forwarded
-transparently apart from header hygiene, authorization, and any enabled PII processing.
+Credential swap is opt-in. If `credentials.enabled` is omitted or false, requests are forwarded
+transparently apart from header hygiene, authorization, and any enabled PII processing, even when
+credential fields are present in the object.
 
 Do not place real credentials in committed JSON, Helm values, Terraform variable files, or
 ConfigMaps. The Helm and ECS examples in this guide keep channel configuration non-secret. If a
@@ -230,6 +234,7 @@ config:
         enabled: true
         force_redact: false
       authorization:
+        enabled: true
         allowed_operations:
           - operation: GetReservationRQ
             version: "^1.0"

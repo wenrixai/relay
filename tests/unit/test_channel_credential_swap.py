@@ -28,12 +28,16 @@ def _ctx(channel: ChannelConfig, headers: dict[str, str] | None = None) -> SwapC
     return SwapContext(channel=channel, headers={} if headers is None else headers, keyring=None)
 
 
+def _enabled(credentials: dict[str, str] | None) -> dict[str, object]:
+    return {"enabled": True, **credentials} if credentials is not None else {}
+
+
 def _tf_channel(credentials: dict[str, str] | None = None) -> ChannelConfig:
-    return ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION, credentials=credentials or {})
+    return ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION, credentials=_enabled(credentials))
 
 
 def _farelogix_channel(credentials: dict[str, str] | None = None) -> ChannelConfig:
-    return ChannelConfig(name="flx", type=ChannelType.FARELOGIX_AA, credentials=credentials or {})
+    return ChannelConfig(name="flx", type=ChannelType.FARELOGIX_AA, credentials=_enabled(credentials))
 
 
 def _ndc_channel(
@@ -41,14 +45,14 @@ def _ndc_channel(
     credentials: dict[str, str] | None = None,
 ) -> ChannelConfig:
     host = "la.test" if channel_type is ChannelType.LA_NDC_DIRECT else None
-    return ChannelConfig(name=channel_type.value, type=channel_type, host=host, credentials=credentials or {})
+    return ChannelConfig(name=channel_type.value, type=channel_type, host=host, credentials=_enabled(credentials))
 
 
 def _gds_channel(
     channel_type: ChannelType = ChannelType.AMADEUS,
     credentials: dict[str, str] | None = None,
 ) -> ChannelConfig:
-    return ChannelConfig(name=channel_type.value, type=channel_type, host="gds.test", credentials=credentials or {})
+    return ChannelConfig(name=channel_type.value, type=channel_type, host="gds.test", credentials=_enabled(credentials))
 
 
 def _assert_swap_error(message: str, func: Callable[..., object], *args: object) -> None:
@@ -380,5 +384,5 @@ def test_soap_response_noop_and_missing_keyring_paths() -> None:
     already_encrypted = parse_bytes(b"<Envelope><SessionId>ENC_aGVsbG8</SessionId></Envelope>")
     assert handler.swap_response(already_encrypted, SwapContext(channel, {}, keyring)) is False
 
-    no_creds = channel.model_copy(update={"credentials": {}})
+    no_creds = ChannelConfig(name="gds-off", type=ChannelType.AMADEUS, credentials={"soap_security": "<Security/>"})
     assert handler.swap_response(no_creds_response, SwapContext(no_creds, {}, keyring)) is False

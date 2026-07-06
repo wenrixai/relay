@@ -50,7 +50,7 @@ def _client(mock: MockAmadeus, monkeypatch: pytest.MonkeyPatch) -> TestClient:
         name="amadeus",
         type=ChannelType.AMADEUS,
         host="amadeus.test",
-        credentials={"soap_security": SOAP_SECURITY},
+        credentials={"enabled": True, "soap_security": SOAP_SECURITY},
         pii=ChannelPII(enabled=False),  # credential swap only; no PII
     )
     app = create_app(
