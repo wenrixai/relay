@@ -26,7 +26,7 @@ from channel_relay.config.loader import load_config
 from channel_relay.config.models import RelayConfig
 from channel_relay.health import readiness_reasons
 from channel_relay.middleware.access_log import log_access
-from channel_relay.middleware.auth import verify_admin_basic_auth, verify_basic_auth
+from channel_relay.middleware.auth import auth_active, verify_admin_basic_auth, verify_basic_auth
 from channel_relay.observability.logging import configure_logging
 from channel_relay.observability.metrics import METER_NAME, RelayMetrics, build_meter_provider
 from channel_relay.pii.crypto import Keyring, load_keyring
@@ -58,6 +58,22 @@ def build_keyring(settings: Settings, config: RelayConfig | None) -> Keyring | N
         msg = "PII or response auth encryption is enabled for a channel but no keyring is configured"
         raise RuntimeError(msg)
     return keyring
+
+
+def validate_auth_config(settings: Settings) -> None:
+    """Abort startup when basic auth is enabled but no credentials are configured (§9.2).
+
+    Fail closed: an enabled-but-unconfigured relay must refuse to boot rather than serve
+    the data-plane routes open. Serving open is permitted only when basic auth is
+    explicitly disabled (``basic_auth_enabled=False``).
+    """
+    if settings.basic_auth_enabled and not auth_active(settings):
+        msg = (
+            "basic auth is enabled but no credentials are configured "
+            "(set RELAY_BASIC_AUTH_USER and RELAY_BASIC_AUTH_PASS, "
+            "or disable auth with RELAY_BASIC_AUTH_ENABLED=false)"
+        )
+        raise RuntimeError(msg)
 
 
 def _load_startup_config(settings: Settings) -> RelayConfig | None:
@@ -96,6 +112,8 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
+        # Basic auth: enabled without credentials → abort (fail closed, §9.2).
+        validate_auth_config(settings)
         # Load config once on startup unless one was injected (invalid → abort).
         if application.state.config is None:
             application.state.config = _load_startup_config(settings)

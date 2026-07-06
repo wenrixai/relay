@@ -21,8 +21,9 @@ _UNAUTHORIZED_HEADERS = {"WWW-Authenticate": 'Basic realm="wenrix-relay"'}
 def auth_active(settings: Settings) -> bool:
     """True when basic auth is enabled *and* credentials are configured.
 
-    Without configured credentials the relay cannot enforce basic auth; it logs at startup
-    and serves open rather than rejecting every request.
+    When auth is enabled but credentials are unconfigured the relay cannot enforce basic
+    auth; startup aborts (see ``validate_auth_config`` in ``main``) rather than serving
+    open. Serving open is reachable only when auth is explicitly disabled.
     """
     return bool(
         settings.basic_auth_enabled and settings.basic_auth_user is not None and settings.basic_auth_pass is not None

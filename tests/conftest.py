@@ -29,6 +29,17 @@ XmlTexts = Callable[[bytes, str], list[str]]
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
+@pytest.fixture(autouse=True)
+def _default_auth_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Default basic auth off for suites that don't exercise it.
+
+    The relay fails closed at startup (``validate_auth_config``) when auth is enabled
+    without credentials, so any test that builds the app with default settings and enters
+    the lifespan would otherwise abort. The auth/admin suites override this explicitly.
+    """
+    monkeypatch.setenv("RELAY_BASIC_AUTH_ENABLED", "false")
+
+
 @pytest.fixture
 def client() -> TestClient:
     """A TestClient bound to a fresh app instance with an empty (ready) config."""
