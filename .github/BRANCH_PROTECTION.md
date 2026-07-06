@@ -5,7 +5,8 @@ Branch protection is a GitHub repository setting and cannot be committed. Config
 
 - Require a pull request before merging; require approvals (≥1) and CODEOWNERS review.
 - Require status checks to pass before merging, and require branches to be up to date:
-  - `Lint, type-check, test` (ci.yml → `quality`)
+  - `pre-commit` (ci.yml → `quality`)
+  - `pytest` (ci.yml → `test`)
   - `Build image + readiness smoke` (ci.yml → `image`)
   - `CodeQL`, `gitleaks`, `Dependency audit`, `Trivy image scan` (security.yml)
 - Require linear history; dismiss stale approvals on new commits.
