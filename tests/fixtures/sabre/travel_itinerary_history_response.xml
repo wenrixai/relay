@@ -1,0 +1,637 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap-env:Header>
+        <eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0"
+                          soap-env:mustUnderstand="1">
+            <eb:From>
+                <eb:PartyId eb:type="URI">123123</eb:PartyId>
+            </eb:From>
+            <eb:To>
+                <eb:PartyId eb:type="URI">999999</eb:PartyId>
+            </eb:To>
+            <eb:CPAId>3SMJ</eb:CPAId>
+            <eb:ConversationId>V1@00000000-0000-0000-0000-000000000000@11111111-1111-1111-1111-111111111111@
+            </eb:ConversationId>
+            <eb:Service>TravelItineraryHistoryLLSRQ</eb:Service>
+            <eb:Action>TravelItineraryHistoryLLSRS</eb:Action>
+            <eb:MessageData>
+                <eb:MessageId>0000000000000000000</eb:MessageId>
+                <eb:Timestamp>2019-11-07T10:28:24</eb:Timestamp>
+                <eb:RefToMessageId>00000000000</eb:RefToMessageId>
+            </eb:MessageData>
+        </eb:MessageHeader>
+        <wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+            <wsse:BinarySecurityToken valueType="String" EncodingType="wsse:Base64Binary">
+                Shared/IDL:IceSess\/SessMgr:1\.0.IDL/Common/!ICESMS\/RESF!ICESMSLB\/RES.LB!-0000000000000000000!0000000!0
+            </wsse:BinarySecurityToken>
+        </wsse:Security>
+    </soap-env:Header>
+    <soap-env:Body>
+        <TravelItineraryHistoryRS xmlns="http://webservices.sabre.com/sabreXML/2011/10"
+                                  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                  xmlns:stl="http://services.sabre.com/STL/v01" Version="2.3.0">
+            <stl:ApplicationResults status="Complete">
+                <stl:Success timeStamp="2019-11-07T04:28:24-06:00"/>
+            </stl:ApplicationResults>
+            <HistoricalInfo RPH="1">
+                <GeneralInfo Action="X3S">
+                    <Text>SSR KSML SU NN1 SVOTLV0504N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X3S">
+                    <Text>SSR KSML SU NN1 HKGSVO0213N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X3S">
+                    <Text>SSR KSML SU NN1 SVOCAN0220R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X3S">
+                    <Text>SSR KSML SU NN1 TLVSVO0507R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X3S">
+                    <Text>SSR KSML SU NN1 SVOTLV0504N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X3S">
+                    <Text>SSR KSML SU NN1 HKGSVO0213N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X3S">
+                    <Text>SSR KSML SU NN1 SVOCAN0220R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X3S">
+                    <Text>SSR KSML SU NN1 TLVSVO0507R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 SVOCAN0220R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 TLVSVO0507R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 SVOCAN0220R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 TLVSVO0507R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 SVOTLV0504N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 HKGSVO0213N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 SVOTLV0504N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 HKGSVO0213N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 SVOTLV0504E08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 HKGSVO0213E08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 SVOCAN0220N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 TLVSVO0507N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 SVOTLV0504E08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 HKGSVO0213E08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 SVOCAN0220N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="X4S">
+                    <Text>SSR KSML SU KK1 TLVSVO0507N25NOV</Text>
+                </GeneralInfo>
+                <ItineraryInfo>
+                    <ReservationItems>
+                        <Item RPH="1">
+                            <FlightSegment Action="XS" ArrivalDateTime="11-25T17:10" ConnectionInd="O"
+                                           DepartureDateTime="11-25T11:50" FlightNumber="0507" NumberInParty="02"
+                                           ResBookDesigCode="R" Status="HXHK" eTicket="true">
+                                <DestinationLocation LocationCode="SVO"/>
+                                <MarketingAirline Code="SU" FlightNumber="0507"/>
+                                <OriginLocation LocationCode="TLV"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                            <FlightSegment Action="XS" ArrivalDateTime="11-26T10:10" ConnectionInd="I"
+                                           DepartureDateTime="11-25T19:35" FlightNumber="0220" NumberInParty="02"
+                                           ResBookDesigCode="R" Status="HXHK" eTicket="true">
+                                <DestinationLocation LocationCode="CAN"/>
+                                <MarketingAirline Code="SU" FlightNumber="0220"/>
+                                <OriginLocation LocationCode="SVO"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                            <FlightSegment Action="XS" ArrivalDateTime="12-08T17:15" ConnectionInd="O"
+                                           DepartureDateTime="12-08T11:55" FlightNumber="0213" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="HXHK" eTicket="true">
+                                <DestinationLocation LocationCode="SVO"/>
+                                <MarketingAirline Code="SU" FlightNumber="0213"/>
+                                <OriginLocation LocationCode="HKG"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                            <FlightSegment Action="XS" ArrivalDateTime="12-08T23:00" ConnectionInd="I"
+                                           DepartureDateTime="12-08T19:40" FlightNumber="0504" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="HXHK" eTicket="true">
+                                <DestinationLocation LocationCode="TLV"/>
+                                <MarketingAirline Code="SU" FlightNumber="0504"/>
+                                <OriginLocation LocationCode="SVO"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                        </Item>
+                    </ReservationItems>
+                </ItineraryInfo>
+                <ItineraryRef>
+                    <Source AAA_PseudoCityCode="S94J" CreateDateTime="2019-11-07T00:10" CreationAgent="OO"
+                            CreationAgentDutyCode="*" CreationAgentFunctionCode="A" PseudoCityCode="S94J"
+                            ReceivedFrom="BARKAN NOAM"/>
+                </ItineraryRef>
+            </HistoricalInfo>
+            <HistoricalInfo RPH="2">
+                <GeneralInfo Action="A4S">
+                    <Text>SSR OTHS 1S HX CANCELED DUE TO SYSTEM OR PASSENGER ACTION</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR OTHS 1S HX DELETE HX SEGS FROM PNR TO KEEP RES IN SYNCH</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR OTHS 1S PNR CXLD DUE TL EXPRD</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR OTHS 1S PLS REMOVE CANX SEG OR TVL AGT MAY RECEIVE ADM</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR OTHS 1S PLZ UPDATE ITIN BY XXL ALL HX SEGMENTS</Text>
+                </GeneralInfo>
+                <ItineraryInfo>
+                    <ReservationItems>
+                        <Item RPH="1">
+                            <FlightSegment Action="SC" ArrivalDateTime="11-25T17:10" ConnectionInd="O"
+                                           DepartureDateTime="11-25T11:50" FlightNumber="0507" NumberInParty="02"
+                                           ResBookDesigCode="R" Status="HXHK" eTicket="true">
+                                <DestinationLocation LocationCode="SVO"/>
+                                <MarketingAirline Code="SU" FlightNumber="0507"/>
+                                <OriginLocation LocationCode="TLV"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                            <FlightSegment Action="SC" ArrivalDateTime="11-26T10:10" ConnectionInd="I"
+                                           DepartureDateTime="11-25T19:35" FlightNumber="0220" NumberInParty="02"
+                                           ResBookDesigCode="R" Status="HXHK" eTicket="true">
+                                <DestinationLocation LocationCode="CAN"/>
+                                <MarketingAirline Code="SU" FlightNumber="0220"/>
+                                <OriginLocation LocationCode="SVO"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                            <FlightSegment Action="SC" ArrivalDateTime="12-08T17:15" ConnectionInd="O"
+                                           DepartureDateTime="12-08T11:55" FlightNumber="0213" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="HXHK" eTicket="true">
+                                <DestinationLocation LocationCode="SVO"/>
+                                <MarketingAirline Code="SU" FlightNumber="0213"/>
+                                <OriginLocation LocationCode="HKG"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                            <FlightSegment Action="SC" ArrivalDateTime="12-08T23:00" ConnectionInd="I"
+                                           DepartureDateTime="12-08T19:40" FlightNumber="0504" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="HXHK" eTicket="true">
+                                <DestinationLocation LocationCode="TLV"/>
+                                <MarketingAirline Code="SU" FlightNumber="0504"/>
+                                <OriginLocation LocationCode="SVO"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                        </Item>
+                    </ReservationItems>
+                </ItineraryInfo>
+                <ItineraryRef>
+                    <Source AAA_PseudoCityCode="PLT" CreateDateTime="2019-11-06T17:18" CreationAgent="SU"
+                            CreationAgentDutyCode="R" CreationAgentFunctionCode="M" PseudoCityCode="PLT"
+                            ReceivedFrom="HDQRMSU062318 920477EC-001 SYN"/>
+                </ItineraryRef>
+            </HistoricalInfo>
+            <HistoricalInfo RPH="3">
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 TLVSVO0507R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 SVOCAN0220R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 TLVSVO0507R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 SVOCAN0220R25NOV</Text>
+                </GeneralInfo>
+                <ItineraryRef>
+                    <Source AAA_PseudoCityCode="PLT" CreateDateTime="2019-11-06T02:58" CreationAgent="SU"
+                            CreationAgentDutyCode="R" CreationAgentFunctionCode="M" PseudoCityCode="PLT"
+                            ReceivedFrom="HDQRMSU060858 3A445338-002 SSC"/>
+                </ItineraryRef>
+            </HistoricalInfo>
+            <HistoricalInfo RPH="4">
+                <GeneralInfo Action="M3S">
+                    <Text>SSR KSML SU NN1 TLVSVO0507R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="M3S">
+                    <Text>SSR KSML SU NN1 SVOCAN0220R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="M3S">
+                    <Text>SSR KSML SU NN1 TLVSVO0507R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="M3S">
+                    <Text>SSR KSML SU NN1 SVOCAN0220R25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AZ">
+                    <Text>NAME CHG NOT ALLOWED FOR SU-R FARECLASS</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AZ">
+                    <Text>NAME CHG NOT ALLOWED FOR SU-R FARECLASS</Text>
+                </GeneralInfo>
+                <ItineraryInfo>
+                    <ReservationItems>
+                        <Item RPH="1">
+                            <FlightSegment Action="XS" ArrivalDateTime="11-25T17:10" ConnectionInd="O"
+                                           DepartureDateTime="11-25T11:50" FlightNumber="0507" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="HKSS" eTicket="true">
+                                <DestinationLocation LocationCode="SVO"/>
+                                <MarketingAirline Code="SU" FlightNumber="0507"/>
+                                <OriginLocation LocationCode="TLV"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                            <FlightSegment Action="XS" ArrivalDateTime="11-26T10:10" ConnectionInd="I"
+                                           DepartureDateTime="11-25T19:35" FlightNumber="0220" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="HKSS" eTicket="true">
+                                <DestinationLocation LocationCode="CAN"/>
+                                <MarketingAirline Code="SU" FlightNumber="0220"/>
+                                <OriginLocation LocationCode="SVO"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                            <FlightSegment Action="AS" ArrivalDateTime="11-25T17:10" ConnectionInd="O"
+                                           DepartureDateTime="11-25T11:50" FlightNumber="0507" NumberInParty="02"
+                                           ResBookDesigCode="R" Status="SSNN" eTicket="true">
+                                <DestinationLocation LocationCode="SVO"/>
+                                <MarketingAirline Code="SU" FlightNumber="0507"/>
+                                <OriginLocation LocationCode="TLV"/>
+                                <SupplierRef ID="DCSU"/>
+                            </FlightSegment>
+                            <FlightSegment Action="AS" ArrivalDateTime="11-26T10:10" ConnectionInd="I"
+                                           DepartureDateTime="11-25T19:35" FlightNumber="0220" NumberInParty="02"
+                                           ResBookDesigCode="R" Status="SSNN" eTicket="true">
+                                <DestinationLocation LocationCode="CAN"/>
+                                <MarketingAirline Code="SU" FlightNumber="0220"/>
+                                <OriginLocation LocationCode="SVO"/>
+                                <SupplierRef ID="DCSU"/>
+                            </FlightSegment>
+                        </Item>
+                    </ReservationItems>
+                </ItineraryInfo>
+                <ItineraryRef>
+                    <Source AAA_PseudoCityCode="S94J" CreateDateTime="2019-11-06T02:58" CreationAgent="WS"
+                            CreationAgentDutyCode="*" CreationAgentFunctionCode="A" PseudoCityCode="3SMJ"
+                            ReceivedFrom="ZORINX"/>
+                </ItineraryRef>
+            </HistoricalInfo>
+            <HistoricalInfo RPH="5">
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 HKGSVO0213N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 SVOTLV0504N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 HKGSVO0213N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 SVOTLV0504N08DEC</Text>
+                </GeneralInfo>
+                <ItineraryRef>
+                    <Source AAA_PseudoCityCode="PLT" CreateDateTime="2019-11-05T22:27" CreationAgent="SU"
+                            CreationAgentDutyCode="R" CreationAgentFunctionCode="M" PseudoCityCode="PLT"
+                            ReceivedFrom="HDQRMSU060427 577755DE-002 SSC"/>
+                </ItineraryRef>
+            </HistoricalInfo>
+            <HistoricalInfo RPH="6">
+                <GeneralInfo Action="M3S">
+                    <Text>SSR KSML SU NN1 TLVSVO0507N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="M3S">
+                    <Text>SSR KSML SU NN1 SVOCAN0220N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="M3S">
+                    <Text>SSR KSML SU NN1 HKGSVO0213N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="M3S">
+                    <Text>SSR KSML SU NN1 SVOTLV0504N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="M3S">
+                    <Text>SSR KSML SU NN1 TLVSVO0507N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="M3S">
+                    <Text>SSR KSML SU NN1 SVOCAN0220N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="M3S">
+                    <Text>SSR KSML SU NN1 HKGSVO0213N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="M3S">
+                    <Text>SSR KSML SU NN1 SVOTLV0504N08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AZ">
+                    <Text>NAME CHG NOT ALLOWED FOR SU-N FARECLASS</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AZ">
+                    <Text>NAME CHG NOT ALLOWED FOR SU-N FARECLASS</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AZ">
+                    <Text>NAME CHG NOT ALLOWED FOR SU-N FARECLASS</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AZ">
+                    <Text>NAME CHG NOT ALLOWED FOR SU-N FARECLASS</Text>
+                </GeneralInfo>
+                <ItineraryInfo>
+                    <ReservationItems>
+                        <Item RPH="1">
+                            <FlightSegment Action="XS" ArrivalDateTime="11-25T17:10" ConnectionInd="O"
+                                           DepartureDateTime="11-25T11:50" FlightNumber="0507" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="HKNN" eTicket="true">
+                                <DestinationLocation LocationCode="SVO"/>
+                                <MarketingAirline Code="SU" FlightNumber="0507"/>
+                                <OriginLocation LocationCode="TLV"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                            <FlightSegment Action="XS" ArrivalDateTime="11-26T10:10" ConnectionInd="I"
+                                           DepartureDateTime="11-25T19:35" FlightNumber="0220" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="HKNN" eTicket="true">
+                                <DestinationLocation LocationCode="CAN"/>
+                                <MarketingAirline Code="SU" FlightNumber="0220"/>
+                                <OriginLocation LocationCode="SVO"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                            <FlightSegment Action="XS" ArrivalDateTime="12-08T17:15" ConnectionInd="O"
+                                           DepartureDateTime="12-08T11:55" FlightNumber="0213" NumberInParty="02"
+                                           ResBookDesigCode="E" Status="HKNN" eTicket="true">
+                                <DestinationLocation LocationCode="SVO"/>
+                                <MarketingAirline Code="SU" FlightNumber="0213"/>
+                                <OriginLocation LocationCode="HKG"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                            <FlightSegment Action="XS" ArrivalDateTime="12-08T23:00" ConnectionInd="I"
+                                           DepartureDateTime="12-08T19:40" FlightNumber="0504" NumberInParty="02"
+                                           ResBookDesigCode="E" Status="HKNN" eTicket="true">
+                                <DestinationLocation LocationCode="TLV"/>
+                                <MarketingAirline Code="SU" FlightNumber="0504"/>
+                                <OriginLocation LocationCode="SVO"/>
+                                <SupplierRef ID="DCSU*RGSCXY"/>
+                            </FlightSegment>
+                            <FlightSegment Action="AS" ArrivalDateTime="11-25T17:10" ConnectionInd="O"
+                                           DepartureDateTime="11-25T11:50" FlightNumber="0507" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="SSSS" eTicket="true">
+                                <DestinationLocation LocationCode="SVO"/>
+                                <MarketingAirline Code="SU" FlightNumber="0507"/>
+                                <OriginLocation LocationCode="TLV"/>
+                                <SupplierRef ID="DCSU"/>
+                            </FlightSegment>
+                            <FlightSegment Action="AS" ArrivalDateTime="11-26T10:10" ConnectionInd="I"
+                                           DepartureDateTime="11-25T19:35" FlightNumber="0220" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="SSSS" eTicket="true">
+                                <DestinationLocation LocationCode="CAN"/>
+                                <MarketingAirline Code="SU" FlightNumber="0220"/>
+                                <OriginLocation LocationCode="SVO"/>
+                                <SupplierRef ID="DCSU"/>
+                            </FlightSegment>
+                            <FlightSegment Action="AS" ArrivalDateTime="12-08T17:15" ConnectionInd="O"
+                                           DepartureDateTime="12-08T11:55" FlightNumber="0213" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="SSSS" eTicket="true">
+                                <DestinationLocation LocationCode="SVO"/>
+                                <MarketingAirline Code="SU" FlightNumber="0213"/>
+                                <OriginLocation LocationCode="HKG"/>
+                                <SupplierRef ID="DCSU"/>
+                            </FlightSegment>
+                            <FlightSegment Action="AS" ArrivalDateTime="12-08T23:00" ConnectionInd="I"
+                                           DepartureDateTime="12-08T19:40" FlightNumber="0504" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="SSSS" eTicket="true">
+                                <DestinationLocation LocationCode="TLV"/>
+                                <MarketingAirline Code="SU" FlightNumber="0504"/>
+                                <OriginLocation LocationCode="SVO"/>
+                                <SupplierRef ID="DCSU"/>
+                            </FlightSegment>
+                        </Item>
+                    </ReservationItems>
+                </ItineraryInfo>
+                <ItineraryRef>
+                    <Source AAA_PseudoCityCode="S94J" CreateDateTime="2019-11-05T22:27" CreationAgent="WS"
+                            CreationAgentDutyCode="*" CreationAgentFunctionCode="A" PseudoCityCode="3SMJ"
+                            ReceivedFrom="ZORINX"/>
+                </ItineraryRef>
+            </HistoricalInfo>
+            <HistoricalInfo RPH="7">
+                <GeneralInfo Action="A4S">
+                    <Text>SSR OTHS 1S ATTN TKT MUST BE COMPLETED WITHIN 72 HOURS AFTER RES</Text>
+                </GeneralInfo>
+                <ItineraryRef>
+                    <Source AAA_PseudoCityCode="PLT" CreateDateTime="2019-11-05T17:13" CreationAgent="SU"
+                            CreationAgentDutyCode="R" CreationAgentFunctionCode="M" PseudoCityCode="PLT"
+                            ReceivedFrom="HDQRMSU052313 54425B36-001 SYN"/>
+                </ItineraryRef>
+            </HistoricalInfo>
+            <HistoricalInfo RPH="8">
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 TLVSVO0507N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 SVOCAN0220N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 HKGSVO0213E08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 SVOTLV0504E08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 TLVSVO0507N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 SVOCAN0220N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 HKGSVO0213E08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A4S">
+                    <Text>SSR KSML SU KK1 SVOTLV0504E08DEC</Text>
+                </GeneralInfo>
+                <ItineraryRef>
+                    <Source AAA_PseudoCityCode="PLT" CreateDateTime="2019-11-05T05:21" CreationAgent="SU"
+                            CreationAgentDutyCode="R" CreationAgentFunctionCode="M" PseudoCityCode="PLT"
+                            ReceivedFrom="HDQRMSU051121 4B098AF9-001 SSC"/>
+                </ItineraryRef>
+            </HistoricalInfo>
+            <HistoricalInfo RPH="9">
+                <GeneralInfo Action="A3S">
+                    <Text>SSR KSML SU NN1 TLVSVO0507N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3S">
+                    <Text>SSR KSML SU NN1 SVOCAN0220N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3S">
+                    <Text>SSR KSML SU NN1 HKGSVO0213E08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3S">
+                    <Text>SSR KSML SU NN1 SVOTLV0504E08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3S">
+                    <Text>SSR KSML SU NN1 TLVSVO0507N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3S">
+                    <Text>SSR KSML SU NN1 SVOCAN0220N25NOV</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3S">
+                    <Text>SSR KSML SU NN1 HKGSVO0213E08DEC</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3S">
+                    <Text>SSR KSML SU NN1 SVOTLV0504E08DEC</Text>
+                </GeneralInfo>
+                <ItineraryRef>
+                    <Source AAA_PseudoCityCode="S94J" CreateDateTime="2019-11-05T05:21" CreationAgent="WS"
+                            CreationAgentDutyCode="*" CreationAgentFunctionCode="A" PseudoCityCode="S94J"
+                            ReceivedFrom="P"/>
+                </ItineraryRef>
+            </HistoricalInfo>
+            <HistoricalInfo RPH="10">
+                <GeneralInfo Action="A9">
+                    <Text>TLV03-9998887</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A9">
+                    <Text>TLV972-599888777-A-1.1</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AW">
+                    <Text>NOVAK</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AW">
+                    <Text>5 HERZL AVE, TEL AVIV, IL</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3O">
+                    <Text>OSI YY AGENCY NOVAK 039998887</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3O">
+                    <Text>OSI YY AGENCY EMAIL OFFICE//NOVAK.CO.IL</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3O">
+                    <Text>OSI SU NOVAK/TEL AVIV/039998887/NAVIT</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3O">
+                    <Text>OSI SU AGT EMAIL OFFICE¤NOVAK.CO.IL</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3O">
+                    <Text>OSI SU LIRANK55//GMAIL.COM</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3S">
+                    <Text>SSR CTCE SU HK1/LIRANK55//GMAIL.COM</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3S">
+                    <Text>SSR CTCM SU HK1/0599888777</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3O">
+                    <Text>OSI SU 0599888777</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3S">
+                    <Text>SSR DOCS SU HK1/DB/11MAR1979/F/FRIEDMAN /YARDEN</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A3S">
+                    <Text>SSR DOCS SU HK1/DB/22SEP1979/M/FRIEDMAN/LIRAN</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A5F">
+                    <Text>CASH</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AN">
+                    <Text>1FRIEDMAN/YARDEN*11MAR1979</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AN">
+                    <Text>1FRIEDMAN/LIRAN*22SEP1979</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="API">
+                    <Text>TAGENCY 259263866OAGY S94J</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AZ">
+                    <Text>NAME CHG NOT ALLOWED FOR SU-N FARECLASS</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AZ">
+                    <Text>NAME CHG NOT ALLOWED FOR SU-N FARECLASS</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AZ">
+                    <Text>NAME CHG NOT ALLOWED FOR SU-E FARECLASS</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="AZ">
+                    <Text>NAME CHG NOT ALLOWED FOR SU-E FARECLASS</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="A7">
+                    <Text>TAWS94J05NOV200/</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="APE">
+                    <Text>E
+                        OFFICE@NOVAK.CO.IL
+                    </Text>
+                </GeneralInfo>
+                <GeneralInfo Action="APE">
+                    <Text>E
+                        LIRANK55@GMAIL.COM
+                    </Text>
+                </GeneralInfo>
+                <GeneralInfo Action="APE">
+                    <Text>E
+                        LIRANK55@GMAIL.COM
+                    </Text>
+                </GeneralInfo>
+                <GeneralInfo Action="ADT">
+                    <Text>TADT</Text>
+                </GeneralInfo>
+                <GeneralInfo Action="ADT">
+                    <Text>TADT</Text>
+                </GeneralInfo>
+                <ItineraryInfo>
+                    <ReservationItems>
+                        <Item RPH="1">
+                            <FlightSegment Action="AS" ArrivalDateTime="11-25T17:10" ConnectionInd="O"
+                                           DepartureDateTime="11-25T11:50" FlightNumber="0507" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="SSNN" eTicket="true">
+                                <DestinationLocation LocationCode="SVO"/>
+                                <MarketingAirline Code="SU" FlightNumber="0507"/>
+                                <OriginLocation LocationCode="TLV"/>
+                                <SupplierRef ID="DCSU"/>
+                            </FlightSegment>
+                            <FlightSegment Action="AS" ArrivalDateTime="11-26T10:10" ConnectionInd="I"
+                                           DepartureDateTime="11-25T19:35" FlightNumber="0220" NumberInParty="02"
+                                           ResBookDesigCode="N" Status="SSNN" eTicket="true">
+                                <DestinationLocation LocationCode="CAN"/>
+                                <MarketingAirline Code="SU" FlightNumber="0220"/>
+                                <OriginLocation LocationCode="SVO"/>
+                                <SupplierRef ID="DCSU"/>
+                            </FlightSegment>
+                            <FlightSegment Action="AS" ArrivalDateTime="12-08T17:15" ConnectionInd="O"
+                                           DepartureDateTime="12-08T11:55" FlightNumber="0213" NumberInParty="02"
+                                           ResBookDesigCode="E" Status="SSNN" eTicket="true">
+                                <DestinationLocation LocationCode="SVO"/>
+                                <MarketingAirline Code="SU" FlightNumber="0213"/>
+                                <OriginLocation LocationCode="HKG"/>
+                                <SupplierRef ID="DCSU"/>
+                            </FlightSegment>
+                            <FlightSegment Action="AS" ArrivalDateTime="12-08T23:00" ConnectionInd="I"
+                                           DepartureDateTime="12-08T19:40" FlightNumber="0504" NumberInParty="02"
+                                           ResBookDesigCode="E" Status="SSNN" eTicket="true">
+                                <DestinationLocation LocationCode="TLV"/>
+                                <MarketingAirline Code="SU" FlightNumber="0504"/>
+                                <OriginLocation LocationCode="SVO"/>
+                                <SupplierRef ID="DCSU"/>
+                            </FlightSegment>
+                        </Item>
+                    </ReservationItems>
+                </ItineraryInfo>
+                <ItineraryRef>
+                    <Source AAA_PseudoCityCode="S94J" CreateDateTime="2019-11-05T05:21" CreationAgent="WS"
+                            CreationAgentDutyCode="*" CreationAgentFunctionCode="A" PseudoCityCode="S94J"
+                            ReceivedFrom="NOVAK"/>
+                </ItineraryRef>
+            </HistoricalInfo>
+        </TravelItineraryHistoryRS>
+    </soap-env:Body>
+</soap-env:Envelope>

@@ -93,6 +93,30 @@ def test_request_security_header_swapped_not_leaked(monkeypatch: pytest.MonkeyPa
     assert b"ENC_" in response.content
 
 
+def test_newly_covered_operation_redacted_end_to_end(monkeypatch: pytest.MonkeyPatch) -> None:
+    mock = MockSabre("daily_refund_report_response.xml")
+    with _client(mock, monkeypatch) as client:
+        response = client.post("/channel/sabre/op", content=_request_body(), headers={"content-type": "text/xml"})
+    assert response.status_code == 200
+    # Slash-format passenger names are encrypted; the session token was cleaned up first.
+    assert b"MXXX/XXXK" not in response.content
+    assert b"ENC_" in response.content
+    assert b"KIWETP" in response.content  # locator preserved
+
+
+def test_uncovered_operation_forwarded_and_metric_recorded(monkeypatch: pytest.MonkeyPatch) -> None:
+    mock = MockSabre("queue_access_response.xml")
+    with _client(mock, monkeypatch) as client:
+        response = client.post("/channel/sabre/op", content=_request_body(), headers={"content-type": "text/xml"})
+        metrics = client.app.state.metrics  # type: ignore[attr-defined]
+        snapshot = metrics.snapshot()
+    assert response.status_code == 200
+    # QueueAccessRS carries no PII rules: the body is forwarded unchanged (locators survive)...
+    assert b"VHTHEO" in response.content
+    # ...and the coverage-gap metric flags it so the gap is discoverable.
+    assert snapshot["pii_uncovered_operation_total"] == {"sabre": {"QueueAccessRS": 1}}
+
+
 def test_encrypted_token_round_trips_on_next_request(monkeypatch: pytest.MonkeyPatch) -> None:
     mock = MockSabre("air_ticket_emd_response.xml")
     with _client(mock, monkeypatch) as client:

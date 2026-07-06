@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap-env:Header>
+        <eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0"
+            soap-env:mustUnderstand="1">
+            <eb:From>
+                <eb:PartyId eb:type="URI">123123</eb:PartyId>
+            </eb:From>
+            <eb:To>
+                <eb:PartyId eb:type="URI">999999</eb:PartyId>
+            </eb:To>
+            <eb:CPAId>0UUI</eb:CPAId>
+            <eb:ConversationId>V1@4c219360-78f7-4b41-bd91-4a743aecf143@808ddc5f-68d7-41ff-b512-89ab24cd81a3@</eb:ConversationId>
+            <eb:Service>QueueAccessLLSRQ</eb:Service>
+            <eb:Action>QueueAccessLLSRS</eb:Action>
+            <eb:MessageData>
+                <eb:MessageId>976114382290730151</eb:MessageId>
+                <eb:Timestamp>2018-12-27T10:37:09</eb:Timestamp>
+                <eb:RefToMessageId>75666716687</eb:RefToMessageId>
+            </eb:MessageData>
+        </eb:MessageHeader>
+        <wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+            <wsse:BinarySecurityToken valueType="String" EncodingType="wsse:Base64Binary">Shared/IDL:IceSess\\/SessMgr:1\\.0.IDL/Common/!ICESMS\\/ACPCRTC!ICESMSLB\\/CRT.LB!0000000000000!000!00</wsse:BinarySecurityToken>
+        </wsse:Security>
+    </soap-env:Header>
+    <soap-env:Body>
+        <QueueAccessRS xmlns="http://webservices.sabre.com/sabreXML/2011/10" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:stl="http://services.sabre.com/STL/v01" Version="2.0.9">
+            <stl:ApplicationResults status="Complete">
+                <stl:Success timeStamp="2018-12-27T04:37:09-06:00" />
+            </stl:ApplicationResults>
+            <Line Number="1">
+                <DateTime>2018-09-12T07:54</DateTime>
+                <POS>
+                    <Source AgentSine="AWS" PseudoCityCode="0UUI" />
+                </POS>
+                <UniqueID ID="VHTHEO" />
+            </Line>
+            <Line Number="2">
+                <DateTime>2018-09-12T08:13</DateTime>
+                <POS>
+                    <Source AgentSine="AWS" PseudoCityCode="0UUI" />
+                </POS>
+                <UniqueID ID="VHBWYI" />
+            </Line>
+            <Line Number="3">
+                <DateTime>2018-09-12T13:07</DateTime>
+                <POS>
+                    <Source AgentSine="AWS" PseudoCityCode="0UUI" />
+                </POS>
+                <UniqueID ID="VKRDIT" />
+            </Line>
+            <Line Number="4">
+                <DateTime>2018-09-12T13:09</DateTime>
+                <POS>
+                    <Source AgentSine="AWS" PseudoCityCode="0UUI" />
+                </POS>
+                <UniqueID ID="YIXRPW" />
+            </Line>
+            <Line Number="5">
+                <DateTime>2018-09-12T13:10</DateTime>
+                <POS>
+                    <Source AgentSine="AWS" PseudoCityCode="0UUI" />
+                </POS>
+                <UniqueID ID="YIXGVL" />
+            </Line>
+            <Line Number="16">
+                <DateTime>2018-10-11T13:32</DateTime>
+                <POS>
+                    <Source AgentSine="HPK" PseudoCityCode="FSG" />
+                </POS>
+                <UniqueID ID="OYMAIJ" />
+            </Line>
+            <Paragraph> <Text>QUEUE LIST FOR 0UUI QUEUE 500 ON 27DEC AT 1237</Text>
+                <Text>NUM PNR LOCATOR PLACED BY DATE TIME GROUP</Text> <Text>1 VHTHEO 0UUI AWS 12SEP18 0754</Text>
+                <Text>2 VHBWYI 0UUI AWS 12SEP18 0813</Text> <Text>3 VKRDIT 0UUI AWS 12SEP18 1307</Text> <Text>4
+                    YIXRPW 0UUI AWS 12SEP18 1309</Text> <Text>5 YIXGVL 0UUI AWS 12SEP18 1310</Text> <Text>16 OYMAIJ FSG HPK
+                    11OCT18 1332</Text> <Text>END OF LIST</Text>
+            </Paragraph>
+        </QueueAccessRS>
+    </soap-env:Body>
+</soap-env:Envelope>

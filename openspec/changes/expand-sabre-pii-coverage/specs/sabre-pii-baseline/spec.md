@@ -6,22 +6,29 @@
 The baked ruleset (`rules_fallback.json`) SHALL contain field rules for channel `sabre` selected by
 body-derived operation, covering the original baseline (`GetReservationRS`, `TravelItineraryReadRS`,
 `GetPriceQuoteRS` — plain and PQR variants share one operation name, `AirTicketRS`,
-`DailySalesReportRS`) plus the high-priority PII-bearing operations used by Wenrix handlers:
-`CreatePassengerNameRecordRS`, `PassengerDetailsRS`, `TravelItineraryHistoryRS`,
-`GetTicketingDocumentRS`, `GetETicketDetailsRS`, `GetTicketInformationFromAirlineRS`,
-`TicketRefundRS`, `TicketExchangeRS`, `DailyRefundReportRS`, `PastDatePnrDetailsRS`, and
-`QueueAccessRS`. XPaths SHALL be sourced from the Wenrix parsing models
+`DailySalesReportRS`) plus the high-priority PII-bearing operations used by Wenrix handlers,
+identified by their real SOAP body element name (what `parse_operation` returns), which differs from
+the Wenrix service's conceptual API names: `RefundRS` (ticket refund), `DailyRefundReportRS`,
+`eTicketCouponRS` (e-ticket details, incl. the exchange-context variant), `GetElectronicDocumentRS`
+(ticket info from airline), `GetTicketingDocumentRS`, `TravelItineraryHistoryRS`, and `Trip_SearchRS`
+(past-date PNR details). XPaths SHALL be sourced from the Wenrix parsing models
 (`sources/itinerary.py`, `ticketing.py`, `pnr.py`, `history.py`, `queue.py`, `sales_report.py`),
 which enumerate the elements/attributes carrying names, contact details, documents, and payment data.
 Rules SHALL bind every namespace they use explicitly (Sabre payloads use default namespaces — each
 rule declares its own prefix→URI map).
+
+Operations whose real responses carry no PII SHALL NOT receive rules and are handled by the coverage
+metric (`covered=False`, forwarded unchanged): `QueueAccessRS` (record locators / agent sines / PCC
+only), `PassengerDetailsRS` (status-only acknowledgment — passenger data is in the request), and
+`AutomatedExchangesRS` (fare/penalty comparison). `CreatePassengerNameRecordRS` has no corpus payload
+(the PNR-create operation is `EnhancedAirBookRS`).
 
 #### Scenario: Rules select per operation
 - **WHEN** a Sabre response body's SOAP Body first-child local-name is one of the covered operations
 - **THEN** only that operation's rules (plus shared-pattern rules whose operation regex matches) apply
 
 #### Scenario: Newly covered operation redacts names
-- **WHEN** a `PassengerDetailsRS` or `CreatePassengerNameRecordRS` response echoes passenger names
+- **WHEN** a `RefundRS`, `eTicketCouponRS`, or `Trip_SearchRS` response carries passenger names
 - **THEN** those names are redacted per the rule's action and no plaintext name is forwarded
 
 #### Scenario: Uncovered operation forwarded with coverage metric

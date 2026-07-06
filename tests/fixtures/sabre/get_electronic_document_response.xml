@@ -1,0 +1,105 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <GetElectronicDocumentRS xmlns="http://www.sabre.com/ns/Ticketing/EDoc" Version="2.2.0">
+            <STL:STL_Header.RS xmlns:STL="http://www.sabre.com/ns/Ticketing/EDocStl" timeStamp="2023-01-23T10:43:05">
+                <STL:OrchestrationID seq="0">TKTHLP625-29099-1298270143-1674492185793-24139905-edoc:0
+                </STL:OrchestrationID>
+                <STL:Results>
+                    <STL:Success>
+                        <STL:System>TKT-DS</STL:System>
+                        <STL:Source>EDOC</STL:Source>
+                    </STL:Success>
+                </STL:Results>
+            </STL:STL_Header.RS>
+            <Agent sine="AGX" type="GDS">
+                <TicketingProvider>LP</TicketingProvider>
+                <WorkLocation>O1ZJ</WorkLocation>
+                <HomeLocation>LIM</HomeLocation>
+                <IsoCountryCode>PE</IsoCountryCode>
+                <IataNumber>91500275</IataNumber>
+                <CRSCode>1536</CRSCode>
+            </Agent>
+            <TransactionInfo sequence="1">
+                <LocalDateTime>2023-01-23T10:43:05.903-06:00</LocalDateTime>
+                <SystemDateTime>2023-01-23T10:43:05.903-06:00</SystemDateTime>
+                <SystemProvider>1S</SystemProvider>
+            </TransactionInfo>
+            <DocumentDetailsDisplay>
+                <Ticket number="5449697775879" type="TKT">
+                    <Details>
+                        <Reservation>
+                            <Sabre>WPSPUK</Sabre>
+                        </Reservation>
+                        <LocalIssueDateTime>2023-01-15T00:00:00.000-00:00</LocalIssueDateTime>
+                        <FareCalculationPricing>0</FareCalculationPricing>
+                    </Details>
+                    <Customer>
+                        <Traveler>
+                            <Name>AL AL COHEN</Name>
+                            <FirstName>AL AL</FirstName>
+                            <LastName>COHEN</LastName>
+                            <ExternalNumber>D9002000</ExternalNumber>
+                        </Traveler>
+                    </Customer>
+                    <ServiceCoupon coupon="1">
+                        <MarketingProvider>LA</MarketingProvider>
+                        <MarketingFlightNumber>2224</MarketingFlightNumber>
+                        <OperatingProvider>LA</OperatingProvider>
+                        <ClassOfService name="S">S</ClassOfService>
+                        <FareBasis>S00QPDZB</FareBasis>
+                        <StartLocation>JAE</StartLocation>
+                        <StartDate>2023-01-26</StartDate>
+                        <StartTime>13:20:00</StartTime>
+                        <EndLocation>LIM</EndLocation>
+                        <NotValidBeforeDate>2023-01-26</NotValidBeforeDate>
+                        <NotValidAfterDate>2023-01-26</NotValidAfterDate>
+                        <BookingStatus>OK</BookingStatus>
+                        <CurrentStatus>USED</CurrentStatus>
+                        <CurrentStatusCodeSetValue>I</CurrentStatusCodeSetValue>
+                    </ServiceCoupon>
+                    <Amounts>
+                        <New>
+                            <Base>
+                                <Amount currencyCode="USD" decimalPlace="2">51.00</Amount>
+                                <Text>51.00</Text>
+                            </Base>
+                            <Total>
+                                <Amount currencyCode="USD" decimalPlace="2">64.73</Amount>
+                                <Text>64.73</Text>
+                            </Total>
+                        </New>
+                        <Other>
+                            <Commission>
+                                <Amount currencyCode="USD" decimalPlace="2">0.05</Amount>
+                                <PercentageRate>0.10</PercentageRate>
+                                <Text>00010</Text>
+                            </Commission>
+                        </Other>
+                    </Amounts>
+                    <Taxes>
+                        <New>
+                            <Tax code="PE">
+                                <Amount currencyCode="USD" decimalPlace="2">9.18</Amount>
+                            </Tax>
+                            <Tax code="HW">
+                                <Amount currencyCode="USD" decimalPlace="2">4.55</Amount>
+                            </Tax>
+                        </New>
+                    </Taxes>
+                    <Payment sequence="1" type="CA">
+                        <Other>
+                            <Details>Intentionally left empty</Details>
+                        </Other>
+                    </Payment>
+                    <Remark>
+                        <Endorsements sequence="0">RUC90002000000 PAYONLYINUSD//NONREF</Endorsements>
+                    </Remark>
+                    <FareCalculation>
+                        <New>JAE LA LIM51.00USD51.00END</New>
+                    </FareCalculation>
+                </Ticket>
+            </DocumentDetailsDisplay>
+        </GetElectronicDocumentRS>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

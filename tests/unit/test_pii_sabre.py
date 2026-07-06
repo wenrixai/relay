@@ -13,9 +13,17 @@ from __future__ import annotations
 
 import re
 
+import pytest
+
 from channel_relay.pii.codec import TOKEN_RE, decrypt
 from channel_relay.pii.crypto import Keyring
-from channel_relay.pii.engine import deanonymize_request_body, parse_operation, redact_response_body
+from channel_relay.pii.engine import (
+    RedactionError,
+    deanonymize_request_body,
+    parse_operation,
+    redact_response,
+    redact_response_body,
+)
 from channel_relay.pii.rules import RuleSet
 from channel_relay.pii.xml_ops import parse_bytes
 from tests.conftest import FIXTURES_DIR, XmlTexts
@@ -250,6 +258,181 @@ class TestTravelItinerary:
         assert counts["person"] == len(names)
         # Corporate/tour identifiers are operational, not PII.
         assert b"GEC01" in redacted and b"GENELEC" in redacted
+
+
+class TestTicketRefund:
+    """RefundRS (bare root op): passenger names in Traveler attributes."""
+
+    def test_operation(self) -> None:
+        assert parse_operation(parse_bytes(_fixture("ticket_refund_response.xml"))) == "RefundRS"
+
+    def test_names_encrypt_and_round_trip(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, counts = _redact(_fixture("ticket_refund_response.xml"), baked_ruleset, pii_keyring)
+        assert counts == {"person": 2}
+        assert b"MILLER" not in redacted and b"ROBERT" not in redacted
+        (last,) = _attrs(redacted, "lastName")
+        (first,) = _attrs(redacted, "firstName")
+        assert TOKEN_RE.fullmatch(last) and TOKEN_RE.fullmatch(first)
+        assert decrypt(last, pii_keyring) == "MILLER"
+        restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
+        assert b"MILLER" in restored
+
+    def test_non_pii_preserved(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture("ticket_refund_response.xml"), baked_ruleset, pii_keyring)
+        assert b"TBSFWO" in redacted and b"0019122261730" in redacted
+
+
+class TestDailyRefundReport:
+    """DailyRefundReportRS: slash-format PersonName per refund record."""
+
+    def test_operation(self) -> None:
+        assert parse_operation(parse_bytes(_fixture("daily_refund_report_response.xml"))) == "DailyRefundReportRS"
+
+    def test_names_encrypt(self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts) -> None:
+        redacted, counts = _redact(_fixture("daily_refund_report_response.xml"), baked_ruleset, pii_keyring)
+        assert counts == {"person": 5}
+        names = xml_texts(redacted, "PersonName")
+        assert len(names) == 5 and all(TOKEN_RE.fullmatch(n) for n in names)
+
+    def test_non_pii_preserved(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture("daily_refund_report_response.xml"), baked_ruleset, pii_keyring)
+        assert b"KIWETP" in redacted and b"AAG" in redacted
+
+
+class TestETicketCoupon:
+    """eTicketCouponRS: names (element text); FOP/card fields masked. Covers exchange variant too."""
+
+    def test_operation(self) -> None:
+        assert parse_operation(parse_bytes(_fixture("eticket_coupon_response.xml"))) == "eTicketCouponRS"
+        assert parse_operation(parse_bytes(_fixture("ticket_exchange_response.xml"))) == "eTicketCouponRS"
+
+    def test_names_encrypt_and_round_trip(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+    ) -> None:
+        redacted, counts = _redact(_fixture("eticket_coupon_response.xml"), baked_ruleset, pii_keyring)
+        assert b"BENNETT" not in redacted and b"ROBERTALICIA" not in redacted
+        (surname,) = xml_texts(redacted, "Surname")
+        assert TOKEN_RE.fullmatch(surname) and decrypt(surname, pii_keyring) == "BENNETT"
+        assert counts["person"] >= 2
+
+    def test_exchange_variant_names_and_payment_redacted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, counts = _redact(_fixture("ticket_exchange_response.xml"), baked_ruleset, pii_keyring)
+        assert b"GARCIA" not in redacted and b"MARIA" not in redacted
+        assert counts["person"] == 2 and counts["payment"] >= 3
+        assert b"XDDPQO" in redacted  # locator preserved
+
+
+class TestGetElectronicDocument:
+    """GetElectronicDocumentRS: ticket passenger name + external document number."""
+
+    def test_operation(self) -> None:
+        op = parse_operation(parse_bytes(_fixture("get_electronic_document_response.xml")))
+        assert op == "GetElectronicDocumentRS"
+
+    def test_name_encrypt_document_masked(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+    ) -> None:
+        redacted, counts = _redact(_fixture("get_electronic_document_response.xml"), baked_ruleset, pii_keyring)
+        assert b"COHEN" not in redacted and b"D9002000" not in redacted
+        (last,) = xml_texts(redacted, "LastName")
+        assert TOKEN_RE.fullmatch(last) and decrypt(last, pii_keyring) == "COHEN"
+        assert counts["person"] >= 1 and counts["passport_id"] >= 1
+
+    def test_non_pii_preserved(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture("get_electronic_document_response.xml"), baked_ruleset, pii_keyring)
+        assert b"5449697775879" in redacted and b"WPSPUK" in redacted
+
+
+class TestGetTicketingDocument:
+    """GetTicketingDocumentRS: passenger name (DC namespace under alternating prefixes)."""
+
+    def test_operation(self) -> None:
+        assert parse_operation(parse_bytes(_fixture("get_ticketing_document_response.xml"))) == "GetTicketingDocumentRS"
+
+    def test_name_encrypt(self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts) -> None:
+        redacted, counts = _redact(_fixture("get_ticketing_document_response.xml"), baked_ruleset, pii_keyring)
+        assert b"BARNES" not in redacted
+        (last,) = xml_texts(redacted, "LastName")
+        assert TOKEN_RE.fullmatch(last) and decrypt(last, pii_keyring) == "BARNES"
+        assert counts["person"] >= 1
+
+    def test_non_pii_preserved(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture("get_ticketing_document_response.xml"), baked_ruleset, pii_keyring)
+        assert b"9963865370900" in redacted and b"ICMEVA" in redacted
+
+
+class TestTravelItineraryHistory:
+    """TravelItineraryHistoryRS: PII lives in free-text history lines (extract patterns)."""
+
+    def test_operation(self) -> None:
+        op = parse_operation(parse_bytes(_fixture("travel_itinerary_history_response.xml")))
+        assert op == "TravelItineraryHistoryRS"
+
+    def test_free_text_pii_redacted_and_name_round_trips(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, counts = _redact(_fixture("travel_itinerary_history_response.xml"), baked_ruleset, pii_keyring)
+        assert b"FRIEDMAN" not in redacted and b"YARDEN" not in redacted
+        assert counts["person"] >= 2 and counts["email"] >= 1
+        assert b"ENC_" in redacted
+        # The extracted name span round-trips when replayed upstream.
+        restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
+        assert b"FRIEDMAN" in restored
+
+    def test_non_pii_preserved(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture("travel_itinerary_history_response.xml"), baked_ruleset, pii_keyring)
+        assert b"KSML" in redacted  # meal SSR is operational, not PII
+
+
+class TestTripSearchPastDatePnr:
+    """Trip_SearchRS: past-date PNR with an embedded reservation + extensive history mirrors."""
+
+    def test_operation(self) -> None:
+        op = parse_operation(parse_bytes(_fixture("trip_search_past_date_pnr_response.xml")))
+        assert op == "Trip_SearchRS"
+
+    def test_names_and_contacts_redacted_and_round_trip(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+    ) -> None:
+        redacted, counts = _redact(_fixture("trip_search_past_date_pnr_response.xml"), baked_ruleset, pii_keyring)
+        for gone in (b"KOVAC", b"MIRELA", b"TSTUSER//MAIL.COM"):
+            assert gone not in redacted
+        assert counts["person"] >= 2 and counts["phone"] >= 1 and counts["email"] >= 1
+        last_names = [t for t in xml_texts(redacted, "LastName") if t.strip()]
+        assert last_names and all(TOKEN_RE.fullmatch(n) for n in last_names)
+        assert "KOVAC" in {decrypt(n, pii_keyring) for n in last_names}
+        restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
+        assert b"KOVAC" in restored
+
+    def test_non_pii_preserved(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture("trip_search_past_date_pnr_response.xml"), baked_ruleset, pii_keyring)
+        assert b"EKQYAD" in redacted and b"0457976982139" in redacted
+
+
+class TestQueueAccessUncovered:
+    """QueueAccessRS carries only locators/agent-sines (not PII): no rules, forwarded unchanged."""
+
+    def test_operation(self) -> None:
+        assert parse_operation(parse_bytes(_fixture("queue_access_response.xml"))) == "QueueAccessRS"
+
+    def test_uncovered_passes_through(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        outcome = redact_response(
+            _fixture("queue_access_response.xml"), channel="sabre", ruleset=baked_ruleset, keyring=pii_keyring
+        )
+        assert outcome.covered is False
+        assert outcome.counts == {}
+        assert b"VHTHEO" in outcome.body  # record locators are operational, preserved verbatim
+
+
+class TestRequiredAnchorFailsClosed:
+    """A PII-heavy operation whose required anchor matches nothing fails closed (schema drift guard)."""
+
+    def test_missing_refund_last_name_raises(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        # RefundRS with a Traveler that has no lastName attribute: the required anchor matches nothing.
+        body = (
+            b'<RefundRS xmlns="http://www.sabre.com/ns/Ticketing/ExchangeRefund/1.0">'
+            b'<Traveler firstName="ROBERT"/></RefundRS>'
+        )
+        with pytest.raises(RedactionError):
+            _redact(body, baked_ruleset, pii_keyring)
 
 
 def test_ruleset_version_covers_sabre(baked_ruleset: RuleSet) -> None:

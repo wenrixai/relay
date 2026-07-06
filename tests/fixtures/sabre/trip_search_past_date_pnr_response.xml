@@ -1,0 +1,939 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+<soap-env:Header>
+    <eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0" soap-env:mustUnderstand="1">
+        <eb:From>
+            <eb:PartyId eb:type="URI">123123</eb:PartyId>
+        </eb:From>
+        <eb:To>
+            <eb:PartyId eb:type="URI">999999</eb:PartyId>
+        </eb:To>
+        <eb:CPAId>J9JF</eb:CPAId>
+        <eb:ConversationId>V1@63c94443-3fca-46ce-919b-828cb602876a@3b458481-1e6c-417b-9801-1520aa5dc356@
+        </eb:ConversationId>
+        <eb:Service>Trip_SearchRQ</eb:Service>
+        <eb:Action>Trip_SearchRQ</eb:Action>
+        <eb:MessageData>
+            <eb:MessageId>3738045286322200390</eb:MessageId>
+            <eb:Timestamp>2024-05-15T07:57:12</eb:Timestamp>
+            <eb:RefToMessageId>3489967313</eb:RefToMessageId>
+        </eb:MessageData>
+    </eb:MessageHeader>
+    <wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+        <wsse:BinarySecurityToken valueType="String" EncodingType="wsse:Base64Binary">
+            Shared/IDL:IceSess\\/SessMgr:1\\.0.IDL/Common/!ICESMS\\/RESA!ICESMSLB\\/RES.LB!0000000000000!0000!000
+        </wsse:BinarySecurityToken>
+    </wsse:Security>
+</soap-env:Header>
+<soap-env:Body>
+    <Trip_SearchRS xmlns="http://webservices.sabre.com/triprecord" xmlns:ns2="http://services.sabre.com/STL/v01" xmlns:ns4="http://webservices.sabre.com/sabreXML/2003/07" xmlns:ns3="http://webservices.sabre.com/pnrbuilder" xmlns:ns6="http://tds.sabre.com/itinerary" xmlns:ns5="http://tds.sabre.com/rules" xmlns:ns8="http://services.sabre.com/STL/v02" xmlns:ns7="http://services.sabre.com/res/orr/v0" xmlns:ns13="http://www.sabre.com/eps/schemas" xmlns:tir37="http://services.sabre.com/res/tir/v3_7" xmlns:ns9="http://www.sabre.com/ssg/des/v1" xmlns:ns12="http://opentravel.org/common/v02" xmlns:ns11="http://www.OpenTravel.org/ns/OTA2/AppInfo_v01_00" xmlns:tir39="http://services.sabre.com/res/tir/v3_9" xmlns:ns10="http://services.sabre.com/STL_Header/v02_00" xmlns:ns21="http://services.sabre.com/res/or/v1_14" xmlns:ns15="http://webservices.sabre.com/servicesplatform/orr/rules/1.0.0" xmlns:ns14="http://tds.sabre.com/distribution" xmlns:stl115="http://webservices.sabre.com/pnrbuilder/v1_15" xmlns:or16="http://services.sabre.com/res/or/v1_6" xmlns:or18="http://services.sabre.com/res/or/v1_8" xmlns:or19="http://services.sabre.com/res/or/v1_9" xmlns:stl119="http://webservices.sabre.com/pnrbuilder/v1_19" TimeStamp="2024-05-15T02:57:12" Target="Production" Version="4.5.0">
+        <Success>Success</Success>
+        <ReservationsList NumberResults="1" NumberPages="1" TotalResults="1">
+            <Reservations>
+                <Reservation Locator="EKQYXD" PastDate="true" PurgeDate="2023-12-01T00:00:00">
+                    <stl19:GetReservationRS xmlns:stl19="http://webservices.sabre.com/pnrbuilder/v1_19" xmlns:or114="http://services.sabre.com/res/or/v1_14" xmlns:raw="http://tds.sabre.com/itinerary" xmlns:ns4="http://webservices.sabre.com/pnrconn/ReaccSearch" xmlns:ns6="http://services.sabre.com/res/orr/v0" Version="1.19.0">
+                        <stl19:Reservation NumberInSegment="1" numberInParty="1" numberOfInfants="0">
+                            <stl19:BookingDetails>
+                                <stl19:RecordLocator>EKQYAD</stl19:RecordLocator>
+                                <stl19:CreationTimestamp>2023-06-20T00:50:00</stl19:CreationTimestamp>
+                                <stl19:SystemCreationTimestamp>2023-06-20T00:50:00</stl19:SystemCreationTimestamp>
+                                <stl19:CreationAgentID>AWS</stl19:CreationAgentID>
+                                <stl19:UpdateTimestamp>2023-07-17T02:29:49</stl19:UpdateTimestamp>
+                                <stl19:PNRSequence>34</stl19:PNRSequence>
+                                <stl19:FlightsRange End="2023-06-30T05:35:00" Start="2023-06-29T08:10:00"/>
+                                <stl19:DivideSplitDetails/>
+                                <stl19:EstimatedPurgeTimestamp>2023-12-01T00:00:00</stl19:EstimatedPurgeTimestamp>
+                                <stl19:UpdateToken>-1ac0f51f6d244122b6205491cf609d1dede533b81b61ba68</stl19:UpdateToken>
+                            </stl19:BookingDetails>
+                            <stl19:POS AirExtras="false" InhibitCode="U">
+                                <stl19:Source AgentDutyCode="*" AgentSine="AWS" AirlineVendorID="AA" BookingSource="OI7J" HomePseudoCityCode="OI7J" ISOCountry="US" PrimeHostID="1S" PseudoCityCode="OI7J"/>
+                            </stl19:POS>
+                            <stl19:PassengerReservation>
+                                <stl19:Passengers>
+                                    <stl19:Passenger elementId="pnr-3.1" id="3" nameAssocId="1" nameId="01.01" nameType="S" passengerType="ADT">
+                                        <stl19:LastName>KOVAC</stl19:LastName>
+                                        <stl19:FirstName>MIRELA</stl19:FirstName>
+                                        <stl19:SpecialRequests>
+                                            <stl19:GenericSpecialRequest id="21" msgType="S" type="G">
+                                                <stl19:Code>CTCE</stl19:Code>
+                                                <stl19:FreeText>/TSTUSER//MAIL.COM</stl19:FreeText>
+                                                <stl19:ActionCode>HK</stl19:ActionCode>
+                                                <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                <stl19:AirlineCode>AS</stl19:AirlineCode>
+                                                <stl19:FullText>CTCE AS HK1/TSTUSER//MAIL.COM</stl19:FullText>
+                                            </stl19:GenericSpecialRequest>
+                                            <stl19:GenericSpecialRequest id="22" msgType="S" type="G">
+                                                <stl19:Code>CTCE</stl19:Code>
+                                                <stl19:FreeText>/TSTUSER//MAIL.COM</stl19:FreeText>
+                                                <stl19:ActionCode>HK</stl19:ActionCode>
+                                                <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                <stl19:AirlineCode>LA</stl19:AirlineCode>
+                                                <stl19:FullText>CTCE LA HK1/TSTUSER//MAIL.COM</stl19:FullText>
+                                            </stl19:GenericSpecialRequest>
+                                            <stl19:GenericSpecialRequest id="23" msgType="S" type="G">
+                                                <stl19:Code>CTCM</stl19:Code>
+                                                <stl19:FreeText>/12065550102</stl19:FreeText>
+                                                <stl19:ActionCode>HK</stl19:ActionCode>
+                                                <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                <stl19:AirlineCode>AS</stl19:AirlineCode>
+                                                <stl19:FullText>CTCM AS HK1/12065550102</stl19:FullText>
+                                            </stl19:GenericSpecialRequest>
+                                            <stl19:GenericSpecialRequest id="24" msgType="S" type="G">
+                                                <stl19:Code>CTCM</stl19:Code>
+                                                <stl19:FreeText>/12065550102</stl19:FreeText>
+                                                <stl19:ActionCode>HK</stl19:ActionCode>
+                                                <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                <stl19:AirlineCode>LA</stl19:AirlineCode>
+                                                <stl19:FullText>CTCM LA HK1/12065550102</stl19:FullText>
+                                            </stl19:GenericSpecialRequest>
+                                            <stl19:GenericSpecialRequest id="163" msgType="S" type="G">
+                                                <stl19:Code>AUTO</stl19:Code>
+                                                <stl19:FreeText>.ASU SGL NON ELITE NON SAVER</stl19:FreeText>
+                                                <stl19:ActionCode>HN</stl19:ActionCode>
+                                                <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                <stl19:AirlineCode>AS</stl19:AirlineCode>
+                                                <stl19:FullText>AUTO AS HN1 SEACUN0228V29JUN.ASU SGL NON ELITE NON
+                                                    SAVER
+                                                </stl19:FullText>
+                                            </stl19:GenericSpecialRequest>
+                                            <stl19:GenericSpecialRequest id="162" msgType="S" type="A">
+                                                <stl19:Code>AUTO</stl19:Code>
+                                                <stl19:FreeText>.ASU SGL NON ELITE NON SAVER</stl19:FreeText>
+                                                <stl19:ActionCode>HN</stl19:ActionCode>
+                                                <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                <stl19:AirlineCode>AS</stl19:AirlineCode>
+                                                <stl19:FullText>AUTO AS HN1 SEACUN0228V29JUN.ASU SGL NON ELITE NON
+                                                    SAVER
+                                                </stl19:FullText>
+                                            </stl19:GenericSpecialRequest>
+                                            <stl19:APISRequest>
+                                                <stl19:DOCSEntry id="19" type="G">
+                                                    <stl19:DateOfBirth>1990-05-08</stl19:DateOfBirth>
+                                                    <stl19:Gender>F</stl19:Gender>
+                                                    <stl19:Surname>KOVA</stl19:Surname>
+                                                    <stl19:Forename>IVAN</stl19:Forename>
+                                                    <stl19:MiddleName/>
+                                                    <stl19:PrimaryHolder>false</stl19:PrimaryHolder>
+                                                    <stl19:FreeText/>
+                                                    <stl19:ActionCode>HK</stl19:ActionCode>
+                                                    <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                    <stl19:VendorCode>AS</stl19:VendorCode>
+                                                </stl19:DOCSEntry>
+                                            </stl19:APISRequest>
+                                            <stl19:APISRequest>
+                                                <stl19:DOCSEntry id="20" type="G">
+                                                    <stl19:DateOfBirth>1990-05-08</stl19:DateOfBirth>
+                                                    <stl19:Gender>F</stl19:Gender>
+                                                    <stl19:Surname>KOVAC</stl19:Surname>
+                                                    <stl19:Forename>IVAN</stl19:Forename>
+                                                    <stl19:MiddleName/>
+                                                    <stl19:PrimaryHolder>false</stl19:PrimaryHolder>
+                                                    <stl19:FreeText/>
+                                                    <stl19:ActionCode>HK</stl19:ActionCode>
+                                                    <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                    <stl19:VendorCode>LA</stl19:VendorCode>
+                                                </stl19:DOCSEntry>
+                                            </stl19:APISRequest>
+                                            <stl19:TicketingRequest>
+                                                <stl19:TicketType>G</stl19:TicketType>
+                                                <stl19:ValidatingCarrier>AS</stl19:ValidatingCarrier>
+                                                <stl19:ActionCode>HK</stl19:ActionCode>
+                                                <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                <stl19:BoardPoint>SEA</stl19:BoardPoint>
+                                                <stl19:OffPoint>CUN</stl19:OffPoint>
+                                                <stl19:ClassOfService>V</stl19:ClassOfService>
+                                                <stl19:DateOfTravel>2023-06-29T00:00:00</stl19:DateOfTravel>
+                                                <stl19:TicketNumber>0457976982139C1</stl19:TicketNumber>
+                                            </stl19:TicketingRequest>
+                                            <stl19:TicketingRequest>
+                                                <stl19:TicketType>G</stl19:TicketType>
+                                                <stl19:ValidatingCarrier>LA</stl19:ValidatingCarrier>
+                                                <stl19:ActionCode>HK</stl19:ActionCode>
+                                                <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                <stl19:BoardPoint>CUN</stl19:BoardPoint>
+                                                <stl19:OffPoint>LIM</stl19:OffPoint>
+                                                <stl19:ClassOfService>S</stl19:ClassOfService>
+                                                <stl19:DateOfTravel>2023-06-30T00:00:00</stl19:DateOfTravel>
+                                                <stl19:TicketNumber>0457976982139C2</stl19:TicketNumber>
+                                            </stl19:TicketingRequest>
+                                        </stl19:SpecialRequests>
+                                        <stl19:Seats>
+                                            <stl19:PreReservedSeats>
+                                                <stl19:PreReservedSeat id="164">
+                                                    <stl19:SeatNumber>24F</stl19:SeatNumber>
+                                                    <stl19:SmokingPrefOfferedIndicator>false
+                                                    </stl19:SmokingPrefOfferedIndicator>
+                                                    <stl19:SeatStatusCode>UN</stl19:SeatStatusCode>
+                                                    <stl19:BoardPoint>SEA</stl19:BoardPoint>
+                                                    <stl19:OffPoint>CUN</stl19:OffPoint>
+                                                    <stl19:Changed>N</stl19:Changed>
+                                                    <stl19:NameNumber>01.01</stl19:NameNumber>
+                                                </stl19:PreReservedSeat>
+                                            </stl19:PreReservedSeats>
+                                        </stl19:Seats>
+                                    </stl19:Passenger>
+                                </stl19:Passengers>
+                                <stl19:Segments>
+                                    <stl19:Poc>
+                                        <stl19:Airport>SEA</stl19:Airport>
+                                        <stl19:Departure>2023-06-29T08:10:00</stl19:Departure>
+                                    </stl19:Poc>
+                                    <stl19:Segment id="6" sequence="1">
+                                        <stl19:Air CodeShare="false" DayOfWeekInd="4" ResBookDesigCode="V" SmokingAllowed="false" SpecialMeal="false" id="6" isPast="true" segmentAssociationId="2" sequence="1">
+                                            <stl19:DepartureAirport>SEA</stl19:DepartureAirport>
+                                            <stl19:DepartureAirportCodeContext>IATA</stl19:DepartureAirportCodeContext>
+                                            <stl19:ArrivalAirport>CUN</stl19:ArrivalAirport>
+                                            <stl19:ArrivalAirportCodeContext>IATA</stl19:ArrivalAirportCodeContext>
+                                            <stl19:OperatingAirlineCode>AS</stl19:OperatingAirlineCode>
+                                            <stl19:OperatingAirlineShortName>ALASKA AIRLINES
+                                            </stl19:OperatingAirlineShortName>
+                                            <stl19:OperatingFlightNumber>0228</stl19:OperatingFlightNumber>
+                                            <stl19:EquipmentType>321</stl19:EquipmentType>
+                                            <stl19:MarketingAirlineCode>AS</stl19:MarketingAirlineCode>
+                                            <stl19:MarketingFlightNumber>0228</stl19:MarketingFlightNumber>
+                                            <stl19:OperatingClassOfService>V</stl19:OperatingClassOfService>
+                                            <stl19:MarketingClassOfService>V</stl19:MarketingClassOfService>
+                                            <stl19:MarriageGrp>
+                                                <stl19:Ind>0</stl19:Ind>
+                                                <stl19:Group>0</stl19:Group>
+                                                <stl19:Sequence>0</stl19:Sequence>
+                                            </stl19:MarriageGrp>
+                                            <stl19:Seats>
+                                                <stl19:PreReservedSeats>
+                                                    <stl19:PreReservedSeat id="164">
+                                                        <stl19:SeatNumber>24F</stl19:SeatNumber>
+                                                        <stl19:SmokingPrefOfferedIndicator>false
+                                                        </stl19:SmokingPrefOfferedIndicator>
+                                                        <stl19:SeatStatusCode>UN</stl19:SeatStatusCode>
+                                                        <stl19:BoardPoint>SEA</stl19:BoardPoint>
+                                                        <stl19:OffPoint>CUN</stl19:OffPoint>
+                                                        <stl19:Changed>N</stl19:Changed>
+                                                        <stl19:NameNumber>01.01</stl19:NameNumber>
+                                                    </stl19:PreReservedSeat>
+                                                </stl19:PreReservedSeats>
+                                            </stl19:Seats>
+                                            <stl19:AirlineRefId>DCAS*NDDKFA</stl19:AirlineRefId>
+                                            <stl19:Eticket>true</stl19:Eticket>
+                                            <stl19:DepartureDateTime>2023-06-29T08:10:00</stl19:DepartureDateTime>
+                                            <stl19:ArrivalDateTime>2023-06-29T16:20:00</stl19:ArrivalDateTime>
+                                            <stl19:FlightNumber>0228</stl19:FlightNumber>
+                                            <stl19:ClassOfService>V</stl19:ClassOfService>
+                                            <stl19:ActionCode>HK</stl19:ActionCode>
+                                            <stl19:NumberInParty>1</stl19:NumberInParty>
+                                            <stl19:SegmentSpecialRequests>
+                                                <stl19:GenericSpecialRequest id="116" msgType="S" type="G">
+                                                    <stl19:Code>TKNE</stl19:Code>
+                                                    <stl19:FreeText>AS HK1 SEACUN0228V29JUN/0457976982139C1
+                                                    </stl19:FreeText>
+                                                    <stl19:ActionCode>HK</stl19:ActionCode>
+                                                    <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                    <stl19:AirlineCode>AS</stl19:AirlineCode>
+                                                    <stl19:TicketNumber>0457976982139</stl19:TicketNumber>
+                                                    <stl19:FullText>TKNE AS HK1 SEACUN0228V29JUN/0457976982139C1
+                                                    </stl19:FullText>
+                                                </stl19:GenericSpecialRequest>
+                                                <stl19:GenericSpecialRequest id="163" msgType="S" type="G">
+                                                    <stl19:Code>AUTO</stl19:Code>
+                                                    <stl19:FreeText>.ASU SGL NON ELITE NON SAVER</stl19:FreeText>
+                                                    <stl19:ActionCode>HN</stl19:ActionCode>
+                                                    <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                    <stl19:AirlineCode>AS</stl19:AirlineCode>
+                                                    <stl19:FullText>AUTO AS HN1 SEACUN0228V29JUN.ASU SGL NON ELITE NON
+                                                        SAVER
+                                                    </stl19:FullText>
+                                                </stl19:GenericSpecialRequest>
+                                                <stl19:GenericSpecialRequest id="162" msgType="S" type="A">
+                                                    <stl19:Code>AUTO</stl19:Code>
+                                                    <stl19:FreeText>.ASU SGL NON ELITE NON SAVER</stl19:FreeText>
+                                                    <stl19:ActionCode>HN</stl19:ActionCode>
+                                                    <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                    <stl19:AirlineCode>AS</stl19:AirlineCode>
+                                                    <stl19:FullText>AUTO AS HN1 SEACUN0228V29JUN.ASU SGL NON ELITE NON
+                                                        SAVER
+                                                    </stl19:FullText>
+                                                </stl19:GenericSpecialRequest>
+                                            </stl19:SegmentSpecialRequests>
+                                            <stl19:inboundConnection>false</stl19:inboundConnection>
+                                            <stl19:outboundConnection>true</stl19:outboundConnection>
+                                            <stl19:ScheduleChangeIndicator>false</stl19:ScheduleChangeIndicator>
+                                            <stl19:SegmentBookedDate>2023-06-20T00:50:00</stl19:SegmentBookedDate>
+                                            <stl19:Banner>MARKETED BY ALASKA AIRLINES</stl19:Banner>
+                                            <stl19:Informational>false</stl19:Informational>
+                                        </stl19:Air>
+                                    </stl19:Segment>
+                                    <stl19:Segment id="7" sequence="2">
+                                        <stl19:Air Code="**" CodeShare="false" DayOfWeekInd="5" ResBookDesigCode="S" SmokingAllowed="false" SpecialMeal="false" id="7" isPast="true" segmentAssociationId="3" sequence="2">
+                                            <stl19:DepartureAirport>CUN</stl19:DepartureAirport>
+                                            <stl19:DepartureAirportCodeContext>IATA</stl19:DepartureAirportCodeContext>
+                                            <stl19:ArrivalAirport>LIM</stl19:ArrivalAirport>
+                                            <stl19:ArrivalAirportCodeContext>IATA</stl19:ArrivalAirportCodeContext>
+                                            <stl19:OperatingAirlineCode>LA</stl19:OperatingAirlineCode>
+                                            <stl19:OperatingAirlineShortName>LATAM AIRLINES GROUP
+                                            </stl19:OperatingAirlineShortName>
+                                            <stl19:OperatingFlightNumber>2457</stl19:OperatingFlightNumber>
+                                            <stl19:EquipmentType>320</stl19:EquipmentType>
+                                            <stl19:MarketingAirlineCode>LA</stl19:MarketingAirlineCode>
+                                            <stl19:MarketingFlightNumber>2457</stl19:MarketingFlightNumber>
+                                            <stl19:OperatingClassOfService>S</stl19:OperatingClassOfService>
+                                            <stl19:MarketingClassOfService>S</stl19:MarketingClassOfService>
+                                            <stl19:MarriageGrp>
+                                                <stl19:Ind>0</stl19:Ind>
+                                                <stl19:Group>0</stl19:Group>
+                                                <stl19:Sequence>0</stl19:Sequence>
+                                            </stl19:MarriageGrp>
+                                            <stl19:Seats/>
+                                            <stl19:AirlineRefId>DCLA*VDRAWS</stl19:AirlineRefId>
+                                            <stl19:Eticket>true</stl19:Eticket>
+                                            <stl19:DepartureDateTime>2023-06-30T00:25:00</stl19:DepartureDateTime>
+                                            <stl19:ArrivalDateTime>2023-06-30T05:35:00</stl19:ArrivalDateTime>
+                                            <stl19:FlightNumber>2457</stl19:FlightNumber>
+                                            <stl19:ClassOfService>S</stl19:ClassOfService>
+                                            <stl19:ActionCode>HK</stl19:ActionCode>
+                                            <stl19:NumberInParty>1</stl19:NumberInParty>
+                                            <stl19:SegmentSpecialRequests>
+                                                <stl19:GenericSpecialRequest id="117" msgType="S" type="G">
+                                                    <stl19:Code>TKNE</stl19:Code>
+                                                    <stl19:FreeText>LA HK1 CUNLIM2457S30JUN/0457976982139C2
+                                                    </stl19:FreeText>
+                                                    <stl19:ActionCode>HK</stl19:ActionCode>
+                                                    <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                    <stl19:AirlineCode>LA</stl19:AirlineCode>
+                                                    <stl19:TicketNumber>0457976232335</stl19:TicketNumber>
+                                                    <stl19:FullText>TKNE LA HK1 CUNLIM2457S30JUN/0457976982139C2
+                                                    </stl19:FullText>
+                                                </stl19:GenericSpecialRequest>
+                                            </stl19:SegmentSpecialRequests>
+                                            <stl19:inboundConnection>true</stl19:inboundConnection>
+                                            <stl19:outboundConnection>false</stl19:outboundConnection>
+                                            <stl19:ScheduleChangeIndicator>false</stl19:ScheduleChangeIndicator>
+                                            <stl19:SegmentBookedDate>2023-06-20T00:50:00</stl19:SegmentBookedDate>
+                                            <stl19:Banner>MARKETED BY LATAM AIRLINES GROUP</stl19:Banner>
+                                            <stl19:Informational>false</stl19:Informational>
+                                        </stl19:Air>
+                                    </stl19:Segment>
+                                    <stl19:Segment id="85" sequence="3">
+                                        <stl19:General dayOfWeekInd="1" isPast="true">
+                                            <stl19:Line Number="3" Status="GK" Type="OTH"/>
+                                            <stl19:Vendor Code="ZZ"/>
+                                            <stl19:NumberInParty>1</stl19:NumberInParty>
+                                            <stl19:Location LocationCode="DFW"/>
+                                            <stl19:DateTime>2023-11-27T00:00:00</stl19:DateTime>
+                                            <stl19:Text>HAVE A SAFE AND PLEASANT TRIP</stl19:Text>
+                                        </stl19:General>
+                                    </stl19:Segment>
+                                    <stl19:Segment id="152" sequence="4">
+                                        <stl19:General dayOfWeekInd="5" isPast="true">
+                                            <stl19:Line Number="4" Status="GK" Type="OTH"/>
+                                            <stl19:Vendor Code="YY"/>
+                                            <stl19:NumberInParty>1</stl19:NumberInParty>
+                                            <stl19:Location LocationCode="DFW"/>
+                                            <stl19:DateTime>2023-12-01T00:00:00</stl19:DateTime>
+                                            <stl19:Text>THANK YOU FOR THE BUSINESS</stl19:Text>
+                                        </stl19:General>
+                                    </stl19:Segment>
+                                </stl19:Segments>
+                                <stl19:FormsOfPayment>
+                                    <stl19:CreditCardPayment ShortText="CREDIT CARD DATA EXISTS *CC TO DISPLAY"/>
+                                </stl19:FormsOfPayment>
+                                <stl19:TicketingInfo>
+                                    <stl19:AlreadyTicketed elementId="pnr-115" id="115" index="1">
+                                        <stl19:Code>T-20JUN-QQ2J9AUT</stl19:Code>
+                                    </stl19:AlreadyTicketed>
+                                    <stl19:ETicketNumber elementId="pnr-114" id="114" index="2">TE 0457976982139-AT
+                                        KOVAC/N QQ2J9AUT 0110/20JUN
+                                    </stl19:ETicketNumber>
+                                    <stl19:TicketDetails elementId="pnr-114" id="114" index="2">
+                                        <stl19:OriginalTicketDetails>TE 0457976982139-AT KOVAC/N QQ2J9AUT 0110/20JUN
+                                        </stl19:OriginalTicketDetails>
+                                        <stl19:TransactionIndicator>TE</stl19:TransactionIndicator>
+                                        <stl19:TicketNumber>0457976982139</stl19:TicketNumber>
+                                        <stl19:PassengerName>KOVAC/N</stl19:PassengerName>
+                                        <stl19:AgencyLocation>QQ2J</stl19:AgencyLocation>
+                                        <stl19:DutyCode>9</stl19:DutyCode>
+                                        <stl19:AgentSine>AUT</stl19:AgentSine>
+                                        <stl19:Timestamp>2023-06-20T01:10:00</stl19:Timestamp>
+                                        <stl19:PaymentType/>
+                                    </stl19:TicketDetails>
+                                </stl19:TicketingInfo>
+                                <stl19:ItineraryPricing>
+                                    <stl19:FuturePriceInfo>
+                                        <stl19:Text>W$PQ1</stl19:Text>
+                                    </stl19:FuturePriceInfo>
+                                </stl19:ItineraryPricing>
+                            </stl19:PassengerReservation>
+                            <stl19:DKNumbers>
+                                <stl19:DKNumber>2000000001</stl19:DKNumber>
+                            </stl19:DKNumbers>
+                            <stl19:ReceivedFrom>
+                                <stl19:Name>G8WYDTW</stl19:Name>
+                            </stl19:ReceivedFrom>
+                            <stl19:PhoneNumbers>
+                                <stl19:PhoneNumber elementId="pnr-16" id="16" index="1">
+                                    <stl19:CityCode>DFW</stl19:CityCode>
+                                    <stl19:Number>469-330-1170-A</stl19:Number>
+                                </stl19:PhoneNumber>
+                            </stl19:PhoneNumbers>
+                            <stl19:Remarks>
+                                <stl19:Remark elementId="pnr-11" id="11" index="1" type="INVOICE">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>S*BR77</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark elementId="pnr-25" id="25" index="5" type="REG">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>SELLING PRICE / 393.03 USD</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark elementId="pnr-125" id="125" index="10" type="ITINERARY">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>.</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark elementId="pnr-127" id="127" index="12" type="ITINERARY">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>ALASKA AIRLINES CONTACT PHONE NUMBER IS 1-800-426-0333.
+                                            </stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark elementId="pnr-78" id="78" index="46" type="ITINERARY">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>FREQ. FLYER NBR FOR ALASKA AIRLINES NOT PROVIDED</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark elementId="pnr-79" id="79" index="47" type="ITINERARY">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>FREQ. FLYER NBR FOR LATAM AIRLINES NOT PROVIDED</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark elementId="pnr-95" id="95" index="49" type="INVOICE">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>S*UD2 423.20</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark elementId="pnr-99" id="99" index="50" type="HS">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>T\xc2\xa5COMPLEAT TICKET START 20JUN/0110/*TICKET STOP
+                                                20JUN/0110/
+                                            </stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark elementId="pnr-101" id="101" index="51" type="HS">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>AUTH-MSTR/CA0000/20JUN/01921687242346426614</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark elementId="pnr-104" id="104" index="54" type="HS">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>AUTH-AVS NOT SUPPORTED/</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark elementId="pnr-111" id="111" index="59" type="HS">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>XXAUTH/121395/XXXXXXXXXXXXX0005/LA/USD423.20/20JUN/S
+                                            </stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark code="Q" elementId="pnr-132" id="132" index="62" type="CODED">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>20JUN/0110/*CNX TIME MORE THAN 2 HRS-AS228 TO LA2457
+                                            </stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark code="Q" elementId="pnr-144" id="144" index="69" type="CODED">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>20JUN/0111/*MISSING EMAIL ADDRESS ON THE PNR</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark elementId="pnr-105" id="105" index="76" type="FOP">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>*XXXXXXXXXXXXX0005\xc2\xa5XXXXX</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                            </stl19:Remarks>
+                            <stl19:EmailAddresses/>
+                            <stl19:AccountingLines>
+                                <stl19:AccountingLine elementId="pnr-113" id="113" index="1">
+                                    <stl19:FareApplication>ONE</stl19:FareApplication>
+                                    <stl19:FormOfPaymentCode>CC</stl19:FormOfPaymentCode>
+                                    <stl19:AirlineDesignator>LA</stl19:AirlineDesignator>
+                                    <stl19:DocumentNumber>7976982139</stl19:DocumentNumber>
+                                    <stl19:CommissionAmount>47.45</stl19:CommissionAmount>
+                                    <stl19:BaseFare>365.00</stl19:BaseFare>
+                                    <stl19:TaxAmount>58.20</stl19:TaxAmount>
+                                    <stl19:CreditCardNumber>XXXXXXXXXXX0005</stl19:CreditCardNumber>
+                                    <stl19:CreditCardCode>XX</stl19:CreditCardCode>
+                                    <stl19:PassengerName>KOVAC IVAN</stl19:PassengerName>
+                                    <stl19:NumberOfConjunctedDocuments>1</stl19:NumberOfConjunctedDocuments>
+                                    <stl19:TarriffBasis>F</stl19:TarriffBasis>
+                                </stl19:AccountingLine>
+                            </stl19:AccountingLines>
+                            <stl19:GenericSpecialRequests id="120" msgType="S" type="A">
+                                <stl19:Code>OTHS</stl19:Code>
+                                <stl19:FreeText>PLS ADV TKT NBR BEFORE 20JUN23 2250 SEA LT OR AUTO CNL</stl19:FreeText>
+                                <stl19:AirlineCode>1S</stl19:AirlineCode>
+                                <stl19:FullText>OTHS 1S PLS ADV TKT NBR BEFORE 20JUN23 2250 SEA LT OR AUTO CNL
+                                </stl19:FullText>
+                            </stl19:GenericSpecialRequests>
+                            <stl19:GenericSpecialRequests id="9" msgType="O" type="G">
+                                <stl19:FreeText>DTID.US9343CC</stl19:FreeText>
+                                <stl19:AirlineCode>BA</stl19:AirlineCode>
+                                <stl19:FullText>BA DTID.US9343CC</stl19:FullText>
+                            </stl19:GenericSpecialRequests>
+                            <stl19:GenericSpecialRequests id="10" msgType="O" type="G">
+                                <stl19:FreeText>DTID.US9343CC</stl19:FreeText>
+                                <stl19:AirlineCode>YY</stl19:AirlineCode>
+                                <stl19:FullText>YY DTID.US9343CC</stl19:FullText>
+                            </stl19:GenericSpecialRequests>
+                            <stl19:GenericSpecialRequests id="157" msgType="S" type="G">
+                                <stl19:Code>OTHS</stl19:Code>
+                                <stl19:FreeText>LAXP</stl19:FreeText>
+                                <stl19:AirlineCode>AS</stl19:AirlineCode>
+                                <stl19:FullText>OTHS AS LAXP</stl19:FullText>
+                            </stl19:GenericSpecialRequests>
+                            <stl19:Profiles>
+                                <stl19:Profile id="15">
+                                    <stl19:ProfileID>480000123</stl19:ProfileID>
+                                    <stl19:ProfileType>AGY</stl19:ProfileType>
+                                </stl19:Profile>
+                            </stl19:Profiles>
+                            <stl19:History>
+                                <stl19:HistoryTransaction>
+                                    <stl19:Signature SequenceNbr="21">
+                                        <stl19:HistoryTimestamp>2023-06-29T10:05:00</stl19:HistoryTimestamp>
+                                        <stl19:HomePCC>PLT</stl19:HomePCC>
+                                        <stl19:AgencyPCC>PLT</stl19:AgencyPCC>
+                                        <stl19:HistoryFrom>HDQRMAS291505 91444B90-001 SYN</stl19:HistoryFrom>
+                                    </stl19:Signature>
+                                    <stl19:SeatsHistory>
+                                        <stl19:FlightNumber>228</stl19:FlightNumber>
+                                        <stl19:VendorCode>AS</stl19:VendorCode>
+                                        <stl19:FlightDate>2023-06-29T00:00:00</stl19:FlightDate>
+                                        <stl19:BoardCity>SEA</stl19:BoardCity>
+                                        <stl19:OffCity>CUN</stl19:OffCity>
+                                        <stl19:HistoryAction>X4G</stl19:HistoryAction>
+                                        <stl19:SeatNumber>24F</stl19:SeatNumber>
+                                        <stl19:SmokingPrefOfferedIndicator>false</stl19:SmokingPrefOfferedIndicator>
+                                        <stl19:SeatTypeCode/>
+                                        <stl19:SeatStatusCode>KK</stl19:SeatStatusCode>
+                                    </stl19:SeatsHistory>
+                                    <stl19:SeatsHistory>
+                                        <stl19:FlightNumber>228</stl19:FlightNumber>
+                                        <stl19:VendorCode>AS</stl19:VendorCode>
+                                        <stl19:FlightDate>2023-06-29T00:00:00</stl19:FlightDate>
+                                        <stl19:BoardCity>SEA</stl19:BoardCity>
+                                        <stl19:OffCity>CUN</stl19:OffCity>
+                                        <stl19:HistoryAction>A4G</stl19:HistoryAction>
+                                        <stl19:SeatNumber>24F</stl19:SeatNumber>
+                                        <stl19:SmokingPrefOfferedIndicator>false</stl19:SmokingPrefOfferedIndicator>
+                                        <stl19:SeatTypeCode/>
+                                        <stl19:SeatStatusCode>UN</stl19:SeatStatusCode>
+                                    </stl19:SeatsHistory>
+                                </stl19:HistoryTransaction>
+                                <stl19:HistoryTransaction>
+                                    <stl19:Signature SequenceNbr="20">
+                                        <stl19:HistoryTimestamp>2023-06-28T08:11:00</stl19:HistoryTimestamp>
+                                        <stl19:HomePCC>PLT</stl19:HomePCC>
+                                        <stl19:AgencyPCC>PLT</stl19:AgencyPCC>
+                                        <stl19:HistoryFrom>HDQRMAS281311 593ECBBE-001 SYN</stl19:HistoryFrom>
+                                    </stl19:Signature>
+                                    <stl19:FactHistory FactType="AA">
+                                        <stl19:Type>SSR</stl19:Type>
+                                        <stl19:HistoryAction>A4S</stl19:HistoryAction>
+                                        <stl19:Code>AUTO</stl19:Code>
+                                        <stl19:ActionId>AS</stl19:ActionId>
+                                        <stl19:ActionCode>HN</stl19:ActionCode>
+                                        <stl19:NumberInParty>1</stl19:NumberInParty>
+                                        <stl19:FreeText/>
+                                        <stl19:FullText>AUTO AS HN1 SEACUN0228V29JUN.ASU SGL NON ELITE NON SAVER
+                                        </stl19:FullText>
+                                    </stl19:FactHistory>
+                                    <stl19:FactHistory FactType="GEN">
+                                        <stl19:Type>SSR</stl19:Type>
+                                        <stl19:HistoryAction>A3S</stl19:HistoryAction>
+                                        <stl19:Code>AUTO</stl19:Code>
+                                        <stl19:ActionId>AS</stl19:ActionId>
+                                        <stl19:ActionCode>HN</stl19:ActionCode>
+                                        <stl19:NumberInParty>1</stl19:NumberInParty>
+                                        <stl19:FreeText/>
+                                        <stl19:FullText>AUTO AS HN1 SEACUN0228V29JUN.ASU SGL NON ELITE NON SAVER
+                                        </stl19:FullText>
+                                    </stl19:FactHistory>
+                                    <stl19:SeatsHistory>
+                                        <stl19:FlightNumber>228</stl19:FlightNumber>
+                                        <stl19:VendorCode>AS</stl19:VendorCode>
+                                        <stl19:FlightDate>2023-06-29T00:00:00</stl19:FlightDate>
+                                        <stl19:BoardCity>SEA</stl19:BoardCity>
+                                        <stl19:OffCity>CUN</stl19:OffCity>
+                                        <stl19:HistoryAction>A4G</stl19:HistoryAction>
+                                        <stl19:SeatNumber>24F</stl19:SeatNumber>
+                                        <stl19:SmokingPrefOfferedIndicator>false</stl19:SmokingPrefOfferedIndicator>
+                                        <stl19:SeatTypeCode/>
+                                        <stl19:SeatStatusCode>KK</stl19:SeatStatusCode>
+                                    </stl19:SeatsHistory>
+                                </stl19:HistoryTransaction>
+                                <stl19:HistoryTransaction>
+                                    <stl19:Signature SequenceNbr="17">
+                                        <stl19:HistoryTimestamp>2023-06-20T01:11:00</stl19:HistoryTimestamp>
+                                        <stl19:DutyCode>9</stl19:DutyCode>
+                                        <stl19:AgentSine>AUT</stl19:AgentSine>
+                                        <stl19:HomePCC>J9JF</stl19:HomePCC>
+                                        <stl19:AgencyPCC>J9JF</stl19:AgencyPCC>
+                                        <stl19:HistoryFrom>COMPLEAT</stl19:HistoryFrom>
+                                    </stl19:Signature>
+                                    <stl19:RemarkHistory>
+                                        <stl19:HistoryAction>A5H</stl19:HistoryAction>
+                                        <stl19:RemarkType>8</stl19:RemarkType>
+                                        <stl19:RemarkActionCode>H-</stl19:RemarkActionCode>
+                                        <stl19:RemarkText>20JUN/0111/INV WAS ISSUED</stl19:RemarkText>
+                                    </stl19:RemarkHistory>
+                                </stl19:HistoryTransaction>
+                                <stl19:HistoryTransaction>
+                                    <stl19:Signature SequenceNbr="13">
+                                        <stl19:HistoryTimestamp>2023-06-20T01:10:00</stl19:HistoryTimestamp>
+                                        <stl19:DutyCode>9</stl19:DutyCode>
+                                        <stl19:AgentSine>AUT</stl19:AgentSine>
+                                        <stl19:HomePCC>J9JF</stl19:HomePCC>
+                                        <stl19:AgencyPCC>QQ2J</stl19:AgencyPCC>
+                                        <stl19:HistoryFrom>COMPLEAT</stl19:HistoryFrom>
+                                    </stl19:Signature>
+                                    <stl19:RemarkHistory>
+                                        <stl19:HistoryAction>X5H</stl19:HistoryAction>
+                                        <stl19:RemarkType>8</stl19:RemarkType>
+                                        <stl19:RemarkActionCode>H-</stl19:RemarkActionCode>
+                                        <stl19:RemarkText>T$COMPLEAT TICKET START 20JUN/0110/</stl19:RemarkText>
+                                    </stl19:RemarkHistory>
+                                    <stl19:RemarkHistory>
+                                        <stl19:HistoryAction>X5H</stl19:HistoryAction>
+                                        <stl19:RemarkType>8</stl19:RemarkType>
+                                        <stl19:RemarkActionCode>H-</stl19:RemarkActionCode>
+                                        <stl19:RemarkText>T$ETKT</stl19:RemarkText>
+                                    </stl19:RemarkHistory>
+                                    <stl19:RemarkHistory>
+                                        <stl19:HistoryAction>X5H</stl19:HistoryAction>
+                                        <stl19:RemarkType>8</stl19:RemarkType>
+                                        <stl19:RemarkActionCode>H-</stl19:RemarkActionCode>
+                                        <stl19:RemarkText>SF1--VCLA</stl19:RemarkText>
+                                    </stl19:RemarkHistory>
+                                    <stl19:RemarkHistory>
+                                        <stl19:HistoryAction>A5H</stl19:HistoryAction>
+                                        <stl19:RemarkType>8</stl19:RemarkType>
+                                        <stl19:RemarkActionCode>H-</stl19:RemarkActionCode>
+                                        <stl19:RemarkText>T$COMPLEAT TICKET START 20JUN/0110/*TICKET STOP 20JUN/0110/
+                                        </stl19:RemarkText>
+                                    </stl19:RemarkHistory>
+                                    <stl19:RemarkHistory>
+                                        <stl19:HistoryAction>A5H</stl19:HistoryAction>
+                                        <stl19:RemarkType>8</stl19:RemarkType>
+                                        <stl19:RemarkActionCode>H-</stl19:RemarkActionCode>
+                                        <stl19:RemarkText>T$20JUN/0110/TKT WAS ISSUED-REMOVE THIS LINE IF ANOTHER IS
+                                            NEEDED
+                                        </stl19:RemarkText>
+                                    </stl19:RemarkHistory>
+                                    <stl19:RemarkHistory>
+                                        <stl19:HistoryAction>A5H</stl19:HistoryAction>
+                                        <stl19:RemarkType>8</stl19:RemarkType>
+                                        <stl19:RemarkActionCode>H-</stl19:RemarkActionCode>
+                                        <stl19:RemarkText>T$INV</stl19:RemarkText>
+                                    </stl19:RemarkHistory>
+                                </stl19:HistoryTransaction>
+                                <stl19:HistoryTransaction>
+                                    <stl19:Signature SequenceNbr="11">
+                                        <stl19:HistoryTimestamp>2023-06-20T01:10:00</stl19:HistoryTimestamp>
+                                        <stl19:DutyCode>9</stl19:DutyCode>
+                                        <stl19:AgentSine>AUT</stl19:AgentSine>
+                                        <stl19:HomePCC>J9JF</stl19:HomePCC>
+                                        <stl19:AgencyPCC>QQ2J</stl19:AgencyPCC>
+                                        <stl19:HistoryFrom/>
+                                    </stl19:Signature>
+                                    <stl19:RemarkHistory>
+                                        <stl19:HistoryAction>A5H</stl19:HistoryAction>
+                                        <stl19:RemarkType>8</stl19:RemarkType>
+                                        <stl19:RemarkActionCode>H-</stl19:RemarkActionCode>
+                                        <stl19:RemarkText>AUTH-AMEX/AX0005/20JUN/01301687241415272665</stl19:RemarkText>
+                                    </stl19:RemarkHistory>
+                                    <stl19:RemarkHistory>
+                                        <stl19:HistoryAction>A5H</stl19:HistoryAction>
+                                        <stl19:RemarkType>8</stl19:RemarkType>
+                                        <stl19:RemarkActionCode>H-</stl19:RemarkActionCode>
+                                        <stl19:RemarkText>AUTH-APV/121395/000/USD423.20</stl19:RemarkText>
+                                    </stl19:RemarkHistory>
+                                    <stl19:RemarkHistory>
+                                        <stl19:HistoryAction>A5H</stl19:HistoryAction>
+                                        <stl19:RemarkType>8</stl19:RemarkType>
+                                        <stl19:RemarkActionCode>H-</stl19:RemarkActionCode>
+                                        <stl19:RemarkText>AUTH-CSC NOT SUPPLIED/</stl19:RemarkText>
+                                    </stl19:RemarkHistory>
+                                    <stl19:RemarkHistory>
+                                        <stl19:HistoryAction>A5H</stl19:HistoryAction>
+                                        <stl19:RemarkType>8</stl19:RemarkType>
+                                        <stl19:RemarkActionCode>H-</stl19:RemarkActionCode>
+                                        <stl19:RemarkText>AUTH-AVS NOT SUPPORTED/</stl19:RemarkText>
+                                    </stl19:RemarkHistory>
+                                    <stl19:FactHistory FactType="GEN">
+                                        <stl19:Type>SSR</stl19:Type>
+                                        <stl19:HistoryAction>A3S</stl19:HistoryAction>
+                                        <stl19:Code>TKNE</stl19:Code>
+                                        <stl19:ActionId>AS</stl19:ActionId>
+                                        <stl19:ActionCode>HK</stl19:ActionCode>
+                                        <stl19:NumberInParty>1</stl19:NumberInParty>
+                                        <stl19:TicketNumber>0457976982139C1</stl19:TicketNumber>
+                                        <stl19:FreeText/>
+                                        <stl19:FullText>TKNE AS HK1 SEACUN0228V29JUN/0457976982139C1</stl19:FullText>
+                                    </stl19:FactHistory>
+                                    <stl19:FactHistory FactType="GEN">
+                                        <stl19:Type>SSR</stl19:Type>
+                                        <stl19:HistoryAction>A3S</stl19:HistoryAction>
+                                        <stl19:Code>TKNE</stl19:Code>
+                                        <stl19:ActionId>LA</stl19:ActionId>
+                                        <stl19:ActionCode>HK</stl19:ActionCode>
+                                        <stl19:NumberInParty>1</stl19:NumberInParty>
+                                        <stl19:TicketNumber>0457976982139C2</stl19:TicketNumber>
+                                        <stl19:FreeText/>
+                                        <stl19:FullText>TKNE LA HK1 CUNLIM2457S30JUN/0457976982139C2</stl19:FullText>
+                                    </stl19:FactHistory>
+                                    <stl19:TicketingHistory>
+                                        <stl19:OriginalTicketDetails>T-A</stl19:OriginalTicketDetails>
+                                        <stl19:TransactionIndicator>T</stl19:TransactionIndicator>
+                                        <stl19:AgencyLocation/>
+                                        <stl19:HistoryAction>X7</stl19:HistoryAction>
+                                    </stl19:TicketingHistory>
+                                    <stl19:TicketingHistory>
+                                        <stl19:OriginalTicketDetails>T-20JUN-QQ2J9AUT</stl19:OriginalTicketDetails>
+                                        <stl19:TransactionIndicator>T</stl19:TransactionIndicator>
+                                        <stl19:AgencyLocation/>
+                                        <stl19:HistoryAction>A7</stl19:HistoryAction>
+                                    </stl19:TicketingHistory>
+                                    <stl19:TicketingHistory>
+                                        <stl19:TktEntry>W$PQ1</stl19:TktEntry>
+                                        <stl19:HistoryAction>AT</stl19:HistoryAction>
+                                    </stl19:TicketingHistory>
+                                    <stl19:AccountingLineHistory>
+                                        <stl19:HistoryAction>AAC</stl19:HistoryAction>
+                                        <stl19:AccountingLine>LA$7976982139/ 47.45/ 365.00/
+                                            58.20/ONE/CCAX371111XXXXX0005 1.1KOVAC IVAN/1/F/E
+                                        </stl19:AccountingLine>
+                                    </stl19:AccountingLineHistory>
+                                </stl19:HistoryTransaction>
+                                <stl19:HistoryTransaction>
+                                    <stl19:Signature SequenceNbr="5">
+                                        <stl19:HistoryTimestamp>2023-06-20T01:08:00</stl19:HistoryTimestamp>
+                                        <stl19:DutyCode>9</stl19:DutyCode>
+                                        <stl19:AgentSine>AUT</stl19:AgentSine>
+                                        <stl19:HomePCC>J9JF</stl19:HomePCC>
+                                        <stl19:AgencyPCC>QQ2J</stl19:AgencyPCC>
+                                        <stl19:HistoryFrom>COMPLEAT</stl19:HistoryFrom>
+                                    </stl19:Signature>
+                                    <stl19:ItineraryHistory>
+                                        <stl19:GeneralSegment>
+                                            <stl19:HistoryAction>AS</stl19:HistoryAction>
+                                            <stl19:VendorCode>ZZ</stl19:VendorCode>
+                                            <stl19:DateTime>2023-11-27T00:00:00</stl19:DateTime>
+                                            <stl19:Text>DFW/HAVE A SAFE AND PLEASANT TRIP</stl19:Text>
+                                        </stl19:GeneralSegment>
+                                    </stl19:ItineraryHistory>
+                                    <stl19:PhoneHistory>
+                                        <stl19:Location>A</stl19:Location>
+                                        <stl19:TJRCityCode>DFW</stl19:TJRCityCode>
+                                        <stl19:CityCode/>
+                                        <stl19:Extension/>
+                                        <stl19:Number>18005550199</stl19:Number>
+                                        <stl19:HistoryAction>X9</stl19:HistoryAction>
+                                    </stl19:PhoneHistory>
+                                </stl19:HistoryTransaction>
+                                <stl19:HistoryTransaction>
+                                    <stl19:Signature SequenceNbr="1">
+                                        <stl19:HistoryTimestamp>2023-06-20T00:50:00</stl19:HistoryTimestamp>
+                                        <stl19:DutyCode>*</stl19:DutyCode>
+                                        <stl19:AgentSine>AWS</stl19:AgentSine>
+                                        <stl19:HomePCC>OI7J</stl19:HomePCC>
+                                        <stl19:AgencyPCC>OI7J</stl19:AgencyPCC>
+                                        <stl19:HistoryFrom>G8WYDTW</stl19:HistoryFrom>
+                                    </stl19:Signature>
+                                    <stl19:ItineraryHistory>
+                                        <stl19:AirSegment>
+                                            <stl19:DepartureAirport>SEA</stl19:DepartureAirport>
+                                            <stl19:ArrivalAirport>CUN</stl19:ArrivalAirport>
+                                            <stl19:EquipmentType>321</stl19:EquipmentType>
+                                            <stl19:MarketingAirlineCode>AS</stl19:MarketingAirlineCode>
+                                            <stl19:MarketingFlightNumber>0228</stl19:MarketingFlightNumber>
+                                            <stl19:DepartureDateTime>2023-06-29T08:10:00</stl19:DepartureDateTime>
+                                            <stl19:ArrivalDateTime>2023-06-29T16:20:00</stl19:ArrivalDateTime>
+                                            <stl19:FlightNumber>0228</stl19:FlightNumber>
+                                            <stl19:ClassOfService>V</stl19:ClassOfService>
+                                            <stl19:ActionCode>SS</stl19:ActionCode>
+                                            <stl19:NumberInParty>1</stl19:NumberInParty>
+                                            <stl19:HistoryAction>AS</stl19:HistoryAction>
+                                        </stl19:AirSegment>
+                                    </stl19:ItineraryHistory>
+                                    <stl19:ItineraryHistory>
+                                        <stl19:AirSegment>
+                                            <stl19:DepartureAirport>CUN</stl19:DepartureAirport>
+                                            <stl19:ArrivalAirport>LIM</stl19:ArrivalAirport>
+                                            <stl19:OperatingAirlineCode>**</stl19:OperatingAirlineCode>
+                                            <stl19:EquipmentType>320</stl19:EquipmentType>
+                                            <stl19:MarketingAirlineCode>LA</stl19:MarketingAirlineCode>
+                                            <stl19:MarketingFlightNumber>2457</stl19:MarketingFlightNumber>
+                                            <stl19:DepartureDateTime>2023-06-30T00:25:00</stl19:DepartureDateTime>
+                                            <stl19:ArrivalDateTime>2023-06-30T05:35:00</stl19:ArrivalDateTime>
+                                            <stl19:FlightNumber>2457</stl19:FlightNumber>
+                                            <stl19:ClassOfService>S</stl19:ClassOfService>
+                                            <stl19:ActionCode>SS</stl19:ActionCode>
+                                            <stl19:NumberInParty>1</stl19:NumberInParty>
+                                            <stl19:HistoryAction>AS</stl19:HistoryAction>
+                                        </stl19:AirSegment>
+                                    </stl19:ItineraryHistory>
+                                    <stl19:FactHistory FactType="GEN">
+                                        <stl19:Type>OSI</stl19:Type>
+                                        <stl19:HistoryAction>A3O</stl19:HistoryAction>
+                                        <stl19:ActionId>BA</stl19:ActionId>
+                                        <stl19:FreeText>DTID.US9343CC</stl19:FreeText>
+                                        <stl19:FullText>BA DTID.US9343CC</stl19:FullText>
+                                    </stl19:FactHistory>
+                                    <stl19:FactHistory FactType="GEN">
+                                        <stl19:Type>OSI</stl19:Type>
+                                        <stl19:HistoryAction>A3O</stl19:HistoryAction>
+                                        <stl19:ActionId>YY</stl19:ActionId>
+                                        <stl19:FreeText>DTID.US9343CC</stl19:FreeText>
+                                        <stl19:FullText>YY DTID.US9343CC</stl19:FullText>
+                                    </stl19:FactHistory>
+                                    <stl19:FactHistory FactType="GEN">
+                                        <stl19:Type>SSR</stl19:Type>
+                                        <stl19:HistoryAction>A3S</stl19:HistoryAction>
+                                        <stl19:Code>DOCS</stl19:Code>
+                                        <stl19:ActionId>AS</stl19:ActionId>
+                                        <stl19:ActionCode>HK</stl19:ActionCode>
+                                        <stl19:NumberInParty>1</stl19:NumberInParty>
+                                        <stl19:FreeText/>
+                                        <stl19:FullText>DOCS AS HK1/DB/08MAY1990/F/KOVAC/IVAN</stl19:FullText>
+                                    </stl19:FactHistory>
+                                    <stl19:FactHistory FactType="GEN">
+                                        <stl19:Type>SSR</stl19:Type>
+                                        <stl19:HistoryAction>A3S</stl19:HistoryAction>
+                                        <stl19:Code>DOCS</stl19:Code>
+                                        <stl19:ActionId>LA</stl19:ActionId>
+                                        <stl19:ActionCode>HK</stl19:ActionCode>
+                                        <stl19:NumberInParty>1</stl19:NumberInParty>
+                                        <stl19:FreeText/>
+                                        <stl19:FullText>DOCS LA HK1/DB/08MAY1990/F/KOVAC/IVAN</stl19:FullText>
+                                    </stl19:FactHistory>
+                                    <stl19:FactHistory FactType="GEN">
+                                        <stl19:Type>SSR</stl19:Type>
+                                        <stl19:HistoryAction>A3S</stl19:HistoryAction>
+                                        <stl19:Code>CTCE</stl19:Code>
+                                        <stl19:ActionId>AS</stl19:ActionId>
+                                        <stl19:ActionCode>HK</stl19:ActionCode>
+                                        <stl19:NumberInParty>1</stl19:NumberInParty>
+                                        <stl19:FreeText>/TSTUSER//MAIL</stl19:FreeText>
+                                        <stl19:FullText>CTCE AS HK1/TSTUSER//MAIL.COM</stl19:FullText>
+                                    </stl19:FactHistory>
+                                    <stl19:FactHistory FactType="GEN">
+                                        <stl19:Type>SSR</stl19:Type>
+                                        <stl19:HistoryAction>A3S</stl19:HistoryAction>
+                                        <stl19:Code>CTCE</stl19:Code>
+                                        <stl19:ActionId>LA</stl19:ActionId>
+                                        <stl19:ActionCode>HK</stl19:ActionCode>
+                                        <stl19:NumberInParty>1</stl19:NumberInParty>
+                                        <stl19:FreeText>/TSTUSER//MAIL</stl19:FreeText>
+                                        <stl19:FullText>CTCE LA HK1/TSTUSER//MAIL.COM</stl19:FullText>
+                                    </stl19:FactHistory>
+                                    <stl19:FactHistory FactType="GEN">
+                                        <stl19:Type>SSR</stl19:Type>
+                                        <stl19:HistoryAction>A3S</stl19:HistoryAction>
+                                        <stl19:Code>CTCM</stl19:Code>
+                                        <stl19:ActionId>AS</stl19:ActionId>
+                                        <stl19:ActionCode>HK</stl19:ActionCode>
+                                        <stl19:NumberInParty>1</stl19:NumberInParty>
+                                        <stl19:FreeText>/12065550102</stl19:FreeText>
+                                        <stl19:FullText>CTCM AS HK1/12065550102</stl19:FullText>
+                                    </stl19:FactHistory>
+                                    <stl19:FactHistory FactType="GEN">
+                                        <stl19:Type>SSR</stl19:Type>
+                                        <stl19:HistoryAction>A3S</stl19:HistoryAction>
+                                        <stl19:Code>CTCM</stl19:Code>
+                                        <stl19:ActionId>LA</stl19:ActionId>
+                                        <stl19:ActionCode>HK</stl19:ActionCode>
+                                        <stl19:NumberInParty>1</stl19:NumberInParty>
+                                        <stl19:FreeText>/12065550102</stl19:FreeText>
+                                        <stl19:FullText>CTCM LA HK1/12065550102</stl19:FullText>
+                                    </stl19:FactHistory>
+                                    <stl19:TicketingHistory>
+                                        <stl19:OriginalTicketDetails>T-A</stl19:OriginalTicketDetails>
+                                        <stl19:TransactionIndicator>T</stl19:TransactionIndicator>
+                                        <stl19:AgencyLocation/>
+                                        <stl19:HistoryAction>A7</stl19:HistoryAction>
+                                    </stl19:TicketingHistory>
+                                    <stl19:NameHistory>
+                                        <stl19:HistoryAction>AN</stl19:HistoryAction>
+                                        <stl19:NameSeqID>1</stl19:NameSeqID>
+                                        <stl19:LastName>KOVAC</stl19:LastName>
+                                        <stl19:FirstName>IVAN</stl19:FirstName>
+                                    </stl19:NameHistory>
+                                    <stl19:PhoneHistory>
+                                        <stl19:Location>A</stl19:Location>
+                                        <stl19:TJRCityCode>DFW</stl19:TJRCityCode>
+                                        <stl19:CityCode/>
+                                        <stl19:Extension/>
+                                        <stl19:Number>18005550199</stl19:Number>
+                                        <stl19:HistoryAction>A9</stl19:HistoryAction>
+                                    </stl19:PhoneHistory>
+                                    <stl19:PhoneHistory>
+                                        <stl19:Location>A</stl19:Location>
+                                        <stl19:TJRCityCode>DFW</stl19:TJRCityCode>
+                                        <stl19:CityCode/>
+                                        <stl19:Extension/>
+                                        <stl19:Number>469-330-1170</stl19:Number>
+                                        <stl19:HistoryAction>A9</stl19:HistoryAction>
+                                    </stl19:PhoneHistory>
+                                    <stl19:PassengerDetailsHistory>
+                                        <stl19:HistoryAction>ADT</stl19:HistoryAction>
+                                        <stl19:NameID>1</stl19:NameID>
+                                        <stl19:PassengerDetailType/>
+                                        <stl19:PassengerDetails>
+                                            <stl19:PassengerType>
+                                                <stl19:PassengerType>ADT</stl19:PassengerType>
+                                            </stl19:PassengerType>
+                                        </stl19:PassengerDetails>
+                                    </stl19:PassengerDetailsHistory>
+                                    <stl19:CustomerInsightProfileHistory>
+                                        <stl19:HistoryAction>API</stl19:HistoryAction>
+                                        <stl19:ProfileTag>TAGENCY</stl19:ProfileTag>
+                                        <stl19:ProfileID>480000123</stl19:ProfileID>
+                                    </stl19:CustomerInsightProfileHistory>
+                                </stl19:HistoryTransaction>
+                            </stl19:History>
+                        </stl19:Reservation>
+                    </stl19:GetReservationRS>
+                </Reservation>
+            </Reservations>
+        </ReservationsList>
+    </Trip_SearchRS>
+</soap-env:Body>
+</soap-env:Envelope>

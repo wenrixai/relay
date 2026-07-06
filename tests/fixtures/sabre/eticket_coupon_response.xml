@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap-env:Header>
+        <eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0" soap-env:mustUnderstand="1">
+            <eb:From>
+                <eb:PartyId eb:type="URI">123123</eb:PartyId>
+            </eb:From>
+            <eb:To>
+                <eb:PartyId eb:type="URI">999999</eb:PartyId>
+            </eb:To>
+            <eb:CPAId>3YDJ</eb:CPAId>
+            <eb:ConversationId>V1@395ee382-415f-403f-9296-0812eab321bd@4525f0c5-4134-4ff9-9a61-4bb7e668c893@</eb:ConversationId>
+            <eb:Service>eTicketCouponLLSRQ</eb:Service>
+            <eb:Action>eTicketCouponLLSRS</eb:Action>
+            <eb:MessageData>
+                <eb:MessageId>7111821627929351392</eb:MessageId>
+                <eb:Timestamp>2019-11-12T17:26:33</eb:Timestamp>
+                <eb:RefToMessageId>97173294467</eb:RefToMessageId>
+            </eb:MessageData>
+        </eb:MessageHeader>
+        <wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+            <wsse:BinarySecurityToken valueType="String" EncodingType="wsse:Base64Binary">Shared/IDL:IceSess\/SessMgr:1\.0.IDL/Common/!ICESMS\/RESH!ICESMSLB\/RES.LB!-0000000000000000000!000000!0</wsse:BinarySecurityToken>
+        </wsse:Security>
+    </soap-env:Header>
+    <soap-env:Body>
+        <eTicketCouponRS xmlns="http://webservices.sabre.com/sabreXML/2011/10"
+            xmlns:xs="http://www.w3.org/2001/XMLSchema"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:stl="http://services.sabre.com/STL/v01" Version="2.0.0">
+            <stl:ApplicationResults status="Complete">
+                <stl:Success timeStamp="2019-11-12T11:26:33-06:00"/>
+            </stl:ApplicationResults>
+            <TicketingInfos>
+                <TicketingInfo>
+                    <Ticketing AgencyCity="TLV" AgentWorkArea="A" IATA_Number="37200251" IssuingAgent="AWS*" PrimeHostID="1S" PseudoCityCode="3YDJ" TransactionDateTime="2019-11-12T19:26">
+                        <CouponData InformationSource="S" IssueDate="2019-11-05" NumBooklets="1" TicketMedia="E" TicketMode="0">
+                            <AirItineraryPricingInfo>
+                                <Endorsements>
+                                    <Text>NON-REFUNDABLE/DATES SHOWN ONLY/VALID ON A3 FLIGHTS/</Text>
+                                </Endorsements>
+                                <FareCalculation>
+                                    <Text>ATH A3 TLV Q10.97 30.72NUC41.69 PLUS23.00END ROE0.911401</Text>
+                                </FareCalculation>
+                                <ItinTotalFare>
+                                    <BaseFare Amount="38.00" CurrencyCode="EUR"/>
+                                    <EquivFare Amount="42.00" CurrencyCode="USD"/>
+                                    <Taxes Total="40.30">
+                                        <Tax Amount="3.40" TaxCode="YQ"/>
+                                        <Tax Amount="13.40" TaxCode="GR"/>
+                                        <Tax Amount="5.60" TaxCode="WQ"/>
+                                        <Tax Amount="17.90" TaxCode="WP"/>
+                                    </Taxes>
+                                    <TotalFare Amount="82.30" CurrencyCode="USD"/>
+                                </ItinTotalFare>
+                                <PassengerTypeQuantity Code="ADT"/>
+                            </AirItineraryPricingInfo>
+                            <Coupons>
+                                <Coupon CodedStatus="OK" Number="1" StatusCode="OPEN">
+                                    <FlightSegment DepartureDateTime="2020-06-20T23:55" FlightNumber="928" RPH="1" ResBookDesigCode="U">
+                                        <DestinationLocation LocationCode="TLV"/>
+                                        <FareBasis Code="UNOBAGD"/>
+                                        <MarketingAirline Code="A3" FlightNumber="928"/>
+                                        <OperatingAirline Code="A3"/>
+                                        <OriginLocation LocationCode="ATH"/>
+                                    </FlightSegment>
+                                </Coupon>
+                            </Coupons>
+                            <CustomerInfo>
+                                <Customer>
+                                    <Payment RPH="1" Type="CA">
+                                        <Text>CASH</Text>
+                                    </Payment>
+                                    <PersonName NameReference="01SEP97" PassengerType="ADT">
+                                        <GivenName>ROBERTALICIA</GivenName>
+                                        <Surname>BENNETT</Surname>
+                                    </PersonName>
+                                </Customer>
+                            </CustomerInfo>
+                            <ItineraryRef CustomerIdentifier="204815" ID="QBPKUE"/>
+                        </CouponData>
+                    </Ticketing>
+                </TicketingInfo>
+            </TicketingInfos>
+        </eTicketCouponRS>
+    </soap-env:Body>
+</soap-env:Envelope>

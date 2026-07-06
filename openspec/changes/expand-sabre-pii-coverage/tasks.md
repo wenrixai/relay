@@ -19,14 +19,22 @@
 
 ## 4. Sabre baseline rules (sabre-pii-baseline)
 
-- [ ] 4.1 Add sanitized fixtures under `tests/fixtures/sabre/` for each new operation, sourced from `src/tests/resources/sources/sabre` and Wenrix parsing models
-- [ ] 4.2 Author `field`/`reference` rules in `rules_fallback.json` for `CreatePassengerNameRecordRS`, `PassengerDetailsRS`, `TravelItineraryHistoryRS`, `GetTicketingDocumentRS`, `GetETicketDetailsRS`, `GetTicketInformationFromAirlineRS`, `TicketRefundRS`, `TicketExchangeRS`, `DailyRefundReportRS`, `PastDatePnrDetailsRS`, `QueueAccessRS` (XPaths + explicit namespaces per Wenrix models; use `channel-implementation` skill)
-- [ ] 4.3 Set `required: true` on the passenger-name anchor rule of each PII-heavy operation (incl. existing `GetReservationRS`)
-- [ ] 4.4 Write golden unit tests per new operation: counts, reversibility, one-way masks, non-PII preservation, `required` drift fails closed
-- [ ] 4.5 Green: Sabre golden unit suite passes
+- [x] 4.1 Add sanitized fixtures under `tests/fixtures/sabre/` for each new operation, sourced from `src/tests/resources/sources/sabre` and Wenrix parsing models
+- [x] 4.2 Author `field`/`reference` rules in `rules_fallback.json` for `CreatePassengerNameRecordRS`, `PassengerDetailsRS`, `TravelItineraryHistoryRS`, `GetTicketingDocumentRS`, `GetETicketDetailsRS`, `GetTicketInformationFromAirlineRS`, `TicketRefundRS`, `TicketExchangeRS`, `DailyRefundReportRS`, `PastDatePnrDetailsRS`, `QueueAccessRS` (XPaths + explicit namespaces per Wenrix models; use `channel-implementation` skill)
+- [x] 4.3 Set `required: true` on the passenger-name anchor rule of each PII-heavy operation (incl. existing `GetReservationRS`)
+- [x] 4.4 Write golden unit tests per new operation: counts, reversibility, one-way masks, non-PII preservation, `required` drift fails closed
+- [x] 4.5 Green: Sabre golden unit suite passes
 
 ## 5. Integration + CI
 
-- [ ] 5.1 Relay integration tests: full pipeline for a representative new operation (credential swap ordering + `BinarySecurityToken` encryption + PII redaction) and the uncovered-operation metric end-to-end
-- [ ] 5.2 `just ci` green (lint, fmt, types, pylint, tests); coverage gate met
-- [ ] 5.3 `openspec validate expand-sabre-pii-coverage --strict` passes
+- [x] 5.1 Relay integration tests: full pipeline for a representative new operation (credential swap ordering + `BinarySecurityToken` encryption + PII redaction) and the uncovered-operation metric end-to-end
+- [x] 5.2 `just ci` green (lint, fmt, types, pylint, tests); coverage gate met
+- [x] 5.3 `openspec validate expand-sabre-pii-coverage --strict` passes
+
+## Notes (implementation findings)
+
+- Real SOAP body operation names differ from the proposal's conceptual names: `TicketRefundRS`→`RefundRS`, `GetETicketDetailsRS`→`eTicketCouponRS`, `GetTicketInformationFromAirlineRS`→`GetElectronicDocumentRS`, `PastDatePnrDetailsRS`→`Trip_SearchRS`. Rules key off the real body element (what `parse_operation` returns).
+- `TicketExchangeRS`/`AutomatedExchangesRS` carries no passenger PII (fare/penalty comparison); exchange-context PII appears in `eTicketCouponRS`, which is covered.
+- `QueueAccessRS` (real payload) contains only record locators / agent sines / PCC — all non-PII — so it gets no rules and is handled by the coverage metric (forwarded, `covered=False`).
+- `PassengerDetailsRS` response is a status-only ack (passenger data lives in the request); `CreatePassengerNameRecordRS` has no payload in the corpus (the create op is `EnhancedAirBookRS`). Both are left to the coverage metric.
+- New covered operations: `RefundRS`, `DailyRefundReportRS`, `eTicketCouponRS` (incl. exchange), `GetElectronicDocumentRS`, `GetTicketingDocumentRS`, `TravelItineraryHistoryRS`, `Trip_SearchRS`. `required:true` anchors added on each plus existing `GetReservationRS`.

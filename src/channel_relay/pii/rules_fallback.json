@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion-baseline-2026-07-05",
+  "rules_version": "amadeus+sabre+travelfusion-baseline-2026-07-06",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -132,7 +132,8 @@
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "person",
-      "method": "encrypt"
+      "method": "encrypt",
+      "required": true
     },
     {
       "id": "sabre.res.history_name",
@@ -487,6 +488,537 @@
       "path": "//*[local-name()='DisplayName']",
       "source_pii_types": [
         "person"
+      ],
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "sabre.refund.passenger_last_name",
+      "channel": "sabre",
+      "operation": "^RefundRS$",
+      "path": "//er:Traveler/@lastName",
+      "namespaces": {
+        "er": "http://www.sabre.com/ns/Ticketing/ExchangeRefund/1.0"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "required": true
+    },
+    {
+      "id": "sabre.refund.passenger_first_name",
+      "channel": "sabre",
+      "operation": "^RefundRS$",
+      "path": "//er:Traveler/@firstName",
+      "namespaces": {
+        "er": "http://www.sabre.com/ns/Ticketing/ExchangeRefund/1.0"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "sabre.refund_report.passenger_name",
+      "channel": "sabre",
+      "operation": "^DailyRefundReportRS$",
+      "path": "//sx:PersonName",
+      "namespaces": {
+        "sx": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "required": true
+    },
+    {
+      "id": "sabre.etkt.passenger_name",
+      "channel": "sabre",
+      "operation": "^eTicketCouponRS$",
+      "path": "//e:PersonName/e:GivenName | //e:PersonName/e:Surname",
+      "namespaces": {
+        "e": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "required": true
+    },
+    {
+      "id": "sabre.etkt.customer_identifier",
+      "channel": "sabre",
+      "operation": "^eTicketCouponRS$",
+      "path": "//e:ItineraryRef/@CustomerIdentifier",
+      "namespaces": {
+        "e": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "person",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.etkt.payment_text",
+      "channel": "sabre",
+      "operation": "^eTicketCouponRS$",
+      "path": "//e:Payment/e:Text | //e:Endorsements/e:Text",
+      "namespaces": {
+        "e": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "payment",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.etkt.payment_reference",
+      "channel": "sabre",
+      "operation": "^eTicketCouponRS$",
+      "path": "//e:Payment/@ReferenceNumber",
+      "namespaces": {
+        "e": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "payment",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.etkt.payment_expiry",
+      "channel": "sabre",
+      "operation": "^eTicketCouponRS$",
+      "path": "//e:PaymentCard/@ExpirationDate",
+      "namespaces": {
+        "e": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "payment",
+      "method": "mask",
+      "mask_char": "0"
+    },
+    {
+      "id": "sabre.etkt.payment_approval",
+      "channel": "sabre",
+      "operation": "^eTicketCouponRS$",
+      "path": "//e:Payment/@ApprovalID",
+      "namespaces": {
+        "e": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "payment",
+      "method": "mask",
+      "mask_char": "0"
+    },
+    {
+      "id": "sabre.etkt.fare_calc_reference",
+      "channel": "sabre",
+      "operation": "^eTicketCouponRS$",
+      "rule_type": "reference",
+      "path": "//e:FareCalculation/e:Text",
+      "namespaces": {
+        "e": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "source_pii_types": [
+        "person",
+        "frequent_flyer"
+      ],
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "sabre.edoc.passenger_name",
+      "channel": "sabre",
+      "operation": "^GetElectronicDocumentRS$",
+      "path": "//d:Traveler/d:Name | //d:Traveler/d:FirstName | //d:Traveler/d:LastName",
+      "namespaces": {
+        "d": "http://www.sabre.com/ns/Ticketing/EDoc"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "required": true
+    },
+    {
+      "id": "sabre.edoc.external_number",
+      "channel": "sabre",
+      "operation": "^GetElectronicDocumentRS$",
+      "path": "//d:Traveler/d:ExternalNumber",
+      "namespaces": {
+        "d": "http://www.sabre.com/ns/Ticketing/EDoc"
+      },
+      "pii_type": "passport_id",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.edoc.endorsements",
+      "channel": "sabre",
+      "operation": "^GetElectronicDocumentRS$",
+      "path": "//d:Remark/d:Endorsements",
+      "namespaces": {
+        "d": "http://www.sabre.com/ns/Ticketing/EDoc"
+      },
+      "pii_type": "passport_id",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.edoc.payment_details",
+      "channel": "sabre",
+      "operation": "^GetElectronicDocumentRS$",
+      "path": "//d:Payment/d:Other/d:Details",
+      "namespaces": {
+        "d": "http://www.sabre.com/ns/Ticketing/EDoc"
+      },
+      "pii_type": "payment",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.edoc.fare_calc_reference",
+      "channel": "sabre",
+      "operation": "^GetElectronicDocumentRS$",
+      "rule_type": "reference",
+      "path": "//d:FareCalculation/d:New",
+      "namespaces": {
+        "d": "http://www.sabre.com/ns/Ticketing/EDoc"
+      },
+      "source_pii_types": [
+        "person",
+        "frequent_flyer"
+      ],
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "sabre.tktdoc.passenger_name",
+      "channel": "sabre",
+      "operation": "^GetTicketingDocumentRS$",
+      "path": "//dc:Traveler/dc:Name | //dc:Traveler/dc:FirstName | //dc:Traveler/dc:LastName",
+      "namespaces": {
+        "dc": "http://www.sabre.com/ns/Ticketing/DC"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "required": true
+    },
+    {
+      "id": "sabre.tktdoc.external_number",
+      "channel": "sabre",
+      "operation": "^GetTicketingDocumentRS$",
+      "path": "//dc:Traveler/dc:ExternalNumber",
+      "namespaces": {
+        "dc": "http://www.sabre.com/ns/Ticketing/DC"
+      },
+      "pii_type": "dob",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.tktdoc.endorsements",
+      "channel": "sabre",
+      "operation": "^GetTicketingDocumentRS$",
+      "path": "//dc:Remark/dc:Endorsements",
+      "namespaces": {
+        "dc": "http://www.sabre.com/ns/Ticketing/DC"
+      },
+      "pii_type": "payment",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.tktdoc.payment_remarks",
+      "channel": "sabre",
+      "operation": "^GetTicketingDocumentRS$",
+      "path": "//dc:Payment/dc:Remarks",
+      "namespaces": {
+        "dc": "http://www.sabre.com/ns/Ticketing/DC"
+      },
+      "pii_type": "payment",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.tktdoc.fare_calc_reference",
+      "channel": "sabre",
+      "operation": "^GetTicketingDocumentRS$",
+      "rule_type": "reference",
+      "path": "//dc:FareCalculation/dc:New",
+      "namespaces": {
+        "dc": "http://www.sabre.com/ns/Ticketing/DC"
+      },
+      "source_pii_types": [
+        "person",
+        "frequent_flyer"
+      ],
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "sabre.itinhist.passenger_name",
+      "channel": "sabre",
+      "operation": "^TravelItineraryHistoryRS$",
+      "path": "//sx:GeneralInfo[@Action='AN']/sx:Text",
+      "namespaces": {
+        "sx": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "required": true,
+      "extract_patterns": [
+        {
+          "pattern": "^\\s*\\d+([A-Z]+)/"
+        },
+        {
+          "pattern": "^\\s*\\d+[A-Z]+/([A-Z]+)"
+        }
+      ]
+    },
+    {
+      "id": "sabre.itinhist.dob",
+      "channel": "sabre",
+      "operation": "^TravelItineraryHistoryRS$",
+      "path": "//sx:GeneralInfo[@Action='AN']/sx:Text",
+      "namespaces": {
+        "sx": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "dob",
+      "method": "mask",
+      "extract_patterns": [
+        {
+          "pattern": "(\\d{2}[A-Z]{3}\\d{4})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.itinhist.docs_line",
+      "channel": "sabre",
+      "operation": "^TravelItineraryHistoryRS$",
+      "path": "//sx:GeneralInfo/sx:Text[starts-with(normalize-space(.),'SSR DOCS')]",
+      "namespaces": {
+        "sx": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "passport_id",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.itinhist.email",
+      "channel": "sabre",
+      "operation": "^TravelItineraryHistoryRS$",
+      "path": "//sx:GeneralInfo/sx:Text",
+      "namespaces": {
+        "sx": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "email",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "([A-Za-z0-9._+-]+@[A-Za-z0-9.-]+\\.[A-Z]{2,})"
+        },
+        {
+          "pattern": "([A-Za-z0-9._+-]+//[A-Za-z0-9.-]+\\.[A-Z]{2,})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.itinhist.phone",
+      "channel": "sabre",
+      "operation": "^TravelItineraryHistoryRS$",
+      "path": "//sx:GeneralInfo/sx:Text",
+      "namespaces": {
+        "sx": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "phone",
+      "method": "mask",
+      "extract_patterns": [
+        {
+          "pattern": "(\\d{2,4}-\\d{6,10})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.itinhist.address",
+      "channel": "sabre",
+      "operation": "^TravelItineraryHistoryRS$",
+      "path": "//sx:GeneralInfo[@Action='AW']/sx:Text",
+      "namespaces": {
+        "sx": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "address",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.trip.passenger_name",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:Passenger/stl19:LastName | //stl19:Passenger/stl19:FirstName",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "required": true
+    },
+    {
+      "id": "sabre.trip.history_name",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:NameHistory/stl19:LastName | //stl19:NameHistory/stl19:FirstName",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "sabre.trip.ticket_passenger_name",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:TicketDetails/stl19:PassengerName | //stl19:AccountingLine/stl19:PassengerName",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "sabre.trip.docs_name",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:DOCSEntry/stl19:Surname | //stl19:DOCSEntry/stl19:Forename | //stl19:DOCSEntry/stl19:MiddleName",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "person",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.trip.docs_dob",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:DOCSEntry/stl19:DateOfBirth",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "dob",
+      "method": "replace",
+      "replacement": "1901-01-01"
+    },
+    {
+      "id": "sabre.trip.docs_gender",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:DOCSEntry/stl19:Gender",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "gender",
+      "method": "replace",
+      "replacement": "M"
+    },
+    {
+      "id": "sabre.trip.phone",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:PhoneNumber/stl19:Number | //stl19:PhoneHistory/stl19:Number",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "phone",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.trip.card_number",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:AccountingLine/stl19:CreditCardNumber",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "payment",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.trip.fop_remark",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:Remark[@type='FOP']//stl19:RemarkLine/stl19:Text",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "payment",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.trip.accounting_history",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:AccountingLineHistory/stl19:AccountingLine",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "payment",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.trip.card_fragment_remark",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:RemarkLine/stl19:Text | //stl19:RemarkText",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "payment",
+      "method": "mask",
+      "extract_patterns": [
+        {
+          "pattern": "(\\d{0,6}X{4,}\\d{2,})"
+        },
+        {
+          "pattern": "\\$(\\d{2}/\\d{2})"
+        },
+        {
+          "pattern": "AUTH-[A-Z]+/([A-Z]{2}\\d{4})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.trip.contact_email_ssr",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:GenericSpecialRequest[stl19:Code='CTCE']/stl19:FreeText | //stl19:GenericSpecialRequest[stl19:Code='CTCE']/stl19:FullText | //stl19:FactHistory[contains(stl19:FullText,'CTCE')]/stl19:FreeText | //stl19:FactHistory[contains(stl19:FullText,'CTCE')]/stl19:FullText",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "email",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "([A-Za-z0-9]+//[A-Za-z0-9.]+)"
+        }
+      ]
+    },
+    {
+      "id": "sabre.trip.contact_phone_ssr",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:GenericSpecialRequest[stl19:Code='CTCM']/stl19:FreeText | //stl19:GenericSpecialRequest[stl19:Code='CTCM']/stl19:FullText | //stl19:FactHistory[contains(stl19:FullText,'CTCM')]/stl19:FreeText | //stl19:FactHistory[contains(stl19:FullText,'CTCM')]/stl19:FullText",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "phone",
+      "method": "mask",
+      "extract_patterns": [
+        {
+          "pattern": "(\\d{7,})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.trip.docs_freetext",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:FactHistory[contains(stl19:FullText,'DOCS')]/stl19:FullText | //stl19:FactHistory[contains(stl19:FullText,'DOCS')]/stl19:FreeText",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "visa",
+      "method": "mask"
+    },
+    {
+      "id": "sabre.trip.remarks_reference",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "rule_type": "reference",
+      "path": "//stl19:RemarkLine/stl19:Text | //stl19:RemarkText | //stl19:GenericSpecialRequest/stl19:FreeText | //stl19:GenericSpecialRequest/stl19:FullText | //stl19:GenericSpecialRequests/stl19:FreeText | //stl19:GenericSpecialRequests/stl19:FullText | //stl19:ETicketNumber | //stl19:OriginalTicketDetails | //stl19:FactHistory/stl19:FreeText | //stl19:FactHistory/stl19:FullText",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "source_pii_types": [
+        "person",
+        "email",
+        "phone",
+        "frequent_flyer"
       ],
       "pii_type": "person",
       "method": "encrypt"

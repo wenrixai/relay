@@ -1,0 +1,106 @@
+<RefundRS xmlns="http://www.sabre.com/ns/Ticketing/ExchangeRefund/1.0" version="1.1.0">
+    <Header messageID="TKTHLI702-26751-319001182-1476303209379-192-arex" version="1.1.0">
+        <STL:OrchestrationID xmlns:STL="http://services.sabre.com/STL/v01">TKTHLI702-26751-319001182-1476303209379-192-arex</STL:OrchestrationID>
+        <STL:Results xmlns:STL="http://services.sabre.com/STL/v01">
+            <STL:Success>
+                <STL:System>TKT-WS</STL:System>
+                <STL:Source>AREX</STL:Source>
+            </STL:Success>
+        </STL:Results>
+    </Header>
+    <Ticket number="0019122261730" type="TKT">
+        <Details>
+            <LocalIssueDate>2016-10-12T22:27:00</LocalIssueDate>
+            <IssueLocation>DR93</IssueLocation>
+            <Reservation>TBSFWO</Reservation>
+            <AgencyIdentifier>19209875</AgencyIdentifier>
+            <ValidatingCarrier>AA</ValidatingCarrier>
+        </Details>
+        <Traveler firstName="ROBERT" lastName="MILLER" type="ADT"/>
+        <ServiceCoupon number="1" status="OK">
+            <StartLocation>DFW</StartLocation>
+            <EndLocation>LAS</EndLocation>
+            <StartDate>2016-11-20</StartDate>
+            <StartTime>07:15:00</StartTime>
+            <MarketingFlightNumber carrierCode="AA">2626</MarketingFlightNumber>
+            <FareBasis>YA2AA</FareBasis>
+        </ServiceCoupon>
+        <ServiceCoupon number="2" status="OK">
+            <StartLocation>LAS</StartLocation>
+            <EndLocation>DFW</EndLocation>
+            <StartDate>2016-11-27</StartDate>
+            <StartTime>06:20:00</StartTime>
+            <MarketingFlightNumber carrierCode="AA">2176</MarketingFlightNumber>
+            <FareBasis>YA2AA</FareBasis>
+        </ServiceCoupon>
+        <Payment type="CK">
+            <Amount currencyCode="EUR" decimalPlaces="2">2135.51</Amount>
+        </Payment>
+    </Ticket>
+    <PriceInfo>
+        <Refund fareNonRefundable="false" priceType="System" taxesNonRefundable="false">
+            <BaseFareInfo currencyCode="USD" decimalPlaces="2">
+                <DocumentAmount>2191.64</DocumentAmount>
+                <UsedAmount>0.00</UsedAmount>
+            </BaseFareInfo>
+            <FareInfo currencyCode="EUR" decimalPlaces="2">
+                <DocumentAmount>1963.00</DocumentAmount>
+                <NonRefundableAmount>0.00</NonRefundableAmount>
+                <UsedAmount>0.00</UsedAmount>
+                <TotalFeesAmount>0.00</TotalFeesAmount>
+                <CalculatedAmount>1963.00</CalculatedAmount>
+                <RefundAmount>1963.00</RefundAmount>
+            </FareInfo>
+            <TaxInfo currencyCode="EUR" decimalPlaces="2">
+                <Tax code="US">
+                    <DocumentAmount>147.23</DocumentAmount>
+                    <NonRefundableAmount>0.00</NonRefundableAmount>
+                    <UsedAmount>0.00</UsedAmount>
+                    <CalculatedAmount>147.23</CalculatedAmount>
+                    <RefundAmount>147.23</RefundAmount>
+                </Tax>
+                <Tax code="ZP">
+                    <DocumentAmount>7.18</DocumentAmount>
+                    <NonRefundableAmount>0.00</NonRefundableAmount>
+                    <UsedAmount>0.00</UsedAmount>
+                    <CalculatedAmount>7.18</CalculatedAmount>
+                    <RefundAmount>7.18</RefundAmount>
+                </Tax>
+                <Tax code="AY">
+                    <DocumentAmount>10.04</DocumentAmount>
+                    <NonRefundableAmount>0.00</NonRefundableAmount>
+                    <UsedAmount>0.00</UsedAmount>
+                    <CalculatedAmount>10.04</CalculatedAmount>
+                    <RefundAmount>10.04</RefundAmount>
+                </Tax>
+                <Tax code="XF">
+                    <DocumentAmount>8.06</DocumentAmount>
+                    <NonRefundableAmount>0.00</NonRefundableAmount>
+                    <UsedAmount>0.00</UsedAmount>
+                    <CalculatedAmount>8.06</CalculatedAmount>
+                    <RefundAmount>8.06</RefundAmount>
+                    <TaxBreakdown>
+                        <Airport airportCode="DFW" currencyCode="USD" decimalPlaces="2">4.50</Airport>
+                        <Airport airportCode="LAS" currencyCode="USD" decimalPlaces="2">4.50</Airport>
+                    </TaxBreakdown>
+                </Tax>
+                <TotalTaxRefundAmount>172.51</TotalTaxRefundAmount>
+            </TaxInfo>
+            <CommissionInfo>
+                <Commission>
+                    <Percent>5.0</Percent>
+                </Commission>
+            </CommissionInfo>
+        </Refund>
+        <GrandTotal currencyCode="EUR" decimalPlaces="2">2135.51</GrandTotal>
+    </PriceInfo>
+    <TransactionInfo fulfilled="true" reservationAutoEndProcessed="true" reservationAutoRetrieveProcessed="true">
+        <Message type="I">REFUND TRANSACTION PROCESSED</Message>
+        <Message type="I">REFUND ACCOUNTING DATA CREATED IN ACTIVE PNR</Message>
+        <Message type="I">ETR REFUND TRANSACTION PROCESSED</Message>
+        <Message type="I">OK 1324 TBSFWO</Message>
+        <Payment type="CK">
+            <Amount currencyCode="EUR" decimalPlaces="2">2135.51</Amount>
+        </Payment>
+    </TransactionInfo>
+</RefundRS>

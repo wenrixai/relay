@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap-env:Header>
+        <eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0" soap-env:mustUnderstand="1">
+            <eb:From>
+                <eb:PartyId eb:type="URI">123123</eb:PartyId>
+            </eb:From>
+            <eb:To>
+                <eb:PartyId eb:type="URI">999999</eb:PartyId>
+            </eb:To>
+            <eb:CPAId>3SMJ</eb:CPAId>
+            <eb:ConversationId>V1@25dfc8cb-1e46-4a2a-927f-b6738eaeef90@8a51e3d0-be9b-40e3-aef8-673457f39086@</eb:ConversationId>
+            <eb:Service>TicketingDocumentServicesRQ</eb:Service>
+            <eb:Action>TicketingDocumentServicesRQ</eb:Action>
+            <eb:MessageData>
+                <eb:MessageId>1061524546171650930</eb:MessageId>
+                <eb:Timestamp>2021-05-12T15:10:17</eb:Timestamp>
+                <eb:RefToMessageId>5736810715</eb:RefToMessageId>
+            </eb:MessageData>
+        </eb:MessageHeader>
+        <wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+            <wsse:BinarySecurityToken valueType="String" EncodingType="wsse:Base64Binary">Shared/IDL:IceSess\/SessMgr:1\.0.IDL/Common/!ICESMS\/RESA!ICESMSLB\/RES.LB!0000000000000!0000!000</wsse:BinarySecurityToken>
+        </wsse:Security>
+    </soap-env:Header>
+    <soap-env:Body>
+        <TT:GetTicketingDocumentRS xmlns:TT="http://www.sabre.com/ns/Ticketing/DC"
+            xmlns="http://services.sabre.com/STL/v01"
+            xmlns:STL="http://services.sabre.com/STL/v01"
+            xmlns:str="http://sabre.com/ticketing/xslt/strings"
+            xmlns:utils="java:com.sabre.ticketing.tktdoc.utils.XsltUtils"
+            xmlns:xs="http://www.w3.org/2001/XMLSchema" Version="3.27.1">
+            <STL:STL_Header.RS messageID="TKTHLP625-60930-859206617-1620832217175-2934509-tktdoc" timeStamp="2021-05-12T10:10:17">
+                <OrchestrationID seq="1">TKTHLP625-60930-859206617-1620832217175-2934509-tktdoc</OrchestrationID>
+                <DiagnosticData xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">Found</DiagnosticData>
+                <STL:Results>
+                    <Success xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">
+                        <System>T2</System>
+                        <Source>DocumentServices</Source>
+                    </Success>
+                </STL:Results>
+            </STL:STL_Header.RS>
+            <TT:PassengerItineraryReceipt>
+                <TT:Agent duty="*" sine="AWS">
+                    <ns2:TicketingProvider xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" checkDigit="6" name="SABRE                   " number="153">1S</ns2:TicketingProvider>
+                    <ns2:IataNumber xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">37200251</ns2:IataNumber>
+                    <ns2:WorkLocation xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">8KOJ</ns2:WorkLocation>
+                    <ns2:IsoCountryCode xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">IL</ns2:IsoCountryCode>
+                    <TT:CompanyName>TALMA TRAVEL - TO</TT:CompanyName>
+                </TT:Agent>
+                <TT:Ticket accountingCode="996" number="9963865370900" numberOfServiceCoupons="2" type="TKT">
+                    <TT:Details>
+                        <TT:Reservation>
+                            <ns2:Sabre xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" createDate="2021-05-06T00:00:00" provider="AA" purgeDate="2022-02-24T00:00:00">ICMEVA</ns2:Sabre>
+                        </TT:Reservation>
+                        <ns2:LocalIssueDateTime xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">2021-05-07T18:47:00</ns2:LocalIssueDateTime>
+                        <TT:ValidatingProvider name="AIR EUROPA LINEAS AEREAS">UX</TT:ValidatingProvider>
+                        <ns2:AgencyBillingNumber xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">DK110912</ns2:AgencyBillingNumber>
+                        <TT:MandateInfo type="Disclaimer">
+                            <TT:Text language="EN">NOTICE
+CARRIAGE AND OTHER SERVICES PROVIDED BY THE CARRIER ARE SUBJECT TO CONDITIONS OF CARRIAGE, WHICH ARE HEREBY INCORPORATED BY REFERENCE.  THESE CONDITIONS MAY BE OBTAINED FROM THE ISSUING CARRIER. PASSENGERS ON A JOURNEY INVOLVING AN ULTIMATE DESTINATION OR A STOP IN A COUNTRY OTHER THAN THE COUNTRY OF DEPARTURE ARE ADVISED THAT INTERNATIONAL TREATIES KNOWN AS THE MONTREAL CONVENTION, OR ITS PREDECESSOR, THE WARSAW CONVENTION, INCLUDING ITS AMENDMENTS /THE WARSAW CONVENTION SYSTEM/MAY APPLY TO THE ENTIRE JOURNEY, INCLUDING ANY PORTION THEREOF WITHIN A COUNTRY. FOR SUCH PASSENGERS, THE APPLICABLE TREATY, INCLUDING SPECIAL CONTRACTS OF CARRIAGE EMBODIED IN ANY APPLICABLE TARIFFS, GOVERNS AND MAY LIMIT THE LIABILITY OF THE CARRIER. CHECK WITH YOUR CARRIER FOR MORE INFORMATION.</TT:Text>
+                        </TT:MandateInfo>
+                        <TT:MandateInfo type="HazardousMaterials">
+                            <TT:Text language="EN">THE CARRIAGE OF CERTAIN HAZARDOUS MATERIALS, LIKE AEROSOLS, FIREWORKS, AND FLAMMABLE LIQUIDS, ABOARD THE AIRCRAFT IS FORBIDDEN. IF YOU DO NOT UNDERSTAND THESE RESTRICTIONS, FURTHER INFORMATION MAY BE OBTAINED FROM YOUR AIRLINE.</TT:Text>
+                        </TT:MandateInfo>
+                        <TT:MandateInfo type="DataProtectionNotice">
+                            <TT:Text language="EN">DATA PROTECTION NOTICE: YOUR PERSONAL DATA WILL BE PROCESSED IN ACCORDANCE WITH THE APPLICABLE CARRIER'S PRIVACY POLICY AND, IF YOUR BOOKING IS MADE VIA A RESERVATION SYSTEM PROVIDER ("GDS"), WITH ITS PRIVACY POLICY. THESE ARE AVAILABLE AT HTTP://WWW.IATATRAVELCENTER.COM/PRIVACY OR FROM THE CARRIER OR GDS DIRECTLY. YOU SHOULD READ THIS DOCUMENTATION, WHICH APPLIES TO YOUR BOOKING AND SPECIFIES, FOR EXAMPLE, HOW YOUR PERSONAL DATA IS COLLECTED, STORED, USED, DISCLOSED AND TRANSFERRED.</TT:Text>
+                        </TT:MandateInfo>
+                        <ns2:ItineraryType xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">I</ns2:ItineraryType>
+                    </TT:Details>
+                    <TT:Customer>
+                        <TT:Traveler nameId="1" nameNumber="1.1">
+                            <ns2:Name xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">BARNES/DANA MR</ns2:Name>
+                            <ns2:FirstName xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">DANA MR</ns2:FirstName>
+                            <ns2:LastName xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">BARNES</ns2:LastName>
+                            <ns2:ExternalNumber xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">01JAN1900</ns2:ExternalNumber>
+                            <TT:PassengerType>ADT</TT:PassengerType>
+                        </TT:Traveler>
+                    </TT:Customer>
+                    <TT:ServiceCoupon coupon="1">
+                        <TT:MarketingProvider name="AIR EUROPA LINEAS AEREAS">UX</TT:MarketingProvider>
+                        <ns2:MarketingFlightNumber xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">1304</ns2:MarketingFlightNumber>
+                        <TT:OperatingProvider name="AIR EUROPA LINEAS AEREAS, S.A.">UX</TT:OperatingProvider>
+                        <ns2:OperatingFlightNumber xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">1304</ns2:OperatingFlightNumber>
+                        <ns2:ClassOfService xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" name="ECONOMY">Z</ns2:ClassOfService>
+                        <Cabin xmlns="http://www.sabre.com/ns/Ticketing/DC"
+                            xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" name="ECONOMY" sabreCode="Y" shortName="ECONOMY">Y</Cabin>
+                        <ns2:FareBasis xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">ZFLY5L</ns2:FareBasis>
+                        <ns2:StartLocation xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" name="TEL AVIV      TLV">TLV</ns2:StartLocation>
+                        <ns2:StartDateTime xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">2021-09-03T09:10:00</ns2:StartDateTime>
+                        <ns2:EndLocation xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" name="MADRID">MAD</ns2:EndLocation>
+                        <ns2:EndDateTime xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">2021-09-03T13:30:00</ns2:EndDateTime>
+                        <ns2:NotValidBeforeDate xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">2021-09-03</ns2:NotValidBeforeDate>
+                        <ns2:NotValidAfterDate xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">2021-09-03</ns2:NotValidAfterDate>
+                        <ns2:BookingStatus xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" name="CONFIRMED">OK</ns2:BookingStatus>
+                        <ns2:CurrentStatus xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">OK</ns2:CurrentStatus>
+                        <ns2:Reservation xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">T8CCWW</ns2:Reservation>
+                        <ns2:BagAllowance xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">NIL</ns2:BagAllowance>
+                    </TT:ServiceCoupon>
+                    <TT:ServiceCoupon coupon="2">
+                        <TT:MarketingProvider name="AIR EUROPA LINEAS AEREAS">UX</TT:MarketingProvider>
+                        <ns2:MarketingFlightNumber xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">1303</ns2:MarketingFlightNumber>
+                        <TT:OperatingProvider name="AIR EUROPA LINEAS AEREAS, S.A.">UX</TT:OperatingProvider>
+                        <ns2:OperatingFlightNumber xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">1303</ns2:OperatingFlightNumber>
+                        <ns2:ClassOfService xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" name="ECONOMY">Z</ns2:ClassOfService>
+                        <Cabin xmlns="http://www.sabre.com/ns/Ticketing/DC"
+                            xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" name="ECONOMY" sabreCode="Y" shortName="ECONOMY">Y</Cabin>
+                        <ns2:FareBasis xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">ZFLY5L</ns2:FareBasis>
+                        <ns2:StartLocation xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" name="MADRID">MAD</ns2:StartLocation>
+                        <ns2:StartDateTime xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">2021-09-07T15:20:00</ns2:StartDateTime>
+                        <ns2:EndLocation xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" name="TEL AVIV      TLV">TLV</ns2:EndLocation>
+                        <ns2:EndDateTime xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">2021-09-07T21:00:00</ns2:EndDateTime>
+                        <ns2:NotValidBeforeDate xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">2021-09-07</ns2:NotValidBeforeDate>
+                        <ns2:NotValidAfterDate xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">2021-09-07</ns2:NotValidAfterDate>
+                        <ns2:BookingStatus xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" name="CONFIRMED">OK</ns2:BookingStatus>
+                        <ns2:CurrentStatus xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">OK</ns2:CurrentStatus>
+                        <ns2:Reservation xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">T8CCWW</ns2:Reservation>
+                        <ns2:BagAllowance xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">NIL</ns2:BagAllowance>
+                    </TT:ServiceCoupon>
+                    <TT:Amounts>
+                        <TT:New>
+                            <TT:Base>
+                                <ns2:Amount xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" currencyCode="USD" decimalPlace="2">109.00</ns2:Amount>
+                                <ns2:Text xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">109.00</ns2:Text>
+                            </TT:Base>
+                            <TT:TotalTax>
+                                <ns2:Amount xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" currencyCode="USD" decimalPlace="2">57.67</ns2:Amount>
+                                <ns2:Text xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">57.67</ns2:Text>
+                            </TT:TotalTax>
+                            <TT:Total>
+                                <ns2:Amount xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" currencyCode="USD" decimalPlace="2">166.67</ns2:Amount>
+                                <ns2:Text xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">166.67</ns2:Text>
+                            </TT:Total>
+                        </TT:New>
+                    </TT:Amounts>
+                    <TT:Taxes>
+                        <TT:New>
+                            <TT:Tax code="IL" exempt="false" name="DEPARTURE PASSENGER AIRPORT TAX    INTL" sequence="1" status="N">
+                                <ns2:Amount xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" currencyCode="USD" decimalPlace="2">27.87</ns2:Amount>
+                                <ns2:Text xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">27.87</ns2:Text>
+                            </TT:Tax>
+                            <TT:Tax code="JD" exempt="false" name="DEPARTURE CHARGE" sequence="2" status="N">
+                                <ns2:Amount xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" currencyCode="USD" decimalPlace="2">25.00</ns2:Amount>
+                                <ns2:Text xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">25.00</ns2:Text>
+                            </TT:Tax>
+                            <TT:Tax code="QV" exempt="false" name="SECURITY TAX" sequence="3" status="N">
+                                <ns2:Amount xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" currencyCode="USD" decimalPlace="2">4.10</ns2:Amount>
+                                <ns2:Text xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">4.10</ns2:Text>
+                            </TT:Tax>
+                            <TT:Tax code="OG" exempt="false" name="AVIATION SAFETY AND SECURITY FEE" sequence="4" status="N">
+                                <ns2:Amount xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" currencyCode="USD" decimalPlace="2">0.70</ns2:Amount>
+                                <ns2:Text xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">0.70</ns2:Text>
+                            </TT:Tax>
+                        </TT:New>
+                    </TT:Taxes>
+                    <TT:Remark>
+                        <TT:Endorsements sequence="1">CHGS AND REF RESTRICTED</TT:Endorsements>
+                    </TT:Remark>
+                    <TT:FareCalculation>
+                        <TT:New>TLV UX MAD54.50UX TLV54.50NUC109.00END ROE1.00</TT:New>
+                    </TT:FareCalculation>
+                    <TT:AffiliatedAgent>
+                        <ns2:Booking xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" duty="*" sine="AWS">
+                            <ns2:WorkLocation>8KOJ</ns2:WorkLocation>
+                            <ns2:IataNumber>37200251</ns2:IataNumber>
+                            <ns2:HomeLocation>8KOJ</ns2:HomeLocation>
+                        </ns2:Booking>
+                    </TT:AffiliatedAgent>
+                    <TT:Payment sequence="1" type="CA">
+                        <ns2:Total xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">
+                            <ns2:Amount currencyCode="USD" decimalPlace="2">166.67</ns2:Amount>
+                            <ns2:ApplyCreditInd>false</ns2:ApplyCreditInd>
+                        </ns2:Total>
+                        <ns2:Remarks xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC">CASH</ns2:Remarks>
+                        <ns2:Cash xmlns:ns2="http://www.sabre.com/ns/Ticketing/DC" CashIndicator="true"/>
+                    </TT:Payment>
+                </TT:Ticket>
+            </TT:PassengerItineraryReceipt>
+        </TT:GetTicketingDocumentRS>
+    </soap-env:Body>
+</soap-env:Envelope>
