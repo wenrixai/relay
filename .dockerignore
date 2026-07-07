@@ -5,6 +5,8 @@
 .github
 .gitignore
 .dockerignore
+.agents
+.codex
 
 # Tests, docs, specs, perf — not part of any image.
 tests
@@ -23,15 +25,28 @@ RELEASE_CHECKLIST.md
 
 # Python caches / local envs.
 .venv
+build
+dist
+*.egg-info
 __pycache__
 *.pyc
 .mypy_cache
 .pytest_cache
 .ruff_cache
 .coverage
+coverage.xml
 htmlcov
+.tox
+.nox
 
 # Editor / OS cruft.
 .idea
 .vscode
 .DS_Store
+
+# Local tool and dependency caches.
+.cache
+.terraform
+.terragrunt-cache
+node_modules
+*.log
