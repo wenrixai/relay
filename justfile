@@ -55,6 +55,10 @@ run:
 up:
     docker compose up
 
+# Build the production image (multi-stage, non-root, alpine runtime).
+docker-build tag="wenrix-proxy:latest":
+    docker build --target runtime -t {{tag}} .
+
 # Lint + render the Helm chart and run its assertion tests (requires helm).
 helm-test:
     helm lint deployment/helm/chart --set networkPolicy.ingressFromCIDRs='{10.0.0.0/8}'
