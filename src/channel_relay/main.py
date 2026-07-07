@@ -196,12 +196,21 @@ def create_app(
         return diagnostics_snapshot(request)
 
     @application.api_route(
+        "/channel/{name}",
+        methods=_RELAY_METHODS,
+        dependencies=[Depends(verify_basic_auth)],
+    )
+    @application.api_route(
         "/channel/{name}/{path:path}",
         methods=_RELAY_METHODS,
         dependencies=[Depends(verify_basic_auth)],
     )
-    async def relay(name: str, path: str, request: Request) -> Response:
-        """Route to a channel and forward transparently (§3.1, §5)."""
+    async def relay(name: str, request: Request, path: str = "") -> Response:
+        """Route to a channel and forward transparently (§3.1, §5).
+
+        Old nginx proxy allowed a bare ``/channel/<name>`` with no trailing path
+        (e.g. Travelfusion); both route forms exist for that reason.
+        """
         channel = find_channel(request.app.state.config, name)
         if channel is None:
             return JSONResponse(status_code=404, content={"error": "unknown_channel"})

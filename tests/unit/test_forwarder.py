@@ -160,6 +160,21 @@ def test_forward_rewrites_host_to_channel_host(travelfusion_client: TravelFusion
     assert captured["req"].headers["host"] == "api.travelfusion.com"
 
 
+def test_forward_matches_bare_channel_path(travelfusion_client: TravelFusionClientFactory) -> None:
+    """Old nginx proxy allowed a bare ``/channel/<name>`` with no trailing path (§ backward compat)."""
+    captured: dict[str, httpx.Request] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["req"] = request
+        return httpx.Response(204)
+
+    with travelfusion_client(httpx.MockTransport(handler)) as client:
+        resp = client.get("/channel/tf")
+
+    assert resp.status_code == 204
+    assert str(captured["req"].url) == "https://api.travelfusion.com"
+
+
 def test_unknown_channel_returns_404(
     travelfusion_client: TravelFusionClientFactory, unreachable_transport: httpx.MockTransport
 ) -> None:
