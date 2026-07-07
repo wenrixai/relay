@@ -31,6 +31,8 @@ _SOAP_ENVELOPE = "Envelope"
 _SOAP_HEADER = "Header"
 _SOAP_BODY = "Body"
 _SECURITY = "Security"
+_BINARY_SECURITY_TOKEN = "BinarySecurityToken"
+_USERNAME_TOKEN = "UsernameToken"
 
 
 def _local_name(element: etree._Element) -> str:
@@ -75,6 +77,11 @@ def _find_first_by_local(root: etree._Element, local_name: str) -> etree._Elemen
         if _local_name(element) == local_name:
             return element
     return None
+
+
+def _contains_binary_security_token(element: etree._Element) -> bool:
+    """True when the security target carries a session ``BinarySecurityToken`` (Sabre reuse)."""
+    return any(_local_name(node) == _BINARY_SECURITY_TOKEN for node in element.iter("*"))
 
 
 def _require_credential(credentials: dict[str, str], key: str) -> str:
@@ -157,7 +164,15 @@ class NoBodySwapMixin:
 
 
 @dataclass(frozen=True, slots=True)
-class TravelfusionHandler(NoHeaderSwapMixin):
+class NoCredentialValidationMixin:
+    """Default config-load validation for channels with no required credential shape."""
+
+    def validate_credentials(self, channel: ChannelConfig) -> None:  # pylint: disable=unused-argument
+        return None
+
+
+@dataclass(frozen=True, slots=True)
+class TravelfusionHandler(NoHeaderSwapMixin, NoCredentialValidationMixin):
     """Travelfusion XML element credential swap."""
 
     channel_type: ChannelType = ChannelType.TRAVELFUSION
@@ -228,7 +243,7 @@ def _parse_supplier_parameters(value: str) -> list[tuple[str, str]]:
 
 
 @dataclass(frozen=True, slots=True)
-class NdcHeaderHandler(NoBodySwapMixin, NoopResponseMixin):
+class NdcHeaderHandler(NoBodySwapMixin, NoopResponseMixin, NoCredentialValidationMixin):
     """BA/LA direct NDC header credential swap."""
 
     channel_type: ChannelType
@@ -250,7 +265,7 @@ class NdcHeaderHandler(NoBodySwapMixin, NoopResponseMixin):
 
 
 @dataclass(frozen=True, slots=True)
-class FarelogixHandler(NoopResponseMixin):
+class FarelogixHandler(NoopResponseMixin, NoCredentialValidationMixin):
     """Farelogix tc/iden + tc/agent XML attribute credential swap."""
 
     channel_type: ChannelType
@@ -304,11 +319,47 @@ class SoapSecurityHandler(NoHeaderSwapMixin):
     def requires_response_keyring(self, channel: ChannelConfig) -> bool:
         return self.channel_type in {ChannelType.AMADEUS, ChannelType.SABRE} and bool(channel.credential_values)
 
+    def validate_credentials(self, channel: ChannelConfig) -> None:
+        """Config-load check: a swap-enabled SOAP channel must configure exactly one auth form.
+
+        Valid forms are a static ``soap_security`` fragment, or the complete dynamic pair
+        ``soap_username``+``soap_password``. A partial dynamic config (only one of the pair) or a mix
+        of static and dynamic fields is rejected — otherwise ``swap_request_body`` would take the
+        dynamic branch and fail closed on every request.
+        """
+        if not channel.credentials.enabled:  # pylint: disable=no-member
+            return
+        credentials = channel.credential_values
+        has_static = bool(credentials.get("soap_security"))
+        has_username = bool(credentials.get("soap_username"))
+        has_password = bool(credentials.get("soap_password"))
+        static_only = has_static and not (has_username or has_password)
+        dynamic_only = has_username and has_password and not has_static
+        if not (static_only or dynamic_only):
+            raise ValueError(
+                f"channel {channel.name!r}: SOAP credential swap requires exactly one of "
+                "'soap_security' or the complete pair 'soap_username'+'soap_password'"
+            )
+
     def swap_request_body(self, root: etree._Element, context: SwapContext) -> bool:
         credentials = context.channel.credential_values
         if not credentials:
             return False
         target = self._security_target(root, credentials)
+        if target is None:
+            # No swap target located — e.g. an Amadeus stateful non-start request whose session
+            # lives in awsse:Session outside Security. A placeholder UsernameToken must never reach
+            # the supplier, so fail closed if one is present anywhere; otherwise this is a no-op.
+            if _find_first_by_local(root, _USERNAME_TOKEN) is not None:
+                raise CredentialSwapError("SOAP UsernameToken present but no swap target located")
+            return False
+        if _contains_binary_security_token(target):
+            # Session-reuse request: the BinarySecurityToken was already restored to plaintext by
+            # request de-anonymization; forward it as-is. A coexisting UsernameToken would be a
+            # placeholder we must not leak — fail closed rather than skip.
+            if _find_first_by_local(target, _USERNAME_TOKEN) is not None:
+                raise CredentialSwapError("SOAP Security carries both a BinarySecurityToken and a UsernameToken")
+            return False
         if credentials.get("soap_username"):
             fragment = _dynamic_security_fragment(credentials)
         else:
@@ -331,7 +382,12 @@ class SoapSecurityHandler(NoHeaderSwapMixin):
             changed = True
         return changed
 
-    def _security_target(self, root: etree._Element, credentials: dict[str, str]) -> etree._Element:
+    def _security_target(self, root: etree._Element, credentials: dict[str, str]) -> etree._Element | None:
+        """Locate the swappable SOAP security element, or ``None`` when there is nothing to swap.
+
+        An absent ``Security`` element / xpath match returns ``None`` (the swap is a no-op, e.g. a
+        session-reuse request). Only a malformed ``soap_security_target_xpath`` expression fails closed.
+        """
         target_xpath = credentials.get("soap_security_target_xpath")
         if target_xpath:
             try:
@@ -339,18 +395,16 @@ class SoapSecurityHandler(NoHeaderSwapMixin):
             except etree.XPathError as exc:
                 raise CredentialSwapError("soap_security_target_xpath is invalid") from exc
             if not isinstance(located_raw, list) or not located_raw:
-                raise CredentialSwapError("SOAP security XPath target not found")
+                return None
             target = located_raw[0]
-            if not isinstance(target, etree._Element):  # pylint: disable=protected-access
-                raise CredentialSwapError("SOAP security XPath target not found")
-            return target
+            return target if isinstance(target, etree._Element) else None  # pylint: disable=protected-access
         header = _soap_header(root)
         if header is None:
-            raise CredentialSwapError("SOAP Header not found")
+            return None
         for child in header:
             if isinstance(child.tag, str) and _local_name(child) == _SECURITY:
                 return child
-        raise CredentialSwapError("SOAP Security header not found")
+        return None
 
 
 @dataclass(frozen=True, slots=True)
@@ -358,7 +412,10 @@ class AmadeusHandler(SoapSecurityHandler):
     """Amadeus SOAP handler."""
 
     channel_type: ChannelType = ChannelType.AMADEUS
-    response_auth_local_names: ClassVar[set[str]] = {"SessionId", "SequenceNumber", "SecurityToken"}
+    # SequenceNumber is a non-secret conversation counter the client parses as an int and
+    # increments; encrypting it would break session continuity, so only the auth-bearing
+    # SessionId/SecurityToken are protected.
+    response_auth_local_names: ClassVar[set[str]] = {"SessionId", "SecurityToken"}
 
 
 @dataclass(frozen=True, slots=True)

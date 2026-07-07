@@ -69,7 +69,7 @@ class Gds:
     pii_response_fixture: str  # response carrying plaintext PII the relay must redact
     pii_markers: tuple[bytes, ...]  # plaintext PII that must never survive to the client
     non_pii_marker: bytes  # a non-PII value that must be preserved untouched
-    no_security_envelope: bytes  # request with a Header but no Security element (swap fails closed)
+    no_security_envelope: bytes  # request with a Header but no Security element (swap is a no-op)
     bad_token_envelope: bytes  # request whose element text is exactly a malformed ENC_ token
 
     def request_body(self) -> bytes:

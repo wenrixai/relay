@@ -133,7 +133,12 @@ def test_encrypted_token_round_trips_on_next_request(monkeypatch: pytest.MonkeyP
         reply = client.post("/channel/sabre/op", content=follow_up.encode(), headers={"content-type": "text/xml"})
     assert reply.status_code == 200
     forwarded = mock.channel_bodies[-1]
-    # De-anonymization restored the session token, then the security header swap replaced the
-    # whole Security element with the configured fragment — no ENC_ token reaches the channel.
+    # Session reuse: de-anonymization restores the real BinarySecurityToken and the credential swap
+    # leaves it in place (it is not a UsernameToken), so the session token reaches the channel and no
+    # ENC_ token leaks. The relay does NOT re-credential the reuse request with the static fragment.
     assert b"ENC_" not in forwarded
-    assert b">RELAY<" in forwarded
+    assert b"<wsse:BinarySecurityToken>" in forwarded
+    assert b">RELAY<" not in forwarded
+    # The real session token round-trips: what the channel first issued is what it now receives.
+    decrypted = decrypt(token, Keyring.from_json(KEYRING_JSON))
+    assert decrypted.encode() in forwarded

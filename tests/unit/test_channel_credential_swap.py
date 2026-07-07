@@ -226,18 +226,20 @@ def test_farelogix_no_credentials_is_noop_and_missing_subscription_key_fails_clo
     _assert_swap_error("missing Farelogix subscription key", handler.swap_request_headers, _ctx(missing_key, {}))
 
 
-def test_soap_security_fragment_replaces_header_for_gds_channels() -> None:
-    fragment = (
-        '<wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">'
-        "<wsse:BinarySecurityToken>relay-token</wsse:BinarySecurityToken>"
-        "</wsse:Security>"
-    )
+_SOAP_FRAGMENT = (
+    '<wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">'
+    "<wsse:BinarySecurityToken>relay-token</wsse:BinarySecurityToken>"
+    "</wsse:Security>"
+)
+
+
+def test_soap_security_fragment_replaces_username_token_for_gds_channels() -> None:
+    # Amadeus/Travelport request fixtures carry a UsernameToken (auth phase) → swapped to the fragment.
     for channel_type, fixture, operation in [
         (ChannelType.AMADEUS, "amadeus/request.xml", "PNR_Retrieve"),
-        (ChannelType.SABRE, "sabre/request.xml", "TravelItineraryReadRQ"),
         (ChannelType.TRAVELPORT, "travelport/request.xml", "UniversalRecordRetrieveReq"),
     ]:
-        channel = _gds_channel(channel_type, {"soap_security": fragment})
+        channel = _gds_channel(channel_type, {"soap_security": _SOAP_FRAGMENT})
         root = _root(fixture)
         handler = get_handler(channel_type)
 
@@ -247,7 +249,46 @@ def test_soap_security_fragment_replaces_header_for_gds_channels() -> None:
         xml = serialize(root).decode()
         assert "relay-token" in xml
         assert "caller" not in xml
-        assert "caller-token" not in xml
+
+
+def test_sabre_session_reuse_request_is_not_recredentialed() -> None:
+    # A Sabre request carrying a BinarySecurityToken (session reuse) must be left untouched so the
+    # de-anonymized token reaches the channel; injecting a UsernameToken would open a new session.
+    channel = _gds_channel(ChannelType.SABRE, {"soap_security": _SOAP_FRAGMENT})
+    root = _root("sabre/request.xml")  # <Security><BinarySecurityToken>caller-token</...>
+    handler = get_handler(ChannelType.SABRE)
+
+    assert handler.parse_operation(root) == "TravelItineraryReadRQ"
+    assert handler.swap_request_body(root, _ctx(channel)) is False
+
+    xml = serialize(root).decode()
+    assert "caller-token" in xml  # reused session token preserved
+    assert "relay-token" not in xml  # not re-credentialed
+
+
+def test_sabre_session_create_request_is_swapped() -> None:
+    channel = _gds_channel(ChannelType.SABRE, {"soap_security": _SOAP_FRAGMENT})
+    body = (
+        b'<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"'
+        b' xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext"><soap-env:Header>'
+        b"<wsse:Security><wsse:UsernameToken><wsse:Username>caller</wsse:Username>"
+        b"</wsse:UsernameToken></wsse:Security></soap-env:Header>"
+        b"<soap-env:Body><SessionCreateRQ/></soap-env:Body></soap-env:Envelope>"
+    )
+    handler = get_handler(ChannelType.SABRE)
+    root = parse_bytes(body)
+
+    assert handler.swap_request_body(root, _ctx(channel)) is True
+    xml = serialize(root).decode()
+    assert "relay-token" in xml
+    assert "caller" not in xml
+
+
+def test_soap_request_without_security_header_is_noop() -> None:
+    channel = _gds_channel(ChannelType.SABRE, {"soap_security": _SOAP_FRAGMENT})
+    handler = get_handler(ChannelType.SABRE)
+    for body in (b"<Envelope/>", b"<Envelope><Header/><Body/></Envelope>"):
+        assert handler.swap_request_body(parse_bytes(body), _ctx(channel)) is False
 
 
 def test_dynamic_username_token_built_when_soap_username_set() -> None:
@@ -311,13 +352,11 @@ def test_soap_security_xpath_target_variant_replaces_header() -> None:
     ("credentials", "message"),
     [
         ({"soap_security": "<Security/>", "soap_security_target_xpath": "//*["}, "invalid"),
-        ({"soap_security": "<Security/>", "soap_security_target_xpath": "string(//*)"}, "not found"),
-        ({"soap_security": "<Security/>", "soap_security_target_xpath": "//*[local-name()='Missing']"}, "not found"),
         ({"soap_security": "<Security><Token>"}, "parseable XML"),
     ],
-    ids=["invalid-xpath", "scalar-xpath", "missing-target", "invalid-fragment"],
+    ids=["invalid-xpath", "invalid-fragment"],
 )
-def test_soap_security_xpath_target_failures(credentials: dict[str, str], message: str) -> None:
+def test_soap_security_swap_failures_fail_closed(credentials: dict[str, str], message: str) -> None:
     handler = get_handler(ChannelType.AMADEUS)
     channel = _gds_channel(credentials=credentials)
 
@@ -325,19 +364,46 @@ def test_soap_security_xpath_target_failures(credentials: dict[str, str], messag
 
 
 @pytest.mark.parametrize(
-    ("message", "body"),
-    [
-        ("SOAP Header not found", b"<Envelope/>"),
-        ("SOAP Security header not found", b"<Envelope><Header/><Body/></Envelope>"),
-    ],
-    ids=["missing-header", "missing-security"],
+    "target_xpath",
+    ["string(//*)", "//*[local-name()='Missing']"],
+    ids=["scalar-xpath", "missing-target"],
 )
-def test_soap_security_missing_header_or_security_fails_closed(message: str, body: bytes) -> None:
+def test_soap_security_xpath_miss_without_username_token_is_noop(target_xpath: str) -> None:
+    # A valid xpath that matches nothing on a credential-free (session-reuse) body is a no-op.
     handler = get_handler(ChannelType.SABRE)
-    channel = _gds_channel(ChannelType.SABRE, {"soap_security": "<Security/>"})
+    channel = _gds_channel(
+        ChannelType.SABRE, {"soap_security": "<Security/>", "soap_security_target_xpath": target_xpath}
+    )
+    body = (
+        b'<Envelope xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext"><Header>'
+        b"<wsse:Security><wsse:BinarySecurityToken>t</wsse:BinarySecurityToken></wsse:Security>"
+        b"</Header><Body/></Envelope>"
+    )
+    assert handler.swap_request_body(parse_bytes(body), _ctx(channel)) is False
 
-    assert handler.requires_body_inspection(_gds_channel(ChannelType.SABRE)) is False
-    _assert_swap_error(message, handler.swap_request_body, parse_bytes(body), _ctx(channel))
+
+def test_soap_security_xpath_miss_with_username_token_fails_closed() -> None:
+    # The placeholder UsernameToken must never reach the supplier when the xpath target is missed.
+    handler = get_handler(ChannelType.AMADEUS)
+    channel = _gds_channel(
+        credentials={"soap_security": "<Security/>", "soap_security_target_xpath": "//*[local-name()='Missing']"}
+    )
+
+    _assert_swap_error("UsernameToken", handler.swap_request_body, _root("amadeus/request.xml"), _ctx(channel))
+
+
+def test_soap_security_with_both_tokens_fails_closed() -> None:
+    # A Security element carrying both a session token and a placeholder UsernameToken is anomalous:
+    # skipping would leak the placeholder, so the relay fails closed.
+    handler = get_handler(ChannelType.SABRE)
+    channel = _gds_channel(ChannelType.SABRE, {"soap_security": _SOAP_FRAGMENT})
+    body = (
+        b'<Envelope xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext"><Header>'
+        b"<wsse:Security><wsse:BinarySecurityToken>t</wsse:BinarySecurityToken>"
+        b"<wsse:UsernameToken><wsse:Username>caller</wsse:Username></wsse:UsernameToken>"
+        b"</wsse:Security></Header><Body/></Envelope>"
+    )
+    _assert_swap_error("both", handler.swap_request_body, parse_bytes(body), _ctx(channel))
 
 
 def test_ndc_header_swap_replaces_client_sent_variant_case_insensitively() -> None:
@@ -366,6 +432,50 @@ def test_amadeus_and_sabre_response_auth_fields_are_encrypted() -> None:
         xml = serialize(root).decode()
         assert plaintext not in xml
         assert "ENC_" in xml
+
+
+def test_amadeus_response_keeps_sequence_number_plaintext() -> None:
+    keyring = Keyring.from_json(KEYRING_JSON)
+    channel = _gds_channel(ChannelType.AMADEUS, {"soap_security": "<Security/>"})
+    root = _root("amadeus/response_auth.xml")
+
+    assert get_handler(ChannelType.AMADEUS).swap_response(
+        root, SwapContext(channel=channel, headers={}, keyring=keyring)
+    )
+
+    fields = {node.tag.split("}")[-1]: node.text for node in root.iter("*")}
+    assert fields["SessionId"] is not None and fields["SessionId"].startswith("ENC_")
+    assert fields["SecurityToken"] is not None and fields["SecurityToken"].startswith("ENC_")
+    # The conversation counter is left intact so the client can parse and increment it.
+    assert fields["SequenceNumber"] == "42"
+
+
+@pytest.mark.parametrize(
+    ("credentials", "valid"),
+    [
+        ({"soap_security": "<Security/>"}, True),
+        ({"soap_username": "u", "soap_password": "p"}, True),
+        ({}, False),
+        ({"soap_username": "u"}, False),
+        ({"soap_security": "<Security/>", "soap_username": "u", "soap_password": "p"}, False),
+        ({"soap_security": "<Security/>", "soap_username": "u"}, False),
+    ],
+    ids=["static", "dynamic", "neither", "incomplete-dynamic", "both", "static-plus-partial-dynamic"],
+)
+def test_soap_validate_credentials(credentials: dict[str, str], valid: bool) -> None:
+    handler = get_handler(ChannelType.SABRE)
+    channel = _gds_channel(ChannelType.SABRE, credentials)
+    if valid:
+        handler.validate_credentials(channel)
+    else:
+        with pytest.raises(ValueError, match="exactly one"):
+            handler.validate_credentials(channel)
+
+
+def test_soap_validate_credentials_noop_when_disabled() -> None:
+    # credentials.enabled defaults False → no auth requirement even with no fields configured.
+    channel = ChannelConfig(name="sabre", type=ChannelType.SABRE)
+    get_handler(ChannelType.SABRE).validate_credentials(channel)
 
 
 def test_soap_response_noop_and_missing_keyring_paths() -> None:

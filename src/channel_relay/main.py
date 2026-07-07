@@ -22,6 +22,7 @@ from starlette.responses import Response
 from channel_relay import __version__
 from channel_relay.admin import diagnostics_snapshot
 from channel_relay.channels import credentials_require_response_keyring
+from channel_relay.channels import get_handler
 from channel_relay.config.loader import load_config
 from channel_relay.config.models import RelayConfig
 from channel_relay.health import readiness_reasons
@@ -76,6 +77,18 @@ def validate_auth_config(settings: Settings) -> None:
         raise RuntimeError(msg)
 
 
+def validate_credential_config(config: RelayConfig | None) -> None:
+    """Abort startup when a swap-enabled channel lacks the credentials its handler requires.
+
+    Fail fast at config load rather than with a per-request 502: a channel that enables credential
+    swap without configured auth would otherwise silently forward placeholder credentials.
+    """
+    if config is None:
+        return
+    for channel in config.channels:
+        get_handler(channel.type).validate_credentials(channel)
+
+
 def _load_startup_config(settings: Settings) -> RelayConfig | None:
     """Load config on startup.
 
@@ -119,6 +132,8 @@ def create_app(
             application.state.config = _load_startup_config(settings)
         if application.state.config is not None:
             metrics.set_channels_configured(len(application.state.config.channels))
+            # Credential swap enabled without configured auth → abort (fail closed at load).
+            validate_credential_config(application.state.config)
         # PII keyring: invalid → abort; missing while PII enabled → abort (§8.3).
         application.state.keyring = build_keyring(settings, application.state.config)
         owns_client = application.state.client is None

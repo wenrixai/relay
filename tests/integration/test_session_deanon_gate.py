@@ -76,8 +76,10 @@ def test_amadeus_session_tokens_deanonymized_with_pii_disabled(monkeypatch: pyte
         root = parse_bytes(first.content)
         session = {node.tag.split("}")[-1]: node.text for node in root.iter("*")}
         # Response auth encryption runs on the credential-swap feature, independent of pii.enabled.
-        for field in ("SessionId", "SequenceNumber", "SecurityToken"):
+        for field in ("SessionId", "SecurityToken"):
             assert session[field] is not None and session[field].startswith("ENC_")
+        # SequenceNumber is a non-secret counter the client increments; it stays plaintext.
+        assert session["SequenceNumber"] == "42"
 
         follow_up = (
             '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"'

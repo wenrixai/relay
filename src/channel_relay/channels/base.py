@@ -48,3 +48,6 @@ class ChannelHandler(Protocol):
 
     def requires_response_keyring(self, channel: ChannelConfig) -> bool:
         """Whether configured response processing requires a PII keyring."""
+
+    def validate_credentials(self, channel: ChannelConfig) -> None:
+        """Validate configured credentials at config load; raise if the channel is misconfigured."""
