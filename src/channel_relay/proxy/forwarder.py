@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import gzip
 import zlib
+from dataclasses import dataclass
 
 import httpx
 from fastapi import Request
@@ -50,6 +51,16 @@ from channel_relay.proxy.errors import (
 
 # Headers that become stale once the relay rewrites a body (recomputed downstream).
 _BODY_SENSITIVE_HEADERS = frozenset({"content-length", "content-encoding"})
+
+
+@dataclass(frozen=True)
+class _StageContext:
+    """Common per-request state threaded through the forwarding pipeline stages."""
+
+    channel: ChannelConfig
+    max_inspect_bytes: int
+    trace_id: str | None
+    metrics: RelayMetrics | None
 
 
 def _record_xml_error(metrics: RelayMetrics | None, channel: str, kind: str) -> None:
@@ -128,6 +139,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     """
     trace_id = request.headers.get(TRACE_ID_HEADER)
     metrics: RelayMetrics | None = request.app.state.metrics
+    ctx = _StageContext(channel=channel, max_inspect_bytes=max_inspect_bytes, trace_id=trace_id, metrics=metrics)
     if channel.proxy_pass is None:
         logger.bind(channel=channel.name).error("Channel has no upstream base configured")
         return internal_error_response(ErrorReason.INTERNAL_ERROR, "channel has no upstream configured", trace_id)
@@ -147,15 +159,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     # [6] Operation authorization: reject a disallowed operation before any credential injection
     # or upstream call, so a blocked operation never reaches the channel (§operation-authorization).
     if channel.operation_authorization_enabled:
-        auth_outcome = _authorization_stage(
-            handler=handler,
-            channel=channel,
-            body=body,
-            kind=kind,
-            max_inspect_bytes=max_inspect_bytes,
-            trace_id=trace_id,
-            metrics=metrics,
-        )
+        auth_outcome = _authorization_stage(handler=handler, body=body, kind=kind, ctx=ctx)
         if auth_outcome is not None:
             return auth_outcome
 
@@ -186,28 +190,14 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
         # [7] De-anonymize: the channel must always receive plaintext (§8.6). Envelope-driven,
         # keyring-only; fail closed — an undecryptable token never reaches the channel.
         if need_deanon and keyring is not None:
-            pii_outcome = _request_pii_stage(
-                channel=channel,
-                keyring=keyring,
-                body=working,
-                max_inspect_bytes=max_inspect_bytes,
-                trace_id=trace_id,
-                metrics=metrics,
-            )
+            pii_outcome = _request_pii_stage(keyring=keyring, body=working, ctx=ctx)
             if isinstance(pii_outcome, Response):
                 return pii_outcome
             working = pii_outcome
             changed = True
         if need_cred_body:
             swap_outcome = _request_credential_swap_stage(
-                handler=handler,
-                channel=channel,
-                body=working,
-                headers=headers,
-                max_inspect_bytes=max_inspect_bytes,
-                trace_id=trace_id,
-                metrics=metrics,
-                keyring=keyring,
+                handler=handler, body=working, headers=headers, keyring=keyring, ctx=ctx
             )
             if isinstance(swap_outcome, Response):
                 return swap_outcome
@@ -241,13 +231,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
 
     if channel.credential_swap_enabled and content and response_kind is ContentKind.XML:
         response_swap_outcome = _response_credential_swap_stage(
-            channel=channel,
-            content=content,
-            response_headers=response_headers,
-            max_inspect_bytes=max_inspect_bytes,
-            trace_id=trace_id,
-            metrics=metrics,
-            keyring=keyring,
+            content=content, response_headers=response_headers, keyring=keyring, ctx=ctx
         )
         if isinstance(response_swap_outcome, Response):
             return response_swap_outcome
@@ -259,15 +243,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     rules: RuleSet | None = request.app.state.rules
     redaction_ready = keyring is not None or channel.pii.force_redact
     if channel.pii.enabled and redaction_ready and rules is not None and content and response_kind is ContentKind.XML:
-        redaction_outcome = _response_pii_stage(
-            channel=channel,
-            keyring=keyring,
-            rules=rules,
-            content=content,
-            max_inspect_bytes=max_inspect_bytes,
-            trace_id=trace_id,
-            metrics=metrics,
-        )
+        redaction_outcome = _response_pii_stage(keyring=keyring, rules=rules, content=content, ctx=ctx)
         if isinstance(redaction_outcome, Response):
             return redaction_outcome
         content = redaction_outcome
@@ -283,15 +259,8 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     )
 
 
-def _authorization_stage(  # pylint: disable=too-many-arguments
-    *,
-    handler: ChannelHandler,
-    channel: ChannelConfig,
-    body: bytes,
-    kind: ContentKind,
-    max_inspect_bytes: int,
-    trace_id: str | None,
-    metrics: RelayMetrics | None = None,
+def _authorization_stage(
+    *, handler: ChannelHandler, body: bytes, kind: ContentKind, ctx: _StageContext
 ) -> Response | None:
     """Pipeline stage [6]: enforce the operation-name allow-list; disallowed → 403.
 
@@ -299,31 +268,32 @@ def _authorization_stage(  # pylint: disable=too-many-arguments
     body (never a header, §5.3/D6). An operation that cannot be determined — non-XML body or a
     body that does not parse as XML — fails closed: an unverifiable operation is not allowed.
     """
+    channel = ctx.channel
     allowed = {entry.operation for entry in channel.authorization.allowed_operations}
     if kind is not ContentKind.XML:
         logger.bind(channel=channel.name, content_kind=kind).warning("Operation unverifiable: non-XML body")
-        return _deny_operation(channel, trace_id, metrics)
+        return _deny_operation(ctx)
     try:
-        root = parse_bytes(body, max_bytes=max_inspect_bytes)
+        root = parse_bytes(body, max_bytes=ctx.max_inspect_bytes)
     except XmlOversizeError as exc:
-        _record_xml_error(metrics, channel.name, exc.kind)
+        _record_xml_error(ctx.metrics, channel.name, exc.kind)
         return payload_too_large_response()
     except XmlOpsError as exc:
-        _record_xml_error(metrics, channel.name, exc.kind)
+        _record_xml_error(ctx.metrics, channel.name, exc.kind)
         logger.bind(channel=channel.name).warning("Request XML rejected during operation authorization")
-        return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not parseable XML", trace_id)
+        return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not parseable XML", ctx.trace_id)
     operation = handler.parse_operation(root)
     if operation not in allowed:
         logger.bind(channel=channel.name, operation=operation).warning("Operation not allowed")
-        return _deny_operation(channel, trace_id, metrics)
+        return _deny_operation(ctx)
     return None
 
 
-def _deny_operation(channel: ChannelConfig, trace_id: str | None, metrics: RelayMetrics | None) -> Response:
+def _deny_operation(ctx: _StageContext) -> Response:
     """Emit the 403 operation-not-allowed response and count the denial."""
-    if metrics is not None:
-        metrics.record_operation_denied(channel.name)
-    return forbidden_operation_response(trace_id)
+    if ctx.metrics is not None:
+        ctx.metrics.record_operation_denied(ctx.channel.name)
+    return forbidden_operation_response(ctx.trace_id)
 
 
 def _request_header_swap(
@@ -342,121 +312,95 @@ def _request_header_swap(
     return None
 
 
-def _request_credential_swap_stage(  # pylint: disable=too-many-arguments
-    *,
-    handler: ChannelHandler,
-    channel: ChannelConfig,
-    body: bytes,
-    headers: dict[str, str],
-    max_inspect_bytes: int,
-    trace_id: str | None,
-    metrics: RelayMetrics | None = None,
-    keyring: Keyring | None = None,
+def _request_credential_swap_stage(
+    *, handler: ChannelHandler, body: bytes, headers: dict[str, str], keyring: Keyring | None, ctx: _StageContext
 ) -> tuple[bytes, bool] | Response:
     """Pipeline stage [8b]: per-channel request *body* credential swap; error → 502.
 
     Only reached for handlers that require body inspection; ``body`` is already plaintext.
     """
+    channel = ctx.channel
     try:
-        root = parse_bytes(body, max_bytes=max_inspect_bytes)
+        root = parse_bytes(body, max_bytes=ctx.max_inspect_bytes)
         changed = handler.swap_request_body(root, SwapContext(channel, headers, keyring))
         return (serialize(root), True) if changed else (body, False)
     except XmlOversizeError as exc:
-        _record_xml_error(metrics, channel.name, exc.kind)
+        _record_xml_error(ctx.metrics, channel.name, exc.kind)
         return payload_too_large_response()
     except XmlOpsError as exc:
-        _record_xml_error(metrics, channel.name, exc.kind)
+        _record_xml_error(ctx.metrics, channel.name, exc.kind)
         logger.bind(channel=channel.name).warning("Request XML rejected during credential swap")
-        return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not parseable XML", trace_id)
+        return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not parseable XML", ctx.trace_id)
     except CredentialSwapError:
         logger.bind(channel=channel.name).warning("Credential swap failed")
         return internal_error_response(
             ErrorReason.CREDENTIAL_SWAP_FAILED,
             "request credential swap failed",
-            trace_id,
+            ctx.trace_id,
         )
 
 
-def _response_credential_swap_stage(  # pylint: disable=too-many-arguments
-    *,
-    channel: ChannelConfig,
-    content: bytes,
-    response_headers: dict[str, str],
-    max_inspect_bytes: int,
-    trace_id: str | None,
-    metrics: RelayMetrics | None = None,
-    keyring: Keyring | None = None,
+def _response_credential_swap_stage(
+    *, content: bytes, response_headers: dict[str, str], keyring: Keyring | None, ctx: _StageContext
 ) -> tuple[bytes, bool] | Response:
     """Pipeline response hook: credential cleanup/encryption before PII redaction."""
+    channel = ctx.channel
     handler = get_handler(channel.type)
     try:
-        root = parse_bytes(content, max_bytes=max_inspect_bytes)
+        root = parse_bytes(content, max_bytes=ctx.max_inspect_bytes)
         changed = handler.swap_response(root, SwapContext(channel, response_headers, keyring))
         return (serialize(root), True) if changed else (content, False)
     except XmlOversizeError as exc:
-        _record_xml_error(metrics, channel.name, exc.kind)
+        _record_xml_error(ctx.metrics, channel.name, exc.kind)
         return payload_too_large_response()
     except XmlOpsError as exc:
-        _record_xml_error(metrics, channel.name, exc.kind)
+        _record_xml_error(ctx.metrics, channel.name, exc.kind)
         logger.bind(channel=channel.name).warning("Response XML rejected during credential cleanup")
-        return internal_error_response(ErrorReason.XML_PARSE_ERROR, "response body is not parseable XML", trace_id)
+        return internal_error_response(ErrorReason.XML_PARSE_ERROR, "response body is not parseable XML", ctx.trace_id)
     except CredentialSwapError:
         logger.bind(channel=channel.name).warning("Response credential cleanup failed")
         return internal_error_response(
             ErrorReason.CREDENTIAL_SWAP_FAILED,
             "response credential cleanup failed",
-            trace_id,
+            ctx.trace_id,
         )
 
 
-def _request_pii_stage(  # pylint: disable=too-many-arguments
-    *,
-    channel: ChannelConfig,
-    keyring: Keyring,
-    body: bytes,
-    max_inspect_bytes: int,
-    trace_id: str | None,
-    metrics: RelayMetrics | None = None,
-) -> bytes | Response:
+def _request_pii_stage(*, keyring: Keyring, body: bytes, ctx: _StageContext) -> bytes | Response:
     """Pipeline stage [7]: de-anonymize the (plaintext) request body; error → contract Response."""
+    channel = ctx.channel
     try:
-        working, decrypted = deanonymize_request_body(body, keyring=keyring, max_bytes=max_inspect_bytes)
+        working, decrypted = deanonymize_request_body(body, keyring=keyring, max_bytes=ctx.max_inspect_bytes)
     except XmlOversizeError as exc:
-        _record_xml_error(metrics, channel.name, exc.kind)
+        _record_xml_error(ctx.metrics, channel.name, exc.kind)
         return payload_too_large_response()
     except XmlOpsError as exc:
-        _record_xml_error(metrics, channel.name, exc.kind)
+        _record_xml_error(ctx.metrics, channel.name, exc.kind)
         logger.bind(channel=channel.name).warning("Request XML rejected by hardened parser")
-        return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not parseable XML", trace_id)
+        return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not parseable XML", ctx.trace_id)
     except DeanonymizationError:
         logger.bind(channel=channel.name).warning("De-anonymization failed")
         return internal_error_response(
             ErrorReason.PII_DEANONYMIZATION_FAILED,
             "request token de-anonymization failed",
-            trace_id,
+            ctx.trace_id,
         )
     if decrypted:
         logger.bind(channel=channel.name, decrypted=decrypted).debug("De-anonymized tokens")
-        if metrics is not None:
-            metrics.record_pii_decrypted(channel.name, decrypted)
+        if ctx.metrics is not None:
+            ctx.metrics.record_pii_decrypted(channel.name, decrypted)
     return working
 
 
-def _response_pii_stage(  # pylint: disable=too-many-arguments
-    *,
-    channel: ChannelConfig,
-    keyring: Keyring | None,
-    rules: RuleSet,
-    content: bytes,
-    max_inspect_bytes: int,
-    trace_id: str | None,
-    metrics: RelayMetrics | None = None,
+def _response_pii_stage(
+    *, keyring: Keyring | None, rules: RuleSet, content: bytes, ctx: _StageContext
 ) -> bytes | Response:
     """Pipeline stage [9]: redact the response body; error → contract Response.
 
     An operation with no matching rules is still forwarded unchanged (coverage is not a gate);
     the coverage-gap metric is emitted so the gap is discoverable (§pii-coverage-policy, D1).
     """
+    channel = ctx.channel
     try:
         # httpx already decoded any content-encoding, so `content` is plain XML.
         outcome = redact_response(
@@ -465,27 +409,27 @@ def _response_pii_stage(  # pylint: disable=too-many-arguments
             ruleset=rules,
             keyring=keyring,
             force_redact=channel.pii.force_redact,
-            max_bytes=max_inspect_bytes,
+            max_bytes=ctx.max_inspect_bytes,
             operation_parser=get_handler(channel.type).parse_operation,
         )
     except XmlOversizeError as exc:
-        _record_xml_error(metrics, channel.name, exc.kind)
+        _record_xml_error(ctx.metrics, channel.name, exc.kind)
         return payload_too_large_response()
     except XmlOpsError as exc:
-        _record_xml_error(metrics, channel.name, exc.kind)
+        _record_xml_error(ctx.metrics, channel.name, exc.kind)
         logger.bind(channel=channel.name).warning("Response XML rejected by hardened parser")
-        return internal_error_response(ErrorReason.XML_PARSE_ERROR, "response body is not parseable XML", trace_id)
+        return internal_error_response(ErrorReason.XML_PARSE_ERROR, "response body is not parseable XML", ctx.trace_id)
     except RedactionError:
         logger.bind(channel=channel.name).warning("PII redaction failed")
-        return internal_error_response(ErrorReason.PII_REDACTION_FAILED, "response redaction failed", trace_id)
+        return internal_error_response(ErrorReason.PII_REDACTION_FAILED, "response redaction failed", ctx.trace_id)
     if outcome.counts:
         logger.bind(channel=channel.name, counts=outcome.counts).debug("Redacted fields")
-        if metrics is not None:
-            metrics.record_pii_redacted(channel.name, outcome.counts)
+        if ctx.metrics is not None:
+            ctx.metrics.record_pii_redacted(channel.name, outcome.counts)
     if not outcome.covered:
         logger.bind(channel=channel.name, operation=outcome.operation).warning(
             "Response operation has no PII rules; forwarded unredacted"
         )
-        if metrics is not None:
-            metrics.record_uncovered_operation(channel.name, outcome.operation)
+        if ctx.metrics is not None:
+            ctx.metrics.record_uncovered_operation(channel.name, outcome.operation)
     return outcome.body

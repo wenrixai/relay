@@ -17,6 +17,7 @@ from channel_relay.pii.crypto import Keyring
 from channel_relay.pii.rules import RuleSet
 from channel_relay.proxy.errors import WENRIX_ERROR_HEADER
 from channel_relay.proxy.forwarder import (
+    _StageContext,
     _request_credential_swap_stage,
     _request_pii_stage,
     _response_credential_swap_stage,
@@ -267,11 +268,10 @@ def test_response_credential_cleanup_failure_returns_bad_gateway() -> None:
     )
 
     resp = _response_credential_swap_stage(
-        channel=channel,
         content=b"<Envelope><SessionId>SESSION-123</SessionId></Envelope>",
         response_headers={},
-        max_inspect_bytes=1024,
-        trace_id="trace-1",
+        keyring=None,
+        ctx=_StageContext(channel=channel, max_inspect_bytes=1024, trace_id="trace-1", metrics=None),
     )
 
     assert isinstance(resp, StarletteResponse)
@@ -289,12 +289,10 @@ def test_request_credential_swap_oversize_records_metric() -> None:
 
     resp = _request_credential_swap_stage(
         handler=get_handler(channel.type),
-        channel=channel,
         body=b"<Root/>",
         headers={},
-        max_inspect_bytes=1,
-        trace_id=None,
-        metrics=cast(Any, metrics),
+        keyring=None,
+        ctx=_StageContext(channel=channel, max_inspect_bytes=1, trace_id=None, metrics=cast(Any, metrics)),
     )
 
     assert isinstance(resp, StarletteResponse)
@@ -312,13 +310,10 @@ def test_response_credential_cleanup_oversize_records_metric() -> None:
     )
 
     resp = _response_credential_swap_stage(
-        channel=channel,
         content=b"<Envelope/>",
         response_headers={},
-        max_inspect_bytes=1,
-        trace_id=None,
-        metrics=cast(Any, metrics),
         keyring=_keyring(),
+        ctx=_StageContext(channel=channel, max_inspect_bytes=1, trace_id=None, metrics=cast(Any, metrics)),
     )
 
     assert isinstance(resp, StarletteResponse)
@@ -333,12 +328,9 @@ def test_request_pii_stage_records_decrypted_tokens() -> None:
     channel = ChannelConfig(name="mock", type=ChannelType.TRAVELFUSION)
 
     body = _request_pii_stage(
-        channel=channel,
         keyring=keyring,
         body=f"<Root><Value>{token}</Value></Root>".encode(),
-        max_inspect_bytes=1024,
-        trace_id=None,
-        metrics=cast(Any, metrics),
+        ctx=_StageContext(channel=channel, max_inspect_bytes=1024, trace_id=None, metrics=cast(Any, metrics)),
     )
 
     assert isinstance(body, bytes)
@@ -356,11 +348,14 @@ def test_request_pii_stage_records_decrypted_tokens() -> None:
 )
 def test_request_pii_stage_failures(body: bytes, status: int, reason: str) -> None:
     resp = _request_pii_stage(
-        channel=ChannelConfig(name="mock", type=ChannelType.TRAVELFUSION),
         keyring=_keyring(),
         body=body,
-        max_inspect_bytes=1 if status == 413 else 1024,
-        trace_id=None,
+        ctx=_StageContext(
+            channel=ChannelConfig(name="mock", type=ChannelType.TRAVELFUSION),
+            max_inspect_bytes=1 if status == 413 else 1024,
+            trace_id=None,
+            metrics=None,
+        ),
     )
 
     assert isinstance(resp, StarletteResponse)
@@ -379,12 +374,15 @@ def test_request_pii_stage_failures(body: bytes, status: int, reason: str) -> No
 def test_response_pii_stage_failures(content: bytes, status: int, reason: str, max_bytes: int) -> None:
     ruleset = _required_missing_ruleset()
     resp = _response_pii_stage(
-        channel=ChannelConfig(name="mock", type=ChannelType.TRAVELFUSION),
         keyring=_keyring(),
         rules=ruleset,
         content=content,
-        max_inspect_bytes=max_bytes,
-        trace_id=None,
+        ctx=_StageContext(
+            channel=ChannelConfig(name="mock", type=ChannelType.TRAVELFUSION),
+            max_inspect_bytes=max_bytes,
+            trace_id=None,
+            metrics=None,
+        ),
     )
 
     assert isinstance(resp, StarletteResponse)
@@ -398,13 +396,15 @@ def test_response_pii_stage_uncovered_forwards_and_records_metric() -> None:
     content = b"<Root><Search><Name>Jane</Name></Search></Root>"
 
     result = _response_pii_stage(
-        channel=ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION),
         keyring=_keyring(),
         rules=ruleset,
         content=content,
-        max_inspect_bytes=1024,
-        trace_id=None,
-        metrics=cast(Any, metrics),
+        ctx=_StageContext(
+            channel=ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION),
+            max_inspect_bytes=1024,
+            trace_id=None,
+            metrics=cast(Any, metrics),
+        ),
     )
 
     assert isinstance(result, bytes)
@@ -419,13 +419,15 @@ def test_response_pii_stage_covered_does_not_record_uncovered() -> None:
     content = b"<Root><Search><Name>Jane</Name></Search></Root>"
 
     result = _response_pii_stage(
-        channel=ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION),
         keyring=_keyring(),
         rules=ruleset,
         content=content,
-        max_inspect_bytes=1024,
-        trace_id=None,
-        metrics=cast(Any, metrics),
+        ctx=_StageContext(
+            channel=ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION),
+            max_inspect_bytes=1024,
+            trace_id=None,
+            metrics=cast(Any, metrics),
+        ),
     )
 
     assert isinstance(result, bytes)
