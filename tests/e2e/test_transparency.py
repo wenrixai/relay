@@ -6,9 +6,8 @@ relays the body byte-for-byte.
 from __future__ import annotations
 
 import pytest
-from fastapi.testclient import TestClient
 
-from tests.e2e.conftest import GDS_PARAMS, E2EClientFactory, Gds, RecordingUpstream, make_channel
+from tests.e2e.conftest import GDS_PARAMS, E2EClientFactory, Gds, assert_no_server_header, post_gds_request
 
 pytestmark = pytest.mark.e2e
 
@@ -41,47 +40,43 @@ _MUST_NOT_APPEAR = (
 
 @pytest.mark.parametrize("gds", GDS_PARAMS)
 def test_hostile_headers_stripped_and_host_rewritten(gds: Gds, e2e_client: E2EClientFactory) -> None:
-    upstream = RecordingUpstream()
-    channel = make_channel(gds, credentialed=True, pii_enabled=True)
-    client: TestClient = e2e_client(channel, upstream)
-    with client:
-        response = client.post(f"/channel/{gds.name}/op", content=gds.request_body(), headers=_HOSTILE)
+    exchange = post_gds_request(e2e_client, gds, headers=_HOSTILE)
 
-    assert response.status_code == 200
-    assert len(upstream.headers) == 1
-    forwarded = {k.lower() for k in upstream.headers[-1]}
+    assert exchange.response.status_code == 200
+    assert len(exchange.upstream.headers) == 1
+    forwarded = {k.lower() for k in exchange.upstream.headers[-1]}
     for banned in _MUST_NOT_APPEAR:
         assert banned not in forwarded, f"{banned} leaked to channel"
     # The Connection-named token header is also stripped.
     assert "x-secret" not in forwarded
     # Host rewritten to the channel; nothing added on the forwarding front.
-    assert upstream.headers[-1]["host"] == gds.host
+    assert exchange.upstream.headers[-1]["host"] == gds.host
     for added in ("via", "forwarded", "x-forwarded-for", "x-forwarded-host", "x-forwarded-proto"):
         assert added not in forwarded
     # No Server header on the client response.
-    assert "server" not in {k.lower() for k in response.headers}
+    assert_no_server_header(exchange.response)
 
 
 @pytest.mark.parametrize("gds", GDS_PARAMS)
 def test_no_credential_swap_passthrough(gds: Gds, e2e_client: E2EClientFactory) -> None:
     """A channel with no credentials and PII disabled relays the body verbatim (no inspection)."""
     opaque_body = b"\x00\x01\x02 not-xml payload \xff\xfe"
-    upstream = RecordingUpstream(response=b"\x10\x20 opaque-reply \x30")
-    channel = make_channel(gds, credentialed=False, pii_enabled=False)
-    client: TestClient = e2e_client(channel, upstream)
-    with client:
-        response = client.post(
-            f"/channel/{gds.name}/op",
-            content=opaque_body,
-            headers={"content-type": "application/octet-stream"},
-        )
+    exchange = post_gds_request(
+        e2e_client,
+        gds,
+        content=opaque_body,
+        headers={"content-type": "application/octet-stream"},
+        credentialed=False,
+        pii_enabled=False,
+        upstream_response=b"\x10\x20 opaque-reply \x30",
+    )
 
-    assert response.status_code == 200
+    assert exchange.response.status_code == 200
     # Body crosses to the channel byte-for-byte — no mutation, no ENC_ tokens.
-    assert upstream.bodies[-1] == opaque_body
-    assert b"ENC_" not in upstream.bodies[-1]
+    assert exchange.upstream.bodies[-1] == opaque_body
+    assert b"ENC_" not in exchange.upstream.bodies[-1]
     # Response returned to the client unchanged, no Server header.
-    assert response.content == b"\x10\x20 opaque-reply \x30"
-    assert "server" not in {k.lower() for k in response.headers}
+    assert exchange.response.content == b"\x10\x20 opaque-reply \x30"
+    assert_no_server_header(exchange.response)
     # Host still rewritten even on the pure pass-through path.
-    assert upstream.headers[-1]["host"] == gds.host
+    assert exchange.upstream.headers[-1]["host"] == gds.host

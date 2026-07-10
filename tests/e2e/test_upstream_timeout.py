@@ -8,10 +8,18 @@ from typing import Any
 
 import httpx
 import pytest
-from fastapi.testclient import TestClient
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
-from tests.e2e.conftest import GDS_PARAMS, SABRE, E2EClientFactory, Gds, RecordingUpstream, make_channel
+from tests.e2e.conftest import (
+    GDS_PARAMS,
+    SABRE,
+    E2EClientFactory,
+    Gds,
+    RecordingUpstream,
+    assert_no_server_header,
+    make_channel,
+    post_gds_request,
+)
 
 pytestmark = pytest.mark.e2e
 
@@ -32,28 +40,20 @@ def _counter_for_channel(reader: InMemoryMetricReader, name: str, channel: str) 
 
 @pytest.mark.parametrize("gds", GDS_PARAMS)
 def test_read_timeout_returns_504(gds: Gds, e2e_client: E2EClientFactory) -> None:
-    upstream = RecordingUpstream(raise_exc=httpx.ReadTimeout("slow upstream"))
-    channel = make_channel(gds, credentialed=True, pii_enabled=True)
-    client: TestClient = e2e_client(channel, upstream)
-    with client:
-        response = client.post(
-            f"/channel/{gds.name}/op", content=gds.request_body(), headers={"content-type": "text/xml"}
-        )
+    exchange = post_gds_request(e2e_client, gds, upstream_raise_exc=httpx.ReadTimeout("slow upstream"))
+    response = exchange.response
 
     assert response.status_code == 504
     assert response.headers["content-type"].startswith("text/html")
     assert response.headers["x-wenrix-error"] == "upstream_timeout"
-    assert "server" not in {k.lower() for k in response.headers}
-    assert upstream.bodies == []
+    assert_no_server_header(response)
+    assert exchange.upstream.bodies == []
 
 
 def test_connect_timeout_also_504(e2e_client: E2EClientFactory) -> None:
     """ConnectTimeout is a TimeoutException subclass, caught before the generic HTTPError branch."""
-    upstream = RecordingUpstream(raise_exc=httpx.ConnectTimeout("no route"))
-    channel = make_channel(SABRE, credentialed=True, pii_enabled=True)
-    client: TestClient = e2e_client(channel, upstream)
-    with client:
-        response = client.post("/channel/sabre/op", content=SABRE.request_body(), headers={"content-type": "text/xml"})
+    exchange = post_gds_request(e2e_client, SABRE, upstream_raise_exc=httpx.ConnectTimeout("no route"))
+    response = exchange.response
 
     assert response.status_code == 504
     assert response.headers["x-wenrix-error"] == "upstream_timeout"
@@ -63,7 +63,7 @@ def test_timeout_increments_metric(e2e_client: E2EClientFactory) -> None:
     reader = InMemoryMetricReader()
     upstream = RecordingUpstream(raise_exc=httpx.ReadTimeout("slow upstream"))
     channel = make_channel(SABRE, credentialed=True, pii_enabled=True)
-    client: TestClient = e2e_client(channel, upstream, metric_reader=reader)
+    client = e2e_client(channel, upstream, metric_reader=reader)
     with client:
         before = _counter_for_channel(reader, _TIMEOUT_COUNTER, "sabre")
         client.post("/channel/sabre/op", content=SABRE.request_body(), headers={"content-type": "text/xml"})

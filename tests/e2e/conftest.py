@@ -12,6 +12,7 @@ Network is always mocked (see repo instructions); no test performs a real upstre
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -167,3 +168,49 @@ class E2EClientFactory:
 def e2e_client_fixture(monkeypatch: pytest.MonkeyPatch) -> E2EClientFactory:
     """Factory: ``client = e2e_client(channel, upstream, metric_reader=...)``."""
     return E2EClientFactory(monkeypatch)
+
+
+@dataclass(frozen=True)
+class RelayExchange:
+    """Response plus the mock upstream that observed the forwarded request."""
+
+    response: httpx.Response
+    upstream: RecordingUpstream
+
+
+def post_gds_request(
+    e2e_client: E2EClientFactory,
+    gds: Gds,
+    *,
+    content: bytes | None = None,
+    headers: Mapping[str, str] | None = None,
+    credentialed: bool = True,
+    pii_enabled: bool = True,
+    upstream_response: bytes = b"<ok/>",
+    upstream_status: int = 200,
+    upstream_raise_exc: httpx.HTTPError | None = None,
+    metric_reader: MetricReader | None = None,
+) -> RelayExchange:
+    """POST one request through the real relay route for a configured GDS."""
+    upstream = RecordingUpstream(response=upstream_response, status=upstream_status, raise_exc=upstream_raise_exc)
+    channel = make_channel(gds, credentialed=credentialed, pii_enabled=pii_enabled)
+    client = e2e_client(channel, upstream, metric_reader=metric_reader)
+    request_headers = {"content-type": "text/xml", **(headers or {})}
+    with client:
+        response = client.post(
+            f"/channel/{gds.name}/op",
+            content=gds.request_body() if content is None else content,
+            headers=request_headers,
+        )
+    return RelayExchange(response=response, upstream=upstream)
+
+
+def assert_no_server_header(response: httpx.Response) -> None:
+    """Assert the relay does not expose a Server header."""
+    assert "server" not in {k.lower() for k in response.headers}
+
+
+def assert_pii_markers_absent(response: httpx.Response, gds: Gds, *, message: str) -> None:
+    """Assert every known plaintext PII marker for the GDS is absent from the response."""
+    for marker in gds.pii_markers:
+        assert marker not in response.content, message.format(marker=marker)
