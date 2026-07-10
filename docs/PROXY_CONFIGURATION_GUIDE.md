@@ -114,7 +114,7 @@ PII behavior, and authorization rules.
 | `farelogix-ek` | Same as `farelogix-aa` |
 | `amadeus` | `soap_security`, optional `soap_security_target_xpath` |
 | `sabre` | `soap_security`, optional `soap_security_target_xpath` |
-| `travelport` | `soap_security`, optional `soap_security_target_xpath` |
+| `travelport` | `username`, `password` |
 
 Credential swap is opt-in. If `credentials.enabled` is omitted or false, requests are forwarded
 transparently apart from header hygiene, authorization, and any enabled PII processing, even when
@@ -125,6 +125,36 @@ ConfigMaps. The Helm and ECS examples in this guide keep channel configuration n
 deployment requires relay-managed channel credentials, render those fields from the customer's
 approved secret-management workflow at deploy time and do not persist the rendered file outside the
 runtime environment.
+
+### Travelport Universal API credentials
+
+Travelport SOAP/XML authentication is an HTTP Basic header, not a SOAP `Security` element. For an
+enabled Travelport channel, the runtime-rendered secret configuration has this shape:
+
+```json
+{
+  "name": "travelport-prod",
+  "type": "travelport",
+  "proxy_pass": "https://emea.universal-api.travelport.com/B2BGateway/connect/uAPI",
+  "credentials": {
+    "enabled": true,
+    "username": "ASSIGNED_USERNAME_FROM_SECRET_STORE",
+    "password": "ASSIGNED_PASSWORD_FROM_SECRET_STORE"
+  }
+}
+```
+
+The relay creates `Authorization: Basic <base64>` from
+`Universal API/<username>:<password>` and overwrites any caller-supplied `Authorization` casing.
+Configure the bare assigned username: do not include `Universal API/` and do not pre-encode the
+credential pair.
+
+Migration is intentionally fail-fast. Existing Travelport configurations must remove
+`soap_security`, `soap_username`, and `soap_password`; enabled channels containing those obsolete
+keys or an incomplete `username`/`password` pair do not start. Travelport session keys are encrypted
+on responses and restored in the documented `SessTok/@id` and request `SessionKey` attributes, so an
+enabled Travelport credential swap requires `RELAY_PII_KEYRING` or `RELAY_PII_KEYRING_FILE` even when
+`pii.enabled` is false. Keep old key epochs until all outstanding sessions have expired.
 
 ## PII Configuration
 

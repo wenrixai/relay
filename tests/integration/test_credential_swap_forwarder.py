@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+import base64
 import gzip
+from pathlib import Path
 
 import httpx
 from fastapi.testclient import TestClient
 
 from channel_relay.config.models import ChannelConfig, ChannelPII, ChannelType, RelayConfig
 from channel_relay.main import create_app
+from channel_relay.pii.xml_ops import parse_bytes
 
 KEYRING_JSON = '{"0": "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE="}'
+FIXTURES = Path(__file__).parents[1] / "fixtures"
 
 
 def _client(channel: ChannelConfig, handler: httpx.MockTransport) -> TestClient:
@@ -88,6 +92,148 @@ def test_forwarder_sets_ndc_header_without_body_mutation() -> None:
     assert resp.status_code == 204
     assert captured["req"].headers["Client-Key"] == "ba-key"
     assert captured["req"].content == body
+
+
+def _travelport_channel() -> ChannelConfig:
+    return ChannelConfig(
+        name="travelport",
+        type=ChannelType.TRAVELPORT,
+        host="travelport.test",
+        credentials={"enabled": True, "username": "assigned-user", "password": "assigned-pass"},
+        pii=ChannelPII(enabled=False),
+    )
+
+
+def test_travelport_basic_auth_replaces_caller_without_body_credentials() -> None:
+    captured: dict[str, httpx.Request] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["req"] = request
+        return httpx.Response(
+            200,
+            content=b"<PingRsp>connectivity-check</PingRsp>",
+            headers={"content-type": "text/xml"},
+        )
+
+    body = (FIXTURES / "travelport/request.xml").read_bytes()
+    with _client(_travelport_channel(), httpx.MockTransport(handler)) as client:
+        response = client.post(
+            "/channel/travelport/SystemService",
+            content=body,
+            headers={"content-type": "text/xml", "authorization": "Basic Y2FsbGVyOnNlY3JldA=="},
+        )
+
+    assert response.status_code == 200
+    expected = base64.b64encode(b"Universal API/assigned-user:assigned-pass").decode("ascii")
+    authorization = [value for name, value in captured["req"].headers.multi_items() if name == "authorization"]
+    assert authorization == [f"Basic {expected}"]
+    assert "Y2FsbGVyOnNlY3JldA==" not in authorization[0]
+    forwarded = captured["req"].content
+    assert b"UsernameToken" not in forwarded
+    root = parse_bytes(forwarded)
+    fields = {element.tag.split("}")[-1]: element for element in root.iter("*")}
+    assert fields["PingReq"].text == "connectivity-check"
+    assert fields["PingReq"].get("TargetBranch") == "TESTBRANCH"
+
+
+class _TravelportSessionMock:
+    def __init__(self) -> None:
+        self.requests: list[httpx.Request] = []
+
+    def handler(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        if len(self.requests) == 1:
+            content = (FIXTURES / "travelport/booking_start_response.xml").read_bytes()
+        else:
+            content = b"<BookingTravelerRsp/>"
+        return httpx.Response(200, content=content, headers={"content-type": "text/xml"})
+
+
+def _session_key(response: httpx.Response) -> str:
+    root = parse_bytes(response.content)
+    return next(
+        value
+        for element in root.iter("*")
+        for name, value in element.attrib.items()
+        if name.split("}")[-1] == "SessionKey"
+    )
+
+
+def _session_request(token: str) -> bytes:
+    return (
+        (FIXTURES / "travelport/session_follow_up_request.xml")
+        .read_bytes()
+        .replace(b"TEST-SESSION-0001", token.encode())
+    )
+
+
+def test_travelport_session_key_is_encrypted_and_replayed_with_pii_disabled() -> None:
+    mock = _TravelportSessionMock()
+    with _client(_travelport_channel(), httpx.MockTransport(mock.handler)) as client:
+        first = client.post(
+            "/channel/travelport/SharedBookingService",
+            content=(FIXTURES / "travelport/request.xml").read_bytes(),
+            headers={"content-type": "text/xml"},
+        )
+        token = _session_key(first)
+        second = client.post(
+            "/channel/travelport/SharedBookingService",
+            content=_session_request(token),
+            headers={"content-type": "text/xml"},
+        )
+
+    assert first.status_code == 200
+    assert token.startswith("ENC_")
+    assert b"TEST-SESSION-0001" not in first.content
+    assert second.status_code == 200
+    forwarded = mock.requests[-1].content
+    assert b"ENC_" not in forwarded
+    root = parse_bytes(forwarded)
+    values = [
+        value
+        for element in root.iter("*")
+        for name, value in element.attrib.items()
+        if name.split("}")[-1] in {"id", "SessionKey"}
+    ]
+    assert values == ["TEST-SESSION-0001", "TEST-SESSION-0001"]
+
+
+def test_travelport_gzip_session_replay_restores_both_token_locations() -> None:
+    mock = _TravelportSessionMock()
+    with _client(_travelport_channel(), httpx.MockTransport(mock.handler)) as client:
+        first = client.post(
+            "/channel/travelport/SharedBookingService",
+            content=(FIXTURES / "travelport/request.xml").read_bytes(),
+            headers={"content-type": "text/xml"},
+        )
+        token = _session_key(first)
+        second = client.post(
+            "/channel/travelport/SharedBookingService",
+            content=gzip.compress(_session_request(token)),
+            headers={"content-type": "text/xml", "content-encoding": "gzip"},
+        )
+
+    assert second.status_code == 200
+    request = mock.requests[-1]
+    assert request.headers["content-encoding"] == "gzip"
+    forwarded = gzip.decompress(request.content)
+    assert forwarded.count(b"TEST-SESSION-0001") == 2
+    assert b"ENC_" not in forwarded
+
+
+def test_travelport_response_session_cleanup_fails_closed_without_keyring() -> None:
+    mock = _TravelportSessionMock()
+    with _client(_travelport_channel(), httpx.MockTransport(mock.handler)) as client:
+        client.app.state.keyring = None
+        response = client.post(
+            "/channel/travelport/SharedBookingService",
+            content=(FIXTURES / "travelport/request.xml").read_bytes(),
+            headers={"content-type": "text/xml"},
+        )
+
+    assert response.status_code == 502
+    assert response.json()["reason"] == "credential_swap_failed"
+    assert b"TEST-SESSION-0001" not in response.content
 
 
 def test_gzip_body_is_reencoded_when_credential_swap_requires_inspection() -> None:

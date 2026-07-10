@@ -6,10 +6,12 @@
 
 from __future__ import annotations
 
+import base64
 import os
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import ClassVar
+from unicodedata import category
 
 from lxml import etree
 
@@ -89,6 +91,29 @@ def _require_credential(credentials: dict[str, str], key: str) -> str:
     if not value:
         raise CredentialSwapError(f"missing credential {key}")
     return value
+
+
+def _travelport_credentials(credentials: dict[str, str]) -> tuple[str, str]:
+    """Return a validated Travelport Basic-auth pair without exposing values in errors."""
+    for legacy_key in ("soap_security", "soap_username", "soap_password"):
+        if legacy_key in credentials:
+            raise CredentialSwapError(f"obsolete Travelport credential key {legacy_key!r}")
+    username = _require_credential(credentials, "username")
+    password = _require_credential(credentials, "password")
+    if ":" in username:
+        raise CredentialSwapError("Travelport username must not contain ':'")
+    if username.startswith("Universal API/"):
+        raise CredentialSwapError("Travelport username must not include the API prefix")
+    if _contains_control_character(username):
+        raise CredentialSwapError("Travelport username contains a control character")
+    if _contains_control_character(password):
+        raise CredentialSwapError("Travelport password contains a control character")
+    return username, password
+
+
+def _contains_control_character(value: str) -> bool:
+    """Whether a credential contains an HTTP-header-unsafe Unicode control character."""
+    return any(category(character) == "Cc" for character in value)
 
 
 def _set_header(headers: dict[str, str], name: str, value: str) -> None:
@@ -305,7 +330,7 @@ class FarelogixHandler(NoopResponseMixin, NoCredentialValidationMixin):
 
 @dataclass(frozen=True, slots=True)
 class SoapSecurityHandler(NoHeaderSwapMixin):
-    """Amadeus, Sabre, and Travelport SOAP security header replacement."""
+    """Amadeus and Sabre SOAP security header replacement."""
 
     channel_type: ChannelType
     response_auth_local_names: ClassVar[set[str]] = set()
@@ -427,7 +452,56 @@ class SabreHandler(SoapSecurityHandler):
 
 
 @dataclass(frozen=True, slots=True)
-class TravelportHandler(SoapSecurityHandler):
-    """Travelport SOAP handler."""
+class TravelportHandler(NoBodySwapMixin):
+    """Travelport Universal API HTTP Basic auth and session-key protection."""
 
     channel_type: ChannelType = ChannelType.TRAVELPORT
+
+    def parse_operation(self, root: etree._Element) -> str:
+        return _soap_operation(root)
+
+    def requires_body_inspection(self, channel: ChannelConfig) -> bool:  # pylint: disable=unused-argument
+        return False
+
+    def requires_response_keyring(self, channel: ChannelConfig) -> bool:
+        return bool(channel.credential_values)
+
+    def validate_credentials(self, channel: ChannelConfig) -> None:
+        if not channel.credentials.enabled:  # pylint: disable=no-member
+            return
+        try:
+            _travelport_credentials(channel.credential_values)
+        except CredentialSwapError as exc:
+            raise ValueError(f"channel {channel.name!r}: {exc}") from exc
+
+    def swap_request_headers(self, context: SwapContext) -> None:
+        credentials = context.channel.credential_values
+        if not credentials:
+            return
+        username, password = _travelport_credentials(credentials)
+        user_pass = f"Universal API/{username}:{password}".encode()
+        encoded = base64.b64encode(user_pass).decode("ascii")
+        _set_header(context.headers, "Authorization", f"Basic {encoded}")
+
+    def swap_response(self, root: etree._Element, context: SwapContext) -> bool:
+        if not self.requires_response_keyring(context.channel):
+            return False
+        if context.keyring is None:
+            raise CredentialSwapError("response auth encryption requires keyring")
+        changed = False
+        for element in root.iter("*"):
+            element_name = _local_name(element)
+            for attribute_name, raw_value in list(element.attrib.items()):
+                local_attribute_name = etree.QName(attribute_name).localname
+                is_session_key = local_attribute_name == "SessionKey"
+                is_session_token_id = element_name == "SessTok" and local_attribute_name == "id"
+                value = raw_value.decode() if isinstance(raw_value, bytes) else raw_value
+                if not (is_session_key or is_session_token_id) or TOKEN_RE.fullmatch(value):
+                    continue
+                try:
+                    encrypted = encrypt(value, context.keyring)
+                except (UnicodeError, ValueError) as exc:
+                    raise CredentialSwapError("Travelport session encryption failed") from exc
+                element.set(attribute_name, encrypted)
+                changed = True
+        return changed

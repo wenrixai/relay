@@ -55,6 +55,15 @@ def _gds_channel(
     return ChannelConfig(name=channel_type.value, type=channel_type, host="gds.test", credentials=_enabled(credentials))
 
 
+def _travelport_channel(credentials: dict[str, str] | None = None) -> ChannelConfig:
+    return ChannelConfig(
+        name="travelport",
+        type=ChannelType.TRAVELPORT,
+        host="travelport.test",
+        credentials=_enabled(credentials),
+    )
+
+
 def _assert_swap_error(message: str, func: Callable[..., object], *args: object) -> None:
     with pytest.raises(CredentialSwapError, match=message):
         func(*args)
@@ -233,22 +242,121 @@ _SOAP_FRAGMENT = (
 )
 
 
-def test_soap_security_fragment_replaces_username_token_for_gds_channels() -> None:
-    # Amadeus/Travelport request fixtures carry a UsernameToken (auth phase) → swapped to the fragment.
-    for channel_type, fixture, operation in [
-        (ChannelType.AMADEUS, "amadeus/request.xml", "PNR_Retrieve"),
-        (ChannelType.TRAVELPORT, "travelport/request.xml", "UniversalRecordRetrieveReq"),
-    ]:
-        channel = _gds_channel(channel_type, {"soap_security": _SOAP_FRAGMENT})
-        root = _root(fixture)
-        handler = get_handler(channel_type)
+def test_soap_security_fragment_replaces_amadeus_username_token() -> None:
+    channel = _gds_channel(ChannelType.AMADEUS, {"soap_security": _SOAP_FRAGMENT})
+    root = _root("amadeus/request.xml")
+    handler = get_handler(ChannelType.AMADEUS)
 
-        assert handler.parse_operation(root) == operation
-        assert handler.swap_request_body(root, _ctx(channel)) is True
+    assert handler.parse_operation(root) == "PNR_Retrieve"
+    assert handler.swap_request_body(root, _ctx(channel)) is True
 
-        xml = serialize(root).decode()
-        assert "relay-token" in xml
-        assert "caller" not in xml
+    xml = serialize(root).decode()
+    assert "relay-token" in xml
+    assert "caller" not in xml
+
+
+def test_travelport_sets_exact_basic_authorization_and_preserves_body() -> None:
+    channel = _travelport_channel({"username": "assigned-user", "password": "assigned-pass"})
+    root = _root("travelport/request.xml")
+    before = serialize(root)
+    headers = {
+        "authorization": "Basic caller-lower",
+        "Authorization": "Basic caller-title",
+        "accept": "text/xml",
+    }
+    handler = get_handler(ChannelType.TRAVELPORT)
+
+    assert handler.parse_operation(root) == "PingReq"
+    assert handler.requires_body_inspection(channel) is False
+    handler.swap_request_headers(_ctx(channel, headers))
+
+    encoded = base64.b64encode(b"Universal API/assigned-user:assigned-pass").decode("ascii")
+    assert headers == {"accept": "text/xml", "Authorization": f"Basic {encoded}"}
+    assert handler.swap_request_body(root, _ctx(channel, headers)) is False
+    assert serialize(root) == before
+
+
+def test_travelport_disabled_credentials_are_noop() -> None:
+    channel = ChannelConfig(
+        name="travelport",
+        type=ChannelType.TRAVELPORT,
+        host="travelport.test",
+        credentials={"username": "ignored-user", "password": "ignored-pass"},
+    )
+    headers = {"authorization": "Basic caller"}
+    handler = get_handler(ChannelType.TRAVELPORT)
+
+    handler.swap_request_headers(_ctx(channel, headers))
+
+    assert headers == {"authorization": "Basic caller"}
+    assert handler.requires_response_keyring(channel) is False
+
+
+def test_travelport_request_header_swap_fails_closed_for_invalid_direct_config() -> None:
+    handler = get_handler(ChannelType.TRAVELPORT)
+    missing_password = _travelport_channel({"username": "assigned-user"})
+    prefixed_username = _travelport_channel({"username": "Universal API/assigned-user", "password": "assigned-pass"})
+
+    _assert_swap_error("missing credential password", handler.swap_request_headers, _ctx(missing_password, {}))
+    _assert_swap_error("must not include the API prefix", handler.swap_request_headers, _ctx(prefixed_username, {}))
+
+
+def test_travelport_encrypts_only_session_attributes() -> None:
+    channel = _travelport_channel({"username": "assigned-user", "password": "assigned-pass"})
+    keyring = Keyring.from_json(KEYRING_JSON)
+    handler = get_handler(ChannelType.TRAVELPORT)
+    response = _root("travelport/booking_start_response.xml")
+
+    assert handler.requires_response_keyring(channel) is True
+    assert handler.swap_response(response, SwapContext(channel, {}, keyring)) is True
+
+    attrs = {
+        etree.QName(element).localname: {etree.QName(name).localname: value for name, value in element.attrib.items()}
+        for element in response.iter("*")
+    }
+    assert attrs["BookingStartRsp"]["SessionKey"].startswith("ENC_")
+    assert attrs["Reference"]["id"] == "UNRELATED-ID-0001"
+
+    session_request = _root("travelport/session_follow_up_request.xml")
+    assert handler.swap_response(session_request, SwapContext(channel, {}, keyring)) is True
+    session_attrs = {
+        etree.QName(element).localname: {etree.QName(name).localname: value for name, value in element.attrib.items()}
+        for element in session_request.iter("*")
+    }
+    assert session_attrs["SessTok"]["id"].startswith("ENC_")
+    assert session_attrs["BookingTravelerReq"]["SessionKey"].startswith("ENC_")
+
+
+def test_travelport_response_cleanup_is_idempotent_and_requires_keyring() -> None:
+    channel = _travelport_channel({"username": "assigned-user", "password": "assigned-pass"})
+    handler = get_handler(ChannelType.TRAVELPORT)
+    already_encrypted = parse_bytes(
+        b"<Envelope><BookingStartRsp SessionKey='ENC_aGVsbG8'/><SessTok id='ENC_aGVsbG8'/></Envelope>"
+    )
+
+    assert handler.swap_response(already_encrypted, SwapContext(channel, {}, Keyring.from_json(KEYRING_JSON))) is False
+    _assert_swap_error(
+        "response auth encryption requires keyring",
+        handler.swap_response,
+        _root("travelport/booking_start_response.xml"),
+        _ctx(channel),
+    )
+
+
+def test_travelport_response_encryption_error_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    channel = _travelport_channel({"username": "assigned-user", "password": "assigned-pass"})
+    keyring = Keyring.from_json(KEYRING_JSON)
+
+    def fail_encrypt(_value: str, _keyring: Keyring) -> str:
+        raise ValueError("synthetic crypto failure")
+
+    monkeypatch.setattr("channel_relay.channels.handlers.encrypt", fail_encrypt)
+    _assert_swap_error(
+        "Travelport session encryption failed",
+        get_handler(ChannelType.TRAVELPORT).swap_response,
+        _root("travelport/booking_start_response.xml"),
+        SwapContext(channel, {}, keyring),
+    )
 
 
 def test_sabre_session_reuse_request_is_not_recredentialed() -> None:

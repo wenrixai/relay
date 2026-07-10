@@ -1,0 +1,17 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+               xmlns:session="http://www.travelport.com/soa/common/security/SessionContext_v1"
+               xmlns:shared="http://www.travelport.com/schema/sharedBooking_v52_0"
+               xmlns:common="http://www.travelport.com/schema/common_v52_0">
+  <soap:Header>
+    <session:SessionContext>
+      <session:SessTok id="TEST-SESSION-0001"/>
+    </session:SessionContext>
+  </soap:Header>
+  <soap:Body>
+    <shared:BookingTravelerReq AuthorizedBy="TEST"
+                               TargetBranch="TESTBRANCH"
+                               SessionKey="TEST-SESSION-0001">
+      <common:BillingPointOfSaleInfo OriginApplication="uAPI"/>
+    </shared:BookingTravelerReq>
+  </soap:Body>
+</soap:Envelope>

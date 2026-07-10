@@ -1,8 +1,7 @@
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
-  <soap:Header>
-    <wsse:Security><wsse:UsernameToken><wsse:Username>caller</wsse:Username></wsse:UsernameToken></wsse:Security>
-  </soap:Header>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+               xmlns:sys="http://www.travelport.com/schema/system_v52_0">
+  <soap:Header/>
   <soap:Body>
-    <UniversalRecordRetrieveReq/>
+    <sys:PingReq TargetBranch="TESTBRANCH">connectivity-check</sys:PingReq>
   </soap:Body>
 </soap:Envelope>
