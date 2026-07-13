@@ -12,10 +12,11 @@ from loguru import logger
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
+from channel_relay import __version__
 from channel_relay.config.models import ChannelConfig, ChannelType, RelayConfig
 from channel_relay.main import create_app
 from channel_relay.middleware.access_log import log_access
-from channel_relay.observability.metrics import METER_NAME, RelayMetrics
+from channel_relay.observability.metrics import METER_NAME, SERVICE_NAME, RelayMetrics
 
 
 def _metric_points(reader: InMemoryMetricReader, name: str) -> list[Any]:
@@ -43,6 +44,18 @@ def test_relay_metrics_counter_and_gauge() -> None:
 
     gauge = _metric_points(reader, "channel_relay_channels_configured")
     assert gauge and gauge[0].value == 3
+
+
+def test_app_meter_provider_has_otel_service_resource() -> None:
+    reader = InMemoryMetricReader()
+    app = create_app(metric_reader=reader)
+    app.state.metrics.set_channels_configured(1)
+
+    metrics_data = reader.get_metrics_data()
+    resource = metrics_data.resource_metrics[0].resource
+
+    assert resource.attributes["service.name"] == SERVICE_NAME
+    assert resource.attributes["service.version"] == __version__
 
 
 def test_channels_configured_set_on_startup() -> None:

@@ -27,6 +27,7 @@ Parameters:
     Default: "true"
   OtlpEndpoint:
     Type: String
+    Description: OTLP/gRPC endpoint. Use http:// for a plaintext collector. Empty disables export.
     Default: ""
   ContainerPort:
     Type: Number

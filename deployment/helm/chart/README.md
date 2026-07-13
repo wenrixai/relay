@@ -10,7 +10,7 @@ helm install relay deployment/helm/chart \
   --set image.tag=v0.1.0 \
   --set-json 'networkPolicy.ingressFromCIDRs=["10.0.0.0/8"]' \
   --set-json 'networkPolicy.egressToCIDRs=["203.0.113.0/24"]' \
-  --set config.telemetry.otlpEndpoint=otel-collector.telemetry:4317 \
+  --set config.telemetry.otlpEndpoint=http://otel-collector.telemetry:4317 \
   --set config.telemetry.otlpHost=10.100.0.10
 ```
 

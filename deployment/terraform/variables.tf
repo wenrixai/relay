@@ -116,7 +116,7 @@ variable "pii_key_epoch_active" {
 }
 
 variable "otlp_endpoint" {
-  description = "OTLP telemetry endpoint (host:port). Empty disables explicit override."
+  description = "OTLP/gRPC telemetry endpoint. Use http:// for a plaintext collector. Empty disables export."
   type        = string
   default     = ""
 }

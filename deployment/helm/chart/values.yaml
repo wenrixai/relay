@@ -35,10 +35,10 @@ config:
     RELAY_DEFAULT_READ_TIMEOUT: "120"
     RELAY_MAX_INSPECT_BYTES: "8388608"
     RELAY_TELEMETRY_METRICS_ENABLED: "true"
-  # OTLP telemetry endpoint (host:port). Used by the NetworkPolicy egress allow-list.
+  # OTLP/gRPC telemetry endpoint. Use http:// for a plaintext collector.
   telemetry:
     otlpEndpoint: ""
-    # host and port broken out for the NetworkPolicy egress rule.
+    # Host and port broken out for the NetworkPolicy egress rule.
     otlpHost: ""
     otlpPort: 4317
 

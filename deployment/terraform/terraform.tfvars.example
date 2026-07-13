@@ -20,7 +20,7 @@ relay_config_json = "{\"channels\":[{\"name\":\"travelport\",\"type\":\"travelpo
 # pii_keyring_json     = "{\"0\":\"...base64-32-bytes...\"}"
 pii_key_epoch_active = 0
 
-otlp_endpoint = "otel-collector.telemetry.internal:4317"
+otlp_endpoint = "http://otel-collector.telemetry.internal:4317"
 
 desired_count = 2
 min_capacity  = 2

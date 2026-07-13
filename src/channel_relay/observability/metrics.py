@@ -11,15 +11,19 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 
-from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.metrics import CallbackOptions, Counter as OtelCounter, Meter, Observation
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import MetricReader, PeriodicExportingMetricReader
+from opentelemetry.sdk.resources import SERVICE_NAME as OTEL_SERVICE_NAME
+from opentelemetry.sdk.resources import SERVICE_VERSION, Resource
 
+from channel_relay import __version__
 from channel_relay.settings import Settings
 
 METER_NAME = "channel_relay"
 METRIC_PREFIX = "channel_relay_"
+SERVICE_NAME = "wenrix-channel-relay"
 
 
 def _metric_name(name: str) -> str:
@@ -84,7 +88,13 @@ def build_meter_provider(
     elif settings.telemetry_metrics_enabled and settings.otlp_endpoint:
         exporter = OTLPMetricExporter(endpoint=settings.otlp_endpoint)
         readers.append(PeriodicExportingMetricReader(exporter))
-    return MeterProvider(metric_readers=readers)
+    resource = Resource.create(
+        {
+            OTEL_SERVICE_NAME: SERVICE_NAME,
+            SERVICE_VERSION: __version__,
+        }
+    )
+    return MeterProvider(metric_readers=readers, resource=resource)
 
 
 class RelayMetrics:  # pylint: disable=too-many-instance-attributes
