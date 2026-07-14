@@ -84,9 +84,9 @@ valid gRPC exporter form).
 - **THEN** validation fails; `proxy_pass: "http://mock-channel:9000"` validates
 
 ### Requirement: Unenforced external authorization warns at startup
-`authorization.external` is accepted by the model but is NOT enforced by the request pipeline in
-this version. The relay SHALL emit a WARNING log at startup for every channel that configures
-`authorization.external`, stating that it is not enforced.
+The relay SHALL emit a WARNING log at startup for every channel that configures
+`authorization.external`, stating that it is not enforced. `authorization.external` is accepted by
+the model but is NOT enforced by the request pipeline in this version.
 
 #### Scenario: Warning on configured external authorization
 - **WHEN** a channel config sets `authorization.external.url`
