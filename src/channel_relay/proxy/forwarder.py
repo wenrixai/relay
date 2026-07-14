@@ -1,8 +1,10 @@
 """Upstream forwarding (pipeline stages [3]/[8]→[9], §3.1).
 
 Resolves the request to a channel's upstream base and forwards it via httpx with
-per-channel timeouts and **no retries** (§10.5). Header hygiene (§9.1) and the error
-contract (§10) are layered on by their own stages.
+per-channel timeouts and **no request-level retries** (§10.5): the shared client may retry a
+failed connect attempt (before any bytes are sent), but a request that reached the upstream is
+never resent. Header hygiene (§9.1) and the error contract (§10) are layered on by their own
+stages.
 """
 
 from __future__ import annotations
@@ -89,7 +91,8 @@ def build_target_url(channel: ChannelConfig, path: str, query: str) -> httpx.URL
 
 
 def channel_timeout(channel: ChannelConfig) -> httpx.Timeout:
-    """Per-channel connect/read timeout. No retries anywhere in the client."""
+    """Per-channel connect/read timeout. No request-level retries anywhere in the client;
+    only a failed connection attempt (pre-send) may be retried (§10.5)."""
     return httpx.Timeout(
         connect=channel.timeouts.connect,
         read=channel.timeouts.read,

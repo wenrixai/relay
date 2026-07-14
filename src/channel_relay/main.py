@@ -48,9 +48,14 @@ def client_limits(settings: Settings) -> httpx.Limits:
 
 
 def build_http_client(settings: Settings) -> httpx.AsyncClient:
-    """The one shared upstream client: tuned pool, HTTP/1.1, no retries (§10.5, D12 — the
-    client owns retry policy, not the relay)."""
-    transport = httpx.AsyncHTTPTransport(retries=0, limits=client_limits(settings))
+    """The one shared upstream client: tuned pool, HTTP/1.1, connect-only retries (§10.5, D12).
+
+    ``retries`` here retries a failed TCP/TLS *connection attempt* only (httpcore semantics);
+    it never re-sends a request once bytes have gone out, so it cannot double-process an
+    upstream operation. The relay still does not retry at the request level — that policy
+    stays with the calling client.
+    """
+    transport = httpx.AsyncHTTPTransport(retries=settings.upstream_connect_retries, limits=client_limits(settings))
     return httpx.AsyncClient(transport=transport)
 
 

@@ -111,8 +111,13 @@ def test_client_limits_env_overrides() -> None:
     assert limits.keepalive_expiry == 7.5
 
 
-async def test_build_http_client_applies_limits_and_no_retries(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The shared client is built on a transport with retries=0 (D12) and the tuned limits."""
+async def test_build_http_client_applies_limits_and_connect_only_retries(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The shared client's transport gets the tuned limits and the connect-only retry bound
+
+    (D12): ``retries`` is a pre-send connection-attempt retry, never a request-level retry.
+    """
     captured: dict[str, Any] = {}
     real_transport = httpx.AsyncHTTPTransport
 
@@ -123,7 +128,24 @@ async def test_build_http_client_applies_limits_and_no_retries(monkeypatch: pyte
     monkeypatch.setattr("channel_relay.main.httpx.AsyncHTTPTransport", fake_transport)
     client = build_http_client(Settings(max_connections=11))
     try:
-        assert captured["retries"] == 0
+        assert captured["retries"] == 2
         assert captured["limits"].max_connections == 11
+    finally:
+        await client.aclose()
+
+
+async def test_build_http_client_connect_retries_configurable(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``RELAY_UPSTREAM_CONNECT_RETRIES`` propagates to the transport, including disabling it."""
+    captured: dict[str, Any] = {}
+    real_transport = httpx.AsyncHTTPTransport
+
+    def fake_transport(**kwargs: Any) -> httpx.AsyncHTTPTransport:
+        captured.update(kwargs)
+        return real_transport(**kwargs)
+
+    monkeypatch.setattr("channel_relay.main.httpx.AsyncHTTPTransport", fake_transport)
+    client = build_http_client(Settings(upstream_connect_retries=0))
+    try:
+        assert captured["retries"] == 0
     finally:
         await client.aclose()

@@ -25,7 +25,8 @@ channels (Amadeus, Sabre, Travelport), and real observability/testability/Helm d
 - **Zero-config channels**: any supported channel relays out of the box; credential swap and PII are
   opt-in (§5.1, §7).
 - **Stateless** app instances (§12.6 covers upstream sessions); horizontally scalable.
-- **No retries** anywhere (§10.5): fail fast with a defined error.
+- **No request-level retries** (§10.5): a request that reached the upstream fails fast with a
+  defined error; only a pre-send connection attempt may retry.
 
 ### 1.4 Glossary
 | Term | Meaning |
@@ -45,7 +46,7 @@ channels (Amadeus, Sabre, Travelport), and real observability/testability/Helm d
 |---|---|---|
 | Language | **Python 3.13** | `.python-version` pins it; typing required everywhere. |
 | Framework | **FastAPI** / `uvicorn` | Middleware/mediator pipeline (§3). |
-| HTTP client | **httpx** (async) | Per-channel connect/read timeouts; **no retries** (§10.5). |
+| HTTP client | **httpx** (async) | Per-channel connect/read timeouts; no request-level retries, connect-only retry allowed (§10.5). |
 | Packaging | **uv** | `pyproject.toml` + `uv.lock`; `uv sync --frozen`. Never pip. |
 | Models/config | **pydantic v2** + **pydantic-settings** | Primary validator; JSON Schema is **generated** from the models (§6.1). No hand-maintained `schema.json`. |
 | XML | **lxml**, hardened parser (§9.4) | Namespace-aware XPath + structural edits. `xmltodict` not used. |
@@ -360,8 +361,12 @@ new relay-originated errors use JSON. All error responses omit `Server`.
   external proxy-authentication handshake the advanced feature emulates.
 
 ### 10.5 Retries and body limits
-**No retries** on upstream calls (fail fast; the client owns retry policy). Bodies exceeding the
-inspectable-size cap when inspection is required → **413**.
+**No request-level retries** on upstream calls: once a request has been sent, failure (timeout,
+reset, non-2xx) fails fast with a defined error — the calling client owns request-level retry
+policy, not the relay. The shared httpx transport MAY retry a failed **connection attempt**
+(`RELAY_UPSTREAM_CONNECT_RETRIES`, default 2) — connect refused/timeout before any request bytes
+are sent — because no upstream side effect can have occurred yet; this can never cause a request to
+be processed twice. Bodies exceeding the inspectable-size cap when inspection is required → **413**.
 
 ---
 
@@ -518,7 +523,7 @@ required checks. Primary review skill: `thermo-nuclear-code-quality-review`.
 | D9 | Telemetry: MVP in-process OTLP; bundled otelcol a later phase. |
 | D10 | Zero-config channels: only `name`+`type` required; swap & PII opt-in. |
 | D11 | Transparent to channel: full header hygiene (§9.1), no `Server`, no `Via`/`Forwarded`. |
-| D12 | **No retries** on upstream calls. |
+| D12 | **No request-level retries** on upstream calls; only a pre-send connection-attempt retry is allowed (§10.5). |
 | D13 | Config: pydantic-first; JSON Schema generated, not hand-written. |
 | D14 | Container base: Alpine (musllinux wheels). |
 | D15 | Tests/lint: ruff + mypy strict + pylint + required typing; no slow tests. |
