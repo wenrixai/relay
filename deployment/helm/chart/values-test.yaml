@@ -1,0 +1,58 @@
+# Local test-deploy values. Manual image push, no credential swap, prod Sabre/Amadeus hosts.
+# helm install -f this file. See commands at bottom of file (comment) or CLAUDE.md.
+
+image:
+  repository: <YOUR_REGISTRY>/wenrix-relay   # e.g. ghcr.io/you/wenrix-relay, or docker.io/you/wenrix-relay
+  tag: "<YOUR_TAG>"                            # tag you pushed manually
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+config:
+  port: 8080
+  channels:
+    - name: sabre
+      type: sabre
+      # host/proxy_pass omitted -> defaults to prod: webservices.platform.sabre.com
+    - name: amadeus
+      type: amadeus
+      # host/proxy_pass omitted -> defaults to prod: nodeD3.production.webservices.amadeus.com
+  env:
+    RELAY_BASIC_AUTH_ENABLED: "false"   # test setup, no auth in front
+    RELAY_DNS_RESOLVER: "8.8.8.8"
+    RELAY_DEFAULT_CONNECT_TIMEOUT: "30"
+    RELAY_DEFAULT_READ_TIMEOUT: "120"
+    RELAY_MAX_INSPECT_BYTES: "8388608"
+    RELAY_TELEMETRY_METRICS_ENABLED: "false"
+  telemetry:
+    otlpEndpoint: ""
+
+# No PII toggled on any channel above -> keyring unused; skip creating it for this test deploy.
+piiKeyring:
+  enabled: false
+
+basicAuth:
+  enabled: false
+
+tls:
+  enabled: false
+
+autoscaling:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false   # needs >=2 replicas; single-replica test deploy
+
+resources:
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+
+# Default-deny NetworkPolicy needs egressToCIDRs for Sabre/Amadeus IPs to allow egress, which you
+# don't have handy for a quick test. Disabled here so egress/ingress aren't blocked; turn back on
+# and set real ingressFromCIDRs + egressToCIDRs (Sabre/Amadeus prod IP ranges) before real use.
+networkPolicy:
+  enabled: false
