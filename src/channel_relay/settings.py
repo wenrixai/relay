@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     default_connect_timeout: int = 30
     default_read_timeout: int = 120
     max_inspect_bytes: int = 8_388_608
+    # Upstream httpx connection-pool tuning (defaults raise httpx's 100/20/None ceilings for
+    # a high-throughput single-process relay; scaling stays horizontal via replicas).
+    max_connections: int = Field(default=200, ge=1)
+    max_keepalive_connections: int = Field(default=50, ge=0)
+    keepalive_expiry: float = Field(default=30.0, ge=0.0)
     telemetry_logs_enabled: bool = True
     telemetry_metrics_enabled: bool = True
     otlp_endpoint: str | None = None

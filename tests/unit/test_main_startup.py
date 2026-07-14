@@ -9,11 +9,12 @@ from __future__ import annotations
 import io
 from typing import Any
 
+import httpx
 import pytest
 from loguru import logger
 
 from channel_relay.config.models import RelayConfig
-from channel_relay.main import cli, validate_auth_config, warn_unenforced_config
+from channel_relay.main import build_http_client, client_limits, cli, validate_auth_config, warn_unenforced_config
 from channel_relay.settings import Settings
 
 
@@ -88,3 +89,41 @@ def test_cli_uvicorn_hardening_kwargs(monkeypatch: pytest.MonkeyPatch) -> None:
     assert captured["timeout_keep_alive"] == 75
     assert captured["proxy_headers"] is True
     assert captured["forwarded_allow_ips"] == "*"
+    # Fast event loop / HTTP parser pinned explicitly (fail loud, not silent asyncio/h11 fallback).
+    assert captured["loop"] == "uvloop"
+    assert captured["http"] == "httptools"
+
+
+def test_client_limits_defaults() -> None:
+    """Pool tuning defaults: raise ceilings above httpx defaults (100/20/None)."""
+    limits = client_limits(Settings())
+    assert limits.max_connections == 200
+    assert limits.max_keepalive_connections == 50
+    assert limits.keepalive_expiry == 30.0
+
+
+def test_client_limits_env_overrides() -> None:
+    """RELAY_* pool knobs propagate into the httpx.Limits object."""
+    settings = Settings(max_connections=5, max_keepalive_connections=3, keepalive_expiry=7.5)
+    limits = client_limits(settings)
+    assert limits.max_connections == 5
+    assert limits.max_keepalive_connections == 3
+    assert limits.keepalive_expiry == 7.5
+
+
+async def test_build_http_client_applies_limits_and_no_retries(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The shared client is built on a transport with retries=0 (D12) and the tuned limits."""
+    captured: dict[str, Any] = {}
+    real_transport = httpx.AsyncHTTPTransport
+
+    def fake_transport(**kwargs: Any) -> httpx.AsyncHTTPTransport:
+        captured.update(kwargs)
+        return real_transport(**kwargs)
+
+    monkeypatch.setattr("channel_relay.main.httpx.AsyncHTTPTransport", fake_transport)
+    client = build_http_client(Settings(max_connections=11))
+    try:
+        assert captured["retries"] == 0
+        assert captured["limits"].max_connections == 11
+    finally:
+        await client.aclose()
