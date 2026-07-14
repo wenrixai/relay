@@ -57,6 +57,8 @@ jobs:
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
           provenance: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Generate SBOM (syft)
         uses: anchore/sbom-action@v0
