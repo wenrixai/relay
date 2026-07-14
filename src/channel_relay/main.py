@@ -40,6 +40,22 @@ from channel_relay.settings import Settings
 _RELAY_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
 
 
+def client_limits(settings: Settings) -> httpx.Limits:
+    """Build the upstream connection-pool limits from ``RELAY_*`` settings."""
+    return httpx.Limits(
+        max_connections=settings.max_connections,
+        max_keepalive_connections=settings.max_keepalive_connections,
+        keepalive_expiry=settings.keepalive_expiry,
+    )
+
+
+def build_http_client(settings: Settings) -> httpx.AsyncClient:
+    """The one shared upstream client: tuned pool, HTTP/1.1, no retries (§10.5, D12 — the
+    client owns retry policy, not the relay)."""
+    transport = httpx.AsyncHTTPTransport(retries=0, limits=client_limits(settings))
+    return httpx.AsyncClient(transport=transport)
+
+
 def build_keyring(settings: Settings, config: RelayConfig | None) -> Keyring | None:
     """Load the PII keyring; abort startup when PII is enabled without a valid one.
 
@@ -162,8 +178,7 @@ def create_app(
         application.state.keyring = build_keyring(settings, application.state.config)
         owns_client = application.state.client is None
         if owns_client:
-            # No retries: the client owns retry policy, not the relay (§10.5, D12).
-            application.state.client = httpx.AsyncClient(transport=httpx.AsyncHTTPTransport(retries=0))
+            application.state.client = build_http_client(settings)
         # RED metrics via OTel auto-instrumentation, bound to this app's per-app meter provider
         # (never the global one, §11) so parallel app instances in tests don't cross-contaminate.
         # Per-client, not global, for the same isolation reason; uninstrumented on teardown.
@@ -287,6 +302,9 @@ def cli() -> None:
     to 60s; the IaC pins 130s) or the LB reuses connections uvicorn has already closed →
     intermittent 502s. ``forwarded_allow_ips="*"`` is safe because deployment security
     groups/NetworkPolicies restrict ingress to the load balancer.
+
+    ``loop``/``http`` are pinned to uvloop/httptools (declared runtime deps) so a resolver
+    change that drops them fails loudly instead of silently degrading to asyncio/h11.
     """
     uvicorn.run(
         "channel_relay.main:app",
@@ -296,4 +314,6 @@ def cli() -> None:
         timeout_keep_alive=75,
         proxy_headers=True,
         forwarded_allow_ips="*",
+        loop="uvloop",  # fail loud if the fast loop/parser is unavailable, not silent asyncio/h11
+        http="httptools",
     )

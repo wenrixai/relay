@@ -19,6 +19,8 @@ dependencies = [
     "pybase64>=1.4.3",
     "opentelemetry-instrumentation-fastapi>=0.64b0",
     "opentelemetry-instrumentation-httpx>=0.64b0",
+    "uvloop>=0.22",
+    "httptools>=0.6",
 ]
 
 [project.scripts]
