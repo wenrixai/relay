@@ -7,8 +7,7 @@ contract (§10) are layered on by their own stages.
 
 from __future__ import annotations
 
-import gzip
-import zlib
+import asyncio
 from dataclasses import dataclass
 
 import httpx
@@ -23,6 +22,9 @@ from channel_relay.middleware.content import (
     ContentKind,
     body_exceeds_cap,
     classify_content,
+    decode_body,
+    encode_body,
+    is_decodable_encoding,
     requires_inspection,
 )
 from channel_relay.middleware.header_hygiene import (
@@ -110,17 +112,6 @@ def _remove_body_framing(headers: dict[str, str], *, remove_encoding: bool = Fal
             del headers[name]
 
 
-def _gzip_decode(body: bytes) -> bytes:
-    try:
-        return gzip.decompress(body)
-    except (zlib.error, OSError) as exc:
-        raise CredentialSwapError("gzip request body could not be decoded") from exc
-
-
-def _gzip_encode(body: bytes) -> bytes:
-    return gzip.compress(body)
-
-
 async def forward(  # pylint: disable=too-many-locals,too-many-return-statements,too-many-branches,too-many-statements
     client: httpx.AsyncClient,
     channel: ChannelConfig,
@@ -146,9 +137,30 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
 
     body = await request.body()
     kind = classify_content(request.headers.get("content-type"))
-    if requires_inspection(channel) and body_exceeds_cap(len(body), max_inspect_bytes):
+    content_encoding = request.headers.get("content-encoding")
+    inspect = requires_inspection(channel)
+    encoded = inspect and is_decodable_encoding(content_encoding)
+
+    # [4] Content decode — ONCE, before any inspecting stage (authorization, de-anonymization,
+    # credential swap), so every stage sees plaintext (§5.4). gzip/deflate are bounded by the
+    # inspect cap (a small bomb can't expand unbounded) and run off the event loop. Uninspected
+    # channels never decode: their (possibly compressed) body passes through byte-for-byte.
+    if inspect and encoded:
+        try:
+            working = await asyncio.to_thread(decode_body, body, content_encoding, max_inspect_bytes)
+        except XmlOversizeError as exc:
+            _record_xml_error(metrics, channel.name, exc.kind)
+            logger.bind(channel=channel.name).warning("Decompressed body over cap")
+            return payload_too_large_response()
+        except XmlOpsError as exc:
+            _record_xml_error(metrics, channel.name, exc.kind)
+            logger.bind(channel=channel.name).warning("Request body could not be decoded")
+            return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not decodable", trace_id)
+    elif inspect and body_exceeds_cap(len(body), max_inspect_bytes):
         logger.bind(channel=channel.name, body_bytes=len(body)).warning("Inspectable body over cap")
         return payload_too_large_response()
+    else:
+        working = body
     logger.bind(channel=channel.name, content_kind=kind).debug("Relaying body")
     url = build_target_url(channel, path, request.url.query)
 
@@ -158,8 +170,9 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
 
     # [6] Operation authorization: reject a disallowed operation before any credential injection
     # or upstream call, so a blocked operation never reaches the channel (§operation-authorization).
+    # Parses the DECODED body, so a compressed-but-valid request is authorized normally.
     if channel.operation_authorization_enabled:
-        auth_outcome = _authorization_stage(handler=handler, body=body, kind=kind, ctx=ctx)
+        auth_outcome = _authorization_stage(handler=handler, body=working, kind=kind, ctx=ctx)
         if auth_outcome is not None:
             return auth_outcome
 
@@ -170,8 +183,8 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
         if header_outcome is not None:
             return header_outcome
 
-    # [7]/[8b] Body stages operate on decoded plaintext; gzip is decoded/re-encoded once here
-    # so PII de-anonymization and credential-body swap never round-trip it twice.
+    # [7]/[8b] Body stages operate on the already-decoded plaintext (`working`); the body is
+    # re-encoded once below only if a stage changed it.
     need_pii = channel.pii.enabled and keyring is not None and kind is ContentKind.XML
     # De-anonymize replayed session tokens whenever credential-swap response-auth encryption is
     # active for this channel, even with PII disabled — otherwise an ENC_ session token the relay
@@ -179,13 +192,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     need_session_deanon = handler.requires_response_keyring(channel) and keyring is not None and kind is ContentKind.XML
     need_deanon = need_pii or need_session_deanon
     need_cred_body = channel.credential_swap_enabled and handler.requires_body_inspection(channel)
-    if body and (need_deanon or need_cred_body):
-        gzipped = request.headers.get("content-encoding", "").lower() == "gzip"
-        try:
-            working = _gzip_decode(body) if gzipped else body
-        except CredentialSwapError:
-            logger.bind(channel=channel.name).warning("Request body could not be gzip-decoded")
-            return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not decodable", trace_id)
+    if working and (need_deanon or need_cred_body):
         changed = False
         # [7] De-anonymize: the channel must always receive plaintext (§8.6). Envelope-driven,
         # keyring-only; fail closed — an undecryptable token never reaches the channel.
@@ -204,7 +211,7 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
             working, cred_changed = swap_outcome
             changed = changed or cred_changed
         if changed:
-            body = _gzip_encode(working) if gzipped else working
+            body = encode_body(working, content_encoding) if encoded else working
             # The body changed size; stale framing headers must be recomputed by httpx.
             _remove_body_framing(headers)
 

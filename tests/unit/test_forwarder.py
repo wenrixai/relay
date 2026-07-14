@@ -462,3 +462,136 @@ def test_forward_supports_common_methods(method: str, travelfusion_client: Trave
         client.request(method, "/channel/tf/op")
 
     assert captured["req"].method == method
+
+
+# --- Request-body content decoding (harden-request-body-decoding) ---------------------------
+
+_AUTHZ_BODY = b"<CommandList><GetBookingDetails><X/></GetBookingDetails></CommandList>"
+
+
+def _authz_channel() -> ChannelConfig:
+    return ChannelConfig(
+        name="tf",
+        type=ChannelType.TRAVELFUSION,
+        authorization={"enabled": True, "allowed_operations": [{"operation": "GetBookingDetails", "version": "*"}]},
+    )
+
+
+def test_gzip_body_is_decoded_before_authorization_and_forwarded(
+    relay_client_factory: RelayClientFactory,
+) -> None:
+    import gzip
+
+    captured: dict[str, httpx.Request] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["req"] = request
+        return httpx.Response(200)
+
+    with relay_client_factory(_authz_channel(), httpx.MockTransport(handler)) as client:
+        resp = client.post(
+            "/channel/tf/op",
+            content=gzip.compress(_AUTHZ_BODY),
+            headers={"content-type": "application/xml", "content-encoding": "gzip"},
+        )
+
+    # Decoded before the allow-list check -> authorized -> forwarded (was a spurious 403/502).
+    assert resp.status_code == 200
+    assert "req" in captured
+
+
+def test_deflate_body_is_decoded_before_authorization_and_forwarded(
+    relay_client_factory: RelayClientFactory,
+) -> None:
+    import zlib
+
+    captured: dict[str, httpx.Request] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["req"] = request
+        return httpx.Response(200)
+
+    with relay_client_factory(_authz_channel(), httpx.MockTransport(handler)) as client:
+        resp = client.post(
+            "/channel/tf/op",
+            content=zlib.compress(_AUTHZ_BODY),
+            headers={"content-type": "application/xml", "content-encoding": "deflate"},
+        )
+
+    assert resp.status_code == 200
+    assert "req" in captured
+
+
+def test_truncated_gzip_body_returns_xml_parse_error_not_500(
+    relay_client_factory: RelayClientFactory,
+    unreachable_transport: httpx.MockTransport,
+    assert_proxy_error: ProxyErrorAssertion,
+) -> None:
+    import gzip
+
+    # A header-valid but truncated stream raises EOFError in gzip.decompress; it must map to the
+    # 502 contract, not an uncontrolled 500.
+    truncated = gzip.compress(b"<CommandList>" + b"X" * 200 + b"</CommandList>")[:20]
+
+    with relay_client_factory(_authz_channel(), unreachable_transport) as client:
+        resp = client.post(
+            "/channel/tf/op",
+            content=truncated,
+            headers={"content-type": "application/xml", "content-encoding": "gzip"},
+        )
+
+    assert_proxy_error(resp, 502, "xml_parse_error")
+
+
+def test_decoded_and_mutated_body_is_re_encoded_preserving_content_encoding(
+    relay_client_factory: RelayClientFactory,
+) -> None:
+    import gzip
+
+    captured: dict[str, httpx.Request] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["req"] = request
+        return httpx.Response(200)
+
+    # Travelfusion credential swap mutates the (decoded) body; egress must re-gzip it.
+    channel = ChannelConfig(
+        name="tf",
+        type=ChannelType.TRAVELFUSION,
+        credentials={"enabled": True, "login_id": "REAL", "xml_login_id": "REALXML"},
+    )
+    body = b"<CommandList><GetBookingDetails><LoginId>x</LoginId><XmlLoginId>y</XmlLoginId>"
+    body += b"</GetBookingDetails></CommandList>"
+
+    with relay_client_factory(channel, httpx.MockTransport(handler)) as client:
+        resp = client.post(
+            "/channel/tf/op",
+            content=gzip.compress(body),
+            headers={"content-type": "application/xml", "content-encoding": "gzip"},
+        )
+
+    assert resp.status_code == 200
+    req = captured["req"]
+    assert req.headers["content-encoding"] == "gzip"
+    decoded = gzip.decompress(req.content)
+    assert b"REAL" in decoded and b"REALXML" in decoded  # swapped, re-encoded upstream
+
+
+def test_gzip_bomb_body_rejected_with_413(
+    relay_client_factory: RelayClientFactory,
+    unreachable_transport: httpx.MockTransport,
+) -> None:
+    import gzip
+
+    # ~16 MiB of zeros compresses tiny but exceeds the default 8 MiB inspect cap when decoded.
+    bomb = gzip.compress(b"\x00" * (16 * 1024 * 1024))
+    assert len(bomb) < 8_388_608  # small on the wire
+
+    with relay_client_factory(_authz_channel(), unreachable_transport) as client:
+        resp = client.post(
+            "/channel/tf/op",
+            content=bomb,
+            headers={"content-type": "application/xml", "content-encoding": "gzip"},
+        )
+
+    assert resp.status_code == 413
