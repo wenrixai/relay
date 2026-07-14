@@ -1,7 +1,7 @@
 # error-contract Specification
 
 ## Purpose
-TBD - created by archiving change slice-1-mvp. Update Purpose after archive.
+Define stable, sanitized client-facing error responses and upstream failure mappings.
 ## Requirements
 ### Requirement: Upstream timeout error
 On a channel connect/read timeout the relay SHALL return HTTP 504 with `Content-Type: text/html`, a

@@ -5,7 +5,6 @@ config a sanitized ``ConfigValidationError`` propagates so startup aborts with a
 exit (§6.1). The original ``pydantic.ValidationError`` is never re-raised or chained: its
 message embeds the offending input values (which may hold channel credentials), and an
 unhandled exception ultimately reaches uvicorn's stderr logging.
-``WP_*`` legacy synthesis is a later task (T4.3).
 """
 
 from __future__ import annotations

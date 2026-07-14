@@ -11,19 +11,16 @@
 ## 1. Overview
 
 ### 1.1 Problem
-v1 (`wenrixai/channel-proxy`) is an `nginx` + OpenResty/Lua proxy driven by `WP_*` env vars. It
-injects channel credentials via `access_by_lua_block` find-and-replace and strips Wenrix headers.
-It cannot support PII redaction, contextual (structural) credential handling, or first-class
-observability, and its per-message text substitution is brittle.
+The previous proxy used nginx + OpenResty/Lua text substitution for credential injection. It could
+not support PII redaction, contextual structural credential handling, or first-class observability,
+and its per-message text substitution was brittle.
 
 ### 1.2 Goal
-A modern Python (FastAPI) relay that preserves v1 behaviour and adds a privacy-first, zero-trust
-path where Wenrix never sees traveler PII in readable form, structural credential swap, more
+A modern Python (FastAPI) relay that adds a privacy-first, zero-trust path where Wenrix never sees
+traveler PII in readable form, structural credential swap, more
 channels (Amadeus, Sabre, Travelport), and real observability/testability/Helm deployment.
 
 ### 1.3 Non-negotiable principles
-- **Backward compatible** with `WP_*` deployments (see
-  `openspec/specs/relay-configuration/spec.md`).
 - **Transparent relay**: the channel must never learn Wenrix is in the path (§9).
 - **Zero-config channels**: any supported channel relays out of the box; credential swap and PII are
   opt-in (§5.1, §7).
@@ -76,7 +73,7 @@ Client (Wenrix)
 [1]  Auth              basic-auth (default) / mTLS (opt-in)                    §9.2
 [2]  Header hygiene    strip hop-by-hop + forwarding + Wenrix headers          §9.1
 [3]  Route + resolve   /channel/<name>/... → channel config; Host rewrite      §5,§9.1
-[4]  Content decode    handle gzip/chunked; classify XML vs JSON vs opaque     §5.4
+[4]  Content gate      handle gzip XML; classify XML vs unsupported/opaque     §5.4
 [5]  Operation parse   parse operation from body (per-channel parser)          §5.3
 [6]  Authorization     allow/block operation (semver); external authz (later)  §12
 [7]  De-anonymize      replace ENC_ tokens with plaintext (request)            §8.6
@@ -104,7 +101,7 @@ channel-relay/
 ├── openspec/                 # project.md + templates (TDD), specs/, changes/
 ├── src/channel_relay/
 │   ├── main.py  settings.py  health.py  admin.py     # /admin/status (§12.7)
-│   ├── config/    models.py  loader.py  legacy_env.py  json_schema.py  # schema generated
+│   ├── config/    models.py  loader.py  json_schema.py  # schema generated
 │   ├── middleware/ pipeline.py auth.py header_hygiene.py authorization.py
 │   │               timeouts.py access_log.py telemetry.py content.py
 │   ├── channels/  base.py registry.py travelfusion.py ba_ndc.py la_ndc.py
@@ -122,9 +119,8 @@ channel-relay/
 ---
 
 ## 4. Functional requirements
-1. Backward compatible with v1 behaviour; semver image tags (warn against `latest`).
-2. Config via JSON file + `WP_*` env compat (§6,
-   `openspec/specs/relay-configuration/spec.md`).
+1. Versioned JSON configuration; semver image tags (warn against `latest`).
+2. Process settings from `RELAY_*` environment variables (§6).
 3. Header hygiene toward the channel (§9.1).
 4. Channels: Travelfusion, BA NDC, LA NDC, Farelogix AA/LH/UA (+EK), Amadeus/NDCx, Sabre, Travelport (§5).
 5. Per-channel proxy-pass/host override.
@@ -156,20 +152,17 @@ type). Never trusts a client-supplied header (unspoofable). Drives rule selectio
 authorization (§12).
 
 ### 5.4 Content handling (payload types)
-The relay must define behaviour per content type, not assume XML:
+Structured body inspection is XML/SOAP-only:
 - **XML/SOAP** (Travelfusion, Farelogix, Amadeus, Sabre, Travelport): full parse/edit/redact path
   (§8), hardened parser (§9.4).
-- **JSON NDC** (e.g. modern NDC order APIs): JSON path-based redaction and credential swap; rules
-  support a JSONPath variant alongside XPath (`path_type: xpath|jsonpath`).
-- **SOAP attachments / MTOM (multipart)**: v1 = **pass-through opaque** (do not parse binary parts);
-  redact only the root SOAP part if configured. Flag any XOP/MTOM message in logs/metrics.
-- **gzip / deflate**: transparently decode on ingress when the relay must inspect the body
-  (redaction/swap/authz enabled), then re-encode on egress preserving `Content-Encoding`. If no
-  body inspection is required for a channel, pass compressed bytes through untouched.
+- **gzip XML**: decode when the relay must inspect the body, apply structural processing, then
+  preserve the appropriate wire encoding toward the next hop.
 - **chunked transfer-encoding**: supported; the relay buffers only as needed for inspection and
   streams otherwise. Enforce a max inspectable body size (§9.4); oversize → 413.
-- **non-XML / unknown**: **transparent pass-through** with header hygiene only; no parsing, no
-  redaction (redaction requires a configured rule + parseable body).
+- **JSON, MTOM/multipart, deflate, and unknown content**: opaque pass-through only when no configured
+  stage requires inspection. If request inspection is required, fail before forwarding with 415
+  `unsupported_content_type`; if response inspection is required, return 502 with the same reason
+  and none of the upstream body.
 
 ---
 
@@ -179,12 +172,8 @@ The relay must define behaviour per content type, not assume XML:
 Config is expressed as **pydantic models** (single source). JSON Schema is **generated** from the
 models (`config/json_schema.py`) and used for external validation/publishing; there is no
 hand-maintained `schema.json`. On invalid config, log the validation error and **abort startup**
-(non-zero exit). Precedence, defaults, env mapping, secret formats, and `WP_*` migration are
-specified in `openspec/specs/relay-configuration/spec.md`.
-
-### 6.2 Backward compatibility
-On startup, read deprecated `WP_CHANNELS_*` / `WP_SERVER_*` variables and synthesize channel
-entries; documented as deprecated but functional. Parity tested against a v1 config sample.
+(non-zero exit). Precedence, defaults, environment mapping, and secret formats are specified in
+`openspec/specs/relay-configuration/spec.md`.
 
 ---
 
@@ -208,7 +197,7 @@ entries; documented as deprecated but functional. Parity tested against a v1 con
     "rule_type": "field", "pii_type": "person", "method": "encrypt",
     "ignored_content_patterns": ["^TMX"] } ] }
 ```
-`path_type`: `xpath` (default) | `jsonpath` (§5.4). `method`: `encrypt` (default) | `mask`.
+`path_type`: `xpath` (the only supported value). `method`: `encrypt` (default) | `mask`.
 `rule_type`: `field` (default) | `reference`.
 
 **`deterministic` (encrypt only, default `false`).** Random-IV `encrypt` yields a *different*
@@ -451,7 +440,7 @@ Master key Secret **created-if-absent** (pre-install hook / lookup), never regen
   overhead" property tests; codec; per-channel operation parsers; rule engine golden tests on
   sanitized fixtures (§13.6); XML hardening (XXE/DTD/entity-expansion/oversize/malformed) tests;
   header-hygiene tests (hop-by-hop, `Server` absent, no `Via`/`Forwarded` to channel); error-contract
-  tests (exact status/headers/body); legacy `WP_*` parity; `/admin/status` redaction test.
+  tests (exact status/headers/body); `/admin/flare` redaction test.
 - Coverage gate (placeholder 85%; confirm — O2).
 
 ### 13.4 Load / performance methodology
@@ -485,8 +474,8 @@ The chart must ship secure-by-default:
 - Probes wired to `/liveness` and `/readiness`.
 
 ### 13.6 Test fixtures (per channel)
-Under `tests/fixtures/<channel>/`, ship **sanitized** real NDC/GDS/XML (and JSON where applicable)
-request+response pairs with the **expected swapped and/or redacted output**. These drive golden
+Under `tests/fixtures/<channel>/`, ship **sanitized** real GDS/XML request+response pairs with the
+**expected swapped and/or redacted output**. These drive golden
 tests for parsers, credential swap, and redaction. Sanitization removes all real PII/credentials.
 
 ---
@@ -502,8 +491,8 @@ version bump. Branch protection with required checks + PR template + CODEOWNERS.
 
 ## 15. Documentation
 Main article + sub-articles: install & configuration (incl. Helm/K8s + channel implementation),
-advanced configuration, PII redaction explainer. Mark old env vars deprecated; document all new
-config in `docs/PROXY_CONFIGURATION_GUIDE.md` and `openspec/specs/relay-configuration/spec.md`.
+advanced configuration, and PII redaction explainer. Document process and channel configuration in
+`docs/PROXY_CONFIGURATION_GUIDE.md` and `openspec/specs/relay-configuration/spec.md`.
 
 ---
 
@@ -545,4 +534,3 @@ required checks. Primary review skill: `thermo-nuclear-code-quality-review`.
   raw-string (would need scoped, contextual substitution).
 - O5: Confirm the v1 upstream-session model is client-managed pass-through (§12.6), i.e. no relay-held
   GDS/NDC sessions in v1.
-- O6: JSON NDC channels in scope for v1 or later (affects §5.4 / rule `path_type`).

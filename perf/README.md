@@ -18,16 +18,23 @@ CI artifact and are **non-gating by default**.
 
 ```bash
 # 1. Start the mock upstream with fixed latency.
-MOCK_PORT=9000 MOCK_LATENCY_MS=50 uv run python deployment/mock_channel.py &
+MOCK_PORT=9000 MOCK_LATENCY_MS=50 MOCK_BODY_FILE=perf/mock-response.xml \
+  MOCK_CONTENT_TYPE=application/xml MOCK_EXPECTED_LOGIN=perf-login \
+  MOCK_EXPECTED_ROUNDTRIP=PERF_ROUNDTRIP_PLAINTEXT \
+  uv run python deployment/mock_channel.py &
 
 # 2. Start the relay with the perf channel config (basic auth off for simplicity).
+export RELAY_PII_KEYRING='{"0":"'$(head -c32 /dev/urandom | base64)'"}'
+export RELAY_PII_KEY_EPOCH_ACTIVE=0
 RELAY_CONFIG_FILE=perf/relay.perf.json RELAY_BASIC_AUTH_ENABLED=false \
-  RELAY_PII_KEYRING='{"0":"'$(head -c32 /dev/urandom | base64)'"}' RELAY_PII_KEY_EPOCH_ACTIVE=0 \
   uv run uvicorn channel_relay.main:app --port 8080 &
 
-# 3. Run the harness for each payload size.
+# 3. Prove each scenario executes the stage it measures, then run each payload size.
+uv run python perf/preflight.py --token-output /tmp/wenrix-perf-roundtrip-token
 for size in 2048 32768 262144; do
-  k6 run -e RELAY_URL=http://127.0.0.1:8080 -e PAYLOAD_SIZE=$size perf/relay-load.js
+  k6 run -e RELAY_URL=http://127.0.0.1:8080 -e PAYLOAD_SIZE=$size \
+    -e ROUNDTRIP_TOKEN="$(cat /tmp/wenrix-perf-roundtrip-token)" \
+    -e SUMMARY_PATH=summary-$size.json perf/relay-load.js
 done
 ```
 
@@ -35,5 +42,5 @@ Or simply `just perf` (runs the 2KB profile against a locally-started stack).
 
 ## Output
 
-`summary.json` (full k6 metrics) plus a text summary on stdout. Per-scenario p50/p95/p99 come from
+`summary-<payload-size>.json` (full k6 metrics) plus a text summary on stdout. Per-scenario p50/p95/p99 come from
 `http_req_duration{scenario:...}`; error rate from `http_req_failed`.

@@ -1,7 +1,7 @@
 # header-hygiene Specification
 
 ## Purpose
-TBD - created by archiving change slice-1-mvp. Update Purpose after archive.
+Define request and response header filtering that keeps the relay transparent and leak-free.
 ## Requirements
 ### Requirement: Header hygiene toward the channel
 The relay SHALL strip hop-by-hop headers (`Connection`, `Keep-Alive`, `Proxy-Authenticate`,

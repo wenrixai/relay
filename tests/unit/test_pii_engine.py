@@ -106,6 +106,19 @@ class TestRedaction:
         # name + email + card + address + passport + loyalty attr; FrequentFlyer skipped.
         assert sum(counts.values()) == 6
 
+    def test_unknown_namespace_prefix_reports_rule_id(
+        self, response_body: bytes, ruleset: RuleSet, keyring: Keyring
+    ) -> None:
+        failures: list[str] = []
+        redact_response_body(
+            response_body,
+            channel="mock",
+            ruleset=ruleset,
+            keyring=keyring,
+            path_error_callback=failures.append,
+        )
+        assert failures == ["mock.pnr.badns.001"]
+
     def test_structure_and_namespaces_preserved(self, response_body: bytes, ruleset: RuleSet, keyring: Keyring) -> None:
         redacted, _ = redact_response_body(response_body, channel="mock", ruleset=ruleset, keyring=keyring)
         root = parse_bytes(redacted)

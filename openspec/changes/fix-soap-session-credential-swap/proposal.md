@@ -48,5 +48,4 @@ Deployment context: the customer runs the proxy holding the **real** GDS credent
   and must be rewritten), `tests/integration/test_session_deanon_gate.py`,
   `tests/unit/test_channel_handlers.py`, `tests/unit/test_channel_credential_swap.py`, config loader
   tests.
-- No new dependencies. No `WP_*` compatibility impact. Behavior change is limited to SOAP channels
-  with credential swap enabled.
+- No new dependencies. Behavior change is limited to SOAP channels with credential swap enabled.

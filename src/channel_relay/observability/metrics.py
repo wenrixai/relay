@@ -40,6 +40,7 @@ class _MetricTotals:
     xml_parse_errors: dict[str, dict[str, int]] = field(default_factory=dict)
     operations_denied: dict[str, int] = field(default_factory=dict)
     uncovered_operations: dict[str, dict[str, int]] = field(default_factory=dict)
+    pii_rule_path_errors: dict[str, dict[str, int]] = field(default_factory=dict)
 
     @staticmethod
     def increment(values: dict[str, int], key: str, count: int = 1) -> None:
@@ -68,6 +69,9 @@ class _MetricTotals:
             "operations_denied_total": dict(sorted(self.operations_denied.items())),
             "pii_uncovered_operation_total": {
                 channel: dict(sorted(counts.items())) for channel, counts in sorted(self.uncovered_operations.items())
+            },
+            "pii_rule_path_errors_total": {
+                channel: dict(sorted(counts.items())) for channel, counts in sorted(self.pii_rule_path_errors.items())
             },
         }
 
@@ -146,6 +150,11 @@ class RelayMetrics:  # pylint: disable=too-many-instance-attributes
             unit="1",
             description="PII-enabled responses whose operation matched no redaction rules (forwarded).",
         )
+        self._pii_rule_path_errors: OtelCounter = meter.create_counter(
+            _metric_name("pii_rule_path_errors_total"),
+            unit="1",
+            description="PII rules whose XPath could not be evaluated.",
+        )
 
     def _observe_channels(
         self,
@@ -203,6 +212,11 @@ class RelayMetrics:  # pylint: disable=too-many-instance-attributes
         """Record a PII-enabled response forwarded with no matching redaction rules."""
         self._totals.increment_nested(self._totals.uncovered_operations, channel, operation, 1)
         self._uncovered_operations.add(1, {"channel": channel, "operation": operation})
+
+    def record_pii_rule_path_error(self, channel: str, rule_id: str) -> None:
+        """Record a bounded, configuration-derived rule identifier whose XPath is invalid."""
+        self._totals.increment_nested(self._totals.pii_rule_path_errors, channel, rule_id, 1)
+        self._pii_rule_path_errors.add(1, {"channel": channel, "rule_id": rule_id})
 
     def snapshot(self) -> dict[str, object]:
         """Return safe in-process metric totals for admin diagnostics."""

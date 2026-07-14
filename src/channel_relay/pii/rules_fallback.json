@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion-baseline-2026-07-06",
+  "rules_version": "amadeus+sabre+travelfusion-baseline-2026-07-14",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -11,7 +11,8 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "person",
-      "method": "encrypt"
+      "method": "encrypt",
+      "required": true
     },
     {
       "id": "amadeus.pnr.firstname",
@@ -422,7 +423,8 @@
       "operation": "^(GetBookingDetails|GetLatestBookingDetails)$",
       "path": "//*[local-name()='BookingProfile']/*[local-name()='TravellerList']/*[local-name()='Traveller']/*[local-name()='Name']/*[local-name()='NamePartList']/*[local-name()='NamePart']",
       "pii_type": "person",
-      "method": "encrypt"
+      "method": "encrypt",
+      "required": true
     },
     {
       "id": "travelfusion.booking.contact_name",

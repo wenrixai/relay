@@ -1,7 +1,7 @@
 # health-and-logging Specification
 
 ## Purpose
-TBD - created by archiving change slice-1-mvp. Update Purpose after archive.
+Define health signaling, readiness state, and structured secret-safe logging behavior.
 ## Requirements
 ### Requirement: Health probes
 The relay SHALL expose `/liveness` and `/readiness`. Liveness reflects process up; readiness reflects

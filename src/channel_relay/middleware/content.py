@@ -1,9 +1,7 @@
-"""Content handling and classification (§5.4).
+"""Content classification and inspectable-body limits (§5.4).
 
-Slice 1 needs no body inspection (no PII/credential swap yet), so bodies — including
-gzip/deflate and chunked — pass through transparently. When inspection *is* required, the
-inspectable-body cap is enforced (oversize → 413) and the body is classified for logging.
-Actual XML/JSON parsing arrives in later slices; here we only classify and log.
+XML/SOAP is the relay's only structurally inspected content. Other kinds may be classified for
+opaque pass-through or fail-closed gating, but are never parsed as PII or credential payloads.
 """
 
 from __future__ import annotations
@@ -41,7 +39,7 @@ def requires_inspection(channel: ChannelConfig) -> bool:
     """Whether the relay must read/parse the body for this channel.
 
     PII-enabled channels require inspection for request de-anonymization/response
-    redaction. Slice 3 credential swap adds body inspection for channels whose
+    redaction. Credential swap adds body inspection for channels whose
     configured credentials require structural XML mutation or response auth encryption.
     Operation authorization adds body inspection for channels with a configured
     allow-list, so the inspectable-body size cap applies uniformly.

@@ -33,6 +33,7 @@ class ErrorReason(StrEnum):
     XML_PARSE_ERROR = "xml_parse_error"
     CREDENTIAL_SWAP_FAILED = "credential_swap_failed"
     OPERATION_NOT_ALLOWED = "operation_not_allowed"
+    UNSUPPORTED_CONTENT_TYPE = "unsupported_content_type"
 
 
 def upstream_timeout_response() -> Response:
@@ -88,4 +89,21 @@ def payload_too_large_response() -> Response:
         status_code=413,
         content={"error": "payload_too_large"},
         headers={WENRIX_ERROR_HEADER: "payload_too_large"},
+    )
+
+
+def unsupported_content_response(*, upstream: bool, trace_id: str | None) -> Response:
+    """Fail closed when a body requiring structured inspection is not XML/SOAP."""
+    status_code = 502 if upstream else 415
+    error = "bad_gateway" if upstream else "unsupported_media_type"
+    reason = ErrorReason.UNSUPPORTED_CONTENT_TYPE.value
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "error": error,
+            "reason": reason,
+            "detail": "structured inspection supports XML and SOAP only",
+            "trace_id": trace_id,
+        },
+        headers={WENRIX_ERROR_HEADER: reason},
     )

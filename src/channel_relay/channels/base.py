@@ -1,4 +1,4 @@
-"""Channel handler contracts for operation parsing and credential swap (Slice 3)."""
+"""Channel handler contracts for operation parsing and credential swap."""
 
 from __future__ import annotations
 

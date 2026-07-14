@@ -94,6 +94,28 @@ def test_forwarder_sets_ndc_header_without_body_mutation() -> None:
     assert captured["req"].content == body
 
 
+def test_header_only_ndc_json_passes_through_without_inspection() -> None:
+    captured: dict[str, httpx.Request] = {}
+    response_body = b'{"offer":"unchanged"}'
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["req"] = request
+        return httpx.Response(200, content=response_body, headers={"content-type": "application/json"})
+
+    channel = ChannelConfig(
+        name="ba", type=ChannelType.BA_NDC_DIRECT, credentials={"enabled": True, "client_key": "ba-key"}
+    )
+    request_body = b'{"shopping":"unchanged"}'
+
+    with _client(channel, httpx.MockTransport(handler)) as client:
+        resp = client.post("/channel/ba/ndc", content=request_body, headers={"content-type": "application/json"})
+
+    assert resp.status_code == 200
+    assert resp.content == response_body
+    assert captured["req"].headers["Client-Key"] == "ba-key"
+    assert captured["req"].content == request_body
+
+
 def _travelport_channel() -> ChannelConfig:
     return ChannelConfig(
         name="travelport",

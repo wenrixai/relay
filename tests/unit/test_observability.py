@@ -37,6 +37,7 @@ def test_relay_metrics_counter_and_gauge() -> None:
     metrics.set_channels_configured(3)
     metrics.record_upstream_timeout("tf")
     metrics.record_upstream_timeout("tf")
+    metrics.record_pii_rule_path_error("tf", "tf.bad-prefix")
 
     timeouts = _metric_points(reader, "channel_relay_upstream_timeouts_total")
     assert timeouts and timeouts[0].value == 2
@@ -44,6 +45,10 @@ def test_relay_metrics_counter_and_gauge() -> None:
 
     gauge = _metric_points(reader, "channel_relay_channels_configured")
     assert gauge and gauge[0].value == 3
+
+    path_errors = _metric_points(reader, "channel_relay_pii_rule_path_errors_total")
+    assert path_errors and path_errors[0].value == 1
+    assert path_errors[0].attributes == {"channel": "tf", "rule_id": "tf.bad-prefix"}
 
 
 def test_app_meter_provider_has_otel_service_resource() -> None:
