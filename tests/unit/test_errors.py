@@ -71,9 +71,16 @@ def test_upstream_error_returns_502_json_with_trace_id() -> None:
 
 
 def test_no_upstream_configured_returns_502() -> None:
-    # travelport has no default host -> proxy_pass is None
-    channel = ChannelConfig(name="tp", type=ChannelType.TRAVELPORT)
-    with _client(channel, httpx.MockTransport(lambda r: httpx.Response(200))) as client:
+    # Config validation now rejects a hostless channel at load; force the unresolved state on
+    # the built config to exercise the forwarder's defense-in-depth guard.
+    config = RelayConfig(channels=[ChannelConfig(name="tp", type=ChannelType.TRAVELPORT, host="tp.test")])
+    config.channels[0].proxy_pass = None
+    client = TestClient(
+        create_app(
+            config=config, http_client=httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(200)))
+        )
+    )
+    with client:
         resp = client.get("/channel/tp/op")
 
     assert resp.status_code == 502

@@ -107,6 +107,7 @@ def test_external_authorization_warns_at_startup() -> None:
                 {
                     "name": "tp",
                     "type": "travelport",
+                    "host": "tp.test",
                     "authorization": {"external": {"url": "https://authz.example.test"}},
                 }
             ]

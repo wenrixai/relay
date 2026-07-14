@@ -34,10 +34,13 @@ def test_explicit_proxy_pass_wins() -> None:
     assert channel.proxy_pass == "https://override.test/base"
 
 
-def test_per_deployment_type_has_no_host_default() -> None:
-    channel = ChannelConfig(name="tp", type=ChannelType.TRAVELPORT)
-    assert channel.host is None
-    assert channel.proxy_pass is None
+def test_per_deployment_type_requires_explicit_upstream() -> None:
+    # A type with no default host must supply host/proxy_pass, else it would boot "ready"
+    # and 500 on every request (require-channel-auth-and-host-at-startup).
+    with pytest.raises(ValidationError, match="upstream"):
+        ChannelConfig(name="tp", type=ChannelType.TRAVELPORT)
+    ok = ChannelConfig(name="tp", type=ChannelType.TRAVELPORT, host="tp.test")
+    assert ok.proxy_pass == "https://tp.test"
 
 
 def test_timeout_defaults() -> None:

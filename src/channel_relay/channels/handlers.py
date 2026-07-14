@@ -93,6 +93,19 @@ def _require_credential(credentials: dict[str, str], key: str) -> str:
     return value
 
 
+def _validate_required_config(channel: ChannelConfig, keys: tuple[str, ...]) -> None:
+    """Config-load check: a swap-enabled channel must carry every required credential key.
+
+    Fails closed at startup (naming the channel, never a value) instead of a per-request 502.
+    """
+    if not channel.credentials.enabled:  # pylint: disable=no-member
+        return
+    credentials = channel.credential_values
+    missing = [key for key in keys if not credentials.get(key)]
+    if missing:
+        raise ValueError(f"channel {channel.name!r}: missing credential(s) {', '.join(missing)}")
+
+
 def _travelport_credentials(credentials: dict[str, str]) -> tuple[str, str]:
     """Return a validated Travelport Basic-auth pair without exposing values in errors."""
     for legacy_key in ("soap_security", "soap_username", "soap_password"):
@@ -189,18 +202,13 @@ class NoBodySwapMixin:
 
 
 @dataclass(frozen=True, slots=True)
-class NoCredentialValidationMixin:
-    """Default config-load validation for channels with no required credential shape."""
-
-    def validate_credentials(self, channel: ChannelConfig) -> None:  # pylint: disable=unused-argument
-        return None
-
-
-@dataclass(frozen=True, slots=True)
-class TravelfusionHandler(NoHeaderSwapMixin, NoCredentialValidationMixin):
+class TravelfusionHandler(NoHeaderSwapMixin):
     """Travelfusion XML element credential swap."""
 
     channel_type: ChannelType = ChannelType.TRAVELFUSION
+
+    def validate_credentials(self, channel: ChannelConfig) -> None:
+        _validate_required_config(channel, ("login_id", "xml_login_id"))
 
     def parse_operation(self, root: etree._Element) -> str:
         for child in root:
@@ -268,12 +276,15 @@ def _parse_supplier_parameters(value: str) -> list[tuple[str, str]]:
 
 
 @dataclass(frozen=True, slots=True)
-class NdcHeaderHandler(NoBodySwapMixin, NoopResponseMixin, NoCredentialValidationMixin):
+class NdcHeaderHandler(NoBodySwapMixin, NoopResponseMixin):
     """BA/LA direct NDC header credential swap."""
 
     channel_type: ChannelType
     credential_key: str
     header_name: str
+
+    def validate_credentials(self, channel: ChannelConfig) -> None:
+        _validate_required_config(channel, (self.credential_key,))
 
     def parse_operation(self, root: etree._Element) -> str:
         return _local_name(root)
@@ -290,10 +301,18 @@ class NdcHeaderHandler(NoBodySwapMixin, NoopResponseMixin, NoCredentialValidatio
 
 
 @dataclass(frozen=True, slots=True)
-class FarelogixHandler(NoopResponseMixin, NoCredentialValidationMixin):
+class FarelogixHandler(NoopResponseMixin):
     """Farelogix tc/iden + tc/agent XML attribute credential swap."""
 
     channel_type: ChannelType
+
+    def validate_credentials(self, channel: ChannelConfig) -> None:
+        _validate_required_config(channel, ("username", "password", "agent", "agent_password", "agent_user"))
+        if not channel.credentials.enabled:  # pylint: disable=no-member
+            return
+        credentials = channel.credential_values
+        if not (credentials.get("subscription_key") or credentials.get("api_key")):
+            raise ValueError(f"channel {channel.name!r}: missing credential(s) subscription_key (or api_key)")
 
     def parse_operation(self, root: etree._Element) -> str:
         return _soap_operation(root)

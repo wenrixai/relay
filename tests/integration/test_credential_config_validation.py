@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import httpx
 import pytest
+from pydantic import ValidationError
+
 from fastapi.testclient import TestClient
 
 from channel_relay.config.models import ChannelConfig, ChannelType, RelayConfig
@@ -47,6 +49,57 @@ def test_swap_enabled_soap_channel_with_credentials_starts(monkeypatch: pytest.M
 def test_credential_swap_disabled_channel_needs_no_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
     # credentials.enabled defaults False → no requirement, relay boots.
     channel = ChannelConfig(name="sabre", type=ChannelType.SABRE, host="sabre.test")
+    with _app(channel, monkeypatch) as client:
+        assert client.get("/liveness").status_code == 200
+
+
+# --- Resolvable upstream (require-channel-auth-and-host-at-startup, #6) ----------------------
+
+
+@pytest.mark.parametrize("channel_type", [ChannelType.LA_NDC_DIRECT, ChannelType.TRAVELPORT])
+def test_channel_without_resolvable_upstream_is_rejected_at_load(channel_type: ChannelType) -> None:
+    # Types with no default host must supply host/proxy_pass; otherwise they'd boot "ready"
+    # and then 500 on every request.
+    with pytest.raises(ValidationError, match="upstream|host|proxy_pass"):
+        ChannelConfig(name="x", type=channel_type)
+
+
+def test_channel_with_explicit_host_resolves() -> None:
+    channel = ChannelConfig(name="x", type=ChannelType.LA_NDC_DIRECT, host="la.test")
+    assert channel.proxy_pass == "https://la.test"
+
+
+# --- Credential validation for the remaining swap handlers (#5) -----------------------------
+
+
+def test_swap_enabled_travelfusion_missing_login_aborts(monkeypatch: pytest.MonkeyPatch) -> None:
+    channel = ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION, credentials={"enabled": True, "login_id": "only"})
+    with pytest.raises(ValueError, match="tf"):  # noqa: PT012
+        with _app(channel, monkeypatch) as client:
+            client.get("/liveness")
+
+
+def test_swap_enabled_farelogix_missing_field_aborts(monkeypatch: pytest.MonkeyPatch) -> None:
+    channel = ChannelConfig(
+        name="flx",
+        type=ChannelType.FARELOGIX_AA,
+        host="flx.test",
+        credentials={"enabled": True, "username": "u", "subscription_key": "k"},  # missing password/agent/...
+    )
+    with pytest.raises(ValueError, match="flx"):  # noqa: PT012
+        with _app(channel, monkeypatch) as client:
+            client.get("/liveness")
+
+
+def test_swap_enabled_ndc_missing_api_key_aborts(monkeypatch: pytest.MonkeyPatch) -> None:
+    channel = ChannelConfig(name="la", type=ChannelType.LA_NDC_DIRECT, host="la.test", credentials={"enabled": True})
+    with pytest.raises(ValueError, match="la"):  # noqa: PT012
+        with _app(channel, monkeypatch) as client:
+            client.get("/liveness")
+
+
+def test_swap_disabled_remaining_handlers_boot(monkeypatch: pytest.MonkeyPatch) -> None:
+    channel = ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION)
     with _app(channel, monkeypatch) as client:
         assert client.get("/liveness").status_code == 200
 

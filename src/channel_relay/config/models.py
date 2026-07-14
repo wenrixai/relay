@@ -159,11 +159,22 @@ class ChannelConfig(BaseModel):
 
     @model_validator(mode="after")
     def _apply_host_defaults(self) -> ChannelConfig:
-        """Fill ``host`` from the per-type default and derive ``proxy_pass``."""
+        """Fill ``host`` from the per-type default and derive ``proxy_pass``.
+
+        A channel type with no default host must supply ``host`` or ``proxy_pass``: otherwise the
+        channel would resolve to no upstream, boot "ready", and return an internal error on every
+        request. Fail at load instead (§relay-configuration: startup aborts on invalid config).
+        """
         if self.host is None:
             self.host = _DEFAULT_HOSTS.get(self.type)
         if self.proxy_pass is None and self.host is not None:
             self.proxy_pass = f"https://{self.host}"
+        if self.proxy_pass is None:
+            msg = (
+                f"channel {self.name!r} (type {self.type.value!r}) has no resolvable upstream: "
+                "set 'host' or 'proxy_pass'"
+            )
+            raise ValueError(msg)
         return self
 
     @property

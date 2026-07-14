@@ -189,29 +189,32 @@ def test_channel_without_upstream_returns_internal_error(
     unreachable_transport: httpx.MockTransport,
     assert_proxy_error: ProxyErrorAssertion,
 ) -> None:
-    channel = ChannelConfig(name="gds", type=ChannelType.TRAVELPORT)
+    channel = ChannelConfig(name="gds", type=ChannelType.TRAVELPORT, host="gds.test")
 
     with relay_client_factory(channel, unreachable_transport) as client:
+        # Config load rejects a hostless channel; null the resolved upstream on the live config to
+        # exercise the forwarder's defense-in-depth guard.
+        client.app.state.config.channels[0].proxy_pass = None  # type: ignore[attr-defined]
         resp = client.get("/channel/gds/op", headers={"x-wenrix-trace-id": "trace-1"})
 
     assert_proxy_error(resp, 502, "internal_error", "trace-1")
 
 
-def test_header_credential_swap_failure_returns_bad_gateway(
+def test_ndc_swap_enabled_without_credential_aborts_startup(
     relay_client_factory: RelayClientFactory,
     unreachable_transport: httpx.MockTransport,
-    assert_proxy_error: ProxyErrorAssertion,
 ) -> None:
+    # A swap-enabled NDC channel missing its key now fails closed at config load (was a
+    # per-request 502) — require-channel-auth-and-host-at-startup.
     channel = ChannelConfig(
         name="ba",
         type=ChannelType.BA_NDC_DIRECT,
-        credentials={"enabled": True, "api_key_header": "X-Client-Key"},
+        credentials={"enabled": True, "api_key_header": "X-Client-Key"},  # no client_key
     )
 
-    with relay_client_factory(channel, unreachable_transport) as client:
-        resp = client.get("/channel/ba/op")
-
-    assert_proxy_error(resp, 502, "credential_swap_failed")
+    with pytest.raises(ValueError, match="ba"):  # noqa: PT012 - raised on lifespan enter
+        with relay_client_factory(channel, unreachable_transport) as client:
+            client.get("/channel/ba/op")
 
 
 def test_bad_gzip_request_body_returns_xml_parse_error(
