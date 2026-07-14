@@ -4,7 +4,7 @@
 
 FROM ghcr.io/astral-sh/uv:0.11.28 AS uv
 
-FROM python:3.13-alpine AS builder
+FROM python:3.14-alpine AS builder
 COPY --from=uv /uv /usr/local/bin/uv
 WORKDIR /app
 ENV UV_LINK_MODE=copy \
@@ -19,7 +19,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-editable && \
     find /app/.venv -type f \( -name "*.c" -o -name "*.h" \) -delete
 
-FROM python:3.13-alpine AS runtime
+FROM python:3.14-alpine AS runtime
 # Drop to a non-root user.
 RUN addgroup -g 101 -S relay && adduser -u 100 -S -G relay relay
 WORKDIR /app
