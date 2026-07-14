@@ -61,7 +61,7 @@ docker-build tag="wenrix-proxy:latest":
 
 # Lint + render the Helm chart and run its assertion tests (requires helm).
 helm-test:
-    helm lint deployment/helm/chart --set networkPolicy.ingressFromCIDRs='{10.0.0.0/8}'
+    helm lint deployment/helm/chart --set basicAuth.secretName=relay-basic-auth
     uv run pytest tests/deployment/test_helm_chart.py --no-cov
 
 # Run the k6 load/perf harness against a locally-started relay + mock (requires k6).

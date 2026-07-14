@@ -16,8 +16,24 @@ aws cloudformation deploy \
       ImageUri=ghcr.io/wenrixai/wenrix-relay:v0.1.0 \
       WenrixIngressCidr=203.0.113.0/24 \
       CertificateArn=arn:aws:acm:eu-west-1:111122223333:certificate/xxxx \
-      RelayConfigJson='{"channels":[{"name":"travelport","type":"travelport"}]}'
+      RelayConfigJson='{"channels":[{"name":"travelport","type":"travelport"}]}' \
+      BasicAuthEnabled=true \
+      BasicAuthUser=wenrix \
+      BasicAuthPass='replace-with-a-strong-password'
 ```
+
+`BasicAuthUser`/`BasicAuthPass` are required whenever `BasicAuthEnabled=true` (the app crash-loops on
+startup without them); a template `Rule` enforces this at deploy time. Both parameters are `NoEcho` and
+are written into a dedicated `${AWS::StackName}/basic-auth` Secrets Manager secret — the relay task
+reads `RELAY_BASIC_AUTH_USER`/`RELAY_BASIC_AUTH_PASS` from that secret, never from a plaintext
+container environment variable. Set `BasicAuthEnabled=false` (and leave the user/pass params empty) to
+disable basic auth entirely.
+
+`RelayConfigJson` is `NoEcho` too. In this deployment it must **not** carry channel credentials — there
+is no credential-swap secret wired up for it, so any secret placed there would be visible in the task
+definition's environment variables (Secrets Manager values only cover the PII keyring and basic auth).
+Keep channel credentials out of `RelayConfigJson` until a dedicated secret-backed credential path is
+added.
 
 Set the keyring after the stack exists (the secret is created empty and **retained** on delete):
 
@@ -31,8 +47,32 @@ aws secretsmanager put-secret-value \
 
 - Tasks run in **private subnets**, non-root, **read-only root filesystem** (writable `/tmp` only).
 - ALB ingress limited to `WenrixIngressCidr`; tasks accept traffic **only from the ALB** SG.
-- PII keyring in **Secrets Manager**; execution role reads **only that secret**; secret has
-  `DeletionPolicy: Retain` so stack deletion never orphans outstanding tokens.
+- PII keyring in **Secrets Manager**; secret has `DeletionPolicy: Retain` so stack deletion never
+  orphans outstanding tokens.
+- Basic auth credentials (when enabled) also live in **Secrets Manager**, injected into the container
+  via ECS `Secrets` (never a plaintext environment variable).
+- The execution role's `read-relay-secrets` inline policy grants `secretsmanager:GetSecretValue` on
+  only the PII keyring secret, plus the basic-auth secret when `BasicAuthEnabled=true`.
+
+## Single-NAT caveat
+
+This template provisions a **single NAT gateway** (in `PublicSubnet1`) shared by both private subnets.
+That NAT gateway — and its AZ — is an egress single point of failure: if `PublicSubnet1`'s AZ has an
+outage, tasks in *both* private subnets lose outbound internet access (pulling images, reaching AWS
+APIs via the internet, calling out to channels that aren't reachable via VPC endpoints), even though
+the ECS service itself is still multi-AZ for inbound/ALB traffic. This is an accepted cost tradeoff (a
+second NAT gateway roughly doubles the NAT hourly + data-processing cost) rather than an oversight.
+
+To remove the SPOF, add a second NAT gateway plus a per-AZ private route table:
+
+1. Add a second EIP (`NatEip2`) and a second `AWS::EC2::NatGateway` (`NatGateway2`) in `PublicSubnet2`.
+2. Add a second private route table (`PrivateRouteTable2`) with a default route
+   (`0.0.0.0/0`) via `NatGateway2`.
+3. Point `PrivateSubnet2RouteAssoc` at `PrivateRouteTable2` instead of the shared `PrivateRouteTable`
+   (leave `PrivateSubnet1RouteAssoc` on the original table with `NatGateway`).
+
+This keeps each private subnet's egress path confined to its own AZ, at the cost of a second NAT
+gateway.
 
 ## Validate
 
@@ -42,4 +82,5 @@ aws cloudformation validate-template --template-body file://deployment/cloudform
 ```
 
 Parameters mirror the Terraform variables (`ImageUri`, `WenrixIngressCidr`, `CertificateArn`,
-`RelayConfigJson`, `PiiKeyEpochActive`, `DesiredCount`, `Min/MaxCapacity`, `VpcCidr`, …).
+`RelayConfigJson`, `PiiKeyEpochActive`, `BasicAuthEnabled`, `BasicAuthUser`, `BasicAuthPass`,
+`DesiredCount`, `Min/MaxCapacity`, `VpcCidr`, …).

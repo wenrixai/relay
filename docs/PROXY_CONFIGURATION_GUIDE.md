@@ -211,7 +211,7 @@ The most common `RELAY_*` settings are:
 | `RELAY_DEFAULT_CONNECT_TIMEOUT` | `30` | Default upstream connect timeout in seconds. |
 | `RELAY_DEFAULT_READ_TIMEOUT` | `120` | Default upstream read timeout in seconds. |
 | `RELAY_MAX_INSPECT_BYTES` | `8388608` | Maximum body size inspected for XML/PII/authorization processing. |
-| `RELAY_OTLP_ENDPOINT` | unset | Optional OTLP endpoint in `host:port` form. |
+| `RELAY_OTLP_ENDPOINT` | unset | Optional OTLP/gRPC endpoint. URL form (`http://host:4317`) is recommended; a bare `host:port` is also accepted. |
 | `RELAY_RULES_API_URL` | unset | Optional rules API. If unset, bundled fallback rules are used. |
 | `RELAY_PII_KEYRING` | unset | Inline keyring JSON. Prefer mounted files or managed secrets where available. |
 | `RELAY_PII_KEYRING_FILE` | unset | Mounted keyring file path. Takes precedence over inline keyring. |
@@ -225,14 +225,25 @@ When `RELAY_BASIC_AUTH_ENABLED` is true, both `RELAY_BASIC_AUTH_USER` and
 
 Use the Helm chart when deploying into Kubernetes.
 
+The chart ships no `NetworkPolicy`: apply ingress/egress restrictions with your cluster or cloud
+controls (security groups, a customer-managed `NetworkPolicy`, service mesh policy, etc.) alongside
+the chart. The chart also does not terminate TLS; terminate HTTPS at your ingress controller or
+load balancer in front of the Service.
+
+Create the basic-auth Secret first, then reference it by name — `basicAuth.secretName` is required
+whenever `basicAuth.enabled` is true (the default):
+
 ```bash
+kubectl create secret generic relay-basic-auth \
+  --namespace wenrix --create-namespace \
+  --from-literal=user='RELAY_USER' \
+  --from-literal=pass='RELAY_PASSWORD'
+
 helm install relay deployment/helm/chart \
   --namespace wenrix --create-namespace \
   --set image.tag=v0.1.0 \
-  --set-json 'networkPolicy.ingressFromCIDRs=["203.0.113.0/24"]' \
-  --set-json 'networkPolicy.egressToCIDRs=["198.51.100.0/24"]' \
-  --set config.telemetry.otlpEndpoint=otel-collector.telemetry:4317 \
-  --set config.telemetry.otlpHost=10.100.0.10
+  --set basicAuth.secretName=relay-basic-auth \
+  --set config.telemetry.otlpEndpoint=http://otel-collector.telemetry:4317
 ```
 
 ### Helm Values to Configure
@@ -243,13 +254,10 @@ helm install relay deployment/helm/chart \
 | `config.channels` | Non-secret channel configuration rendered into `/etc/wenrix/relay.json`. |
 | `config.env` | Non-secret `RELAY_*` scalar settings. |
 | `config.telemetry.otlpEndpoint` | Optional OTLP endpoint. |
-| `networkPolicy.ingressFromCIDRs` | CIDRs allowed to reach the relay. Required in production. |
-| `networkPolicy.egressToCIDRs` | CIDRs the relay may call for upstream channel APIs. |
 | `basicAuth.enabled` | Keep enabled unless another approved client-auth control is in place. |
-| `basicAuth.secretName` | Kubernetes Secret with `user` and `pass` keys. |
+| `basicAuth.secretName` | Required when `basicAuth.enabled` is true. Kubernetes Secret with `user` and `pass` keys. |
 | `piiKeyring.enabled` | Mount a PII keyring Secret when encrypted PII tokens are used. |
 | `piiKeyring.activeEpoch` | Active key epoch for new tokens. |
-| `tls.enabled` / `tls.secretName` | Optional inbound TLS material mounted from a Secret. |
 
 Example channel values:
 
@@ -276,14 +284,9 @@ config:
     RELAY_MAX_INSPECT_BYTES: "8388608"
 ```
 
-Secrets should be created separately and referenced by name:
-
-```bash
-kubectl create secret generic relay-basic-auth \
-  --namespace wenrix \
-  --from-literal=user='RELAY_USER' \
-  --from-literal=pass='RELAY_PASSWORD'
-```
+The basic-auth Secret is created above, before `helm install`. The PII keyring Secret is created
+separately and referenced by name (or left to the chart's create-if-absent hook — see
+`deployment/helm/chart/README.md`):
 
 ```bash
 kubectl create secret generic relay-pii-keyring \
@@ -296,7 +299,10 @@ through the customer's approved secret-management workflow.
 
 ## AWS ECS Deployment
 
-Use the Terraform module under `deployment/terraform` when deploying on ECS Fargate.
+Use the Terraform module under `deployment/terraform`, or the equivalent CloudFormation template
+under `deployment/cloudformation`, when deploying on ECS Fargate. Both automate the same hardened
+topology described below. If you cannot adopt either automation, `docs/ECS_MANUAL_DEPLOYMENT.md`
+walks through the same topology with plain AWS CLI (and console) steps.
 
 The module expects an existing VPC. It creates:
 
@@ -340,7 +346,7 @@ relay_config_json = <<JSON
 JSON
 
 pii_key_epoch_active = 0
-otlp_endpoint        = "otel-collector.telemetry.internal:4317"
+otlp_endpoint        = "http://otel-collector.telemetry.internal:4317"
 desired_count        = 2
 min_capacity         = 2
 max_capacity         = 10

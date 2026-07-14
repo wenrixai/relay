@@ -1,9 +1,38 @@
 {
   "channels": [
     {
-      "name": "mock",
+      "name": "sabre-prod",
+      "type": "sabre",
+      "timeouts": {
+        "connect": 30,
+        "read": 120
+      },
+      "authorization": {
+        "enabled": true,
+        "allowed_operations": [
+          {
+            "operation": "GetReservationRQ",
+            "version": "^1.0"
+          }
+        ]
+      }
+    },
+    {
+      "name": "amadeus-prod",
+      "type": "amadeus",
+      "pii": {
+        "enabled": true,
+        "force_redact": false
+      }
+    },
+    {
+      "name": "travelport-prod",
       "type": "travelport",
-      "proxy_pass": "http://mock-channel:9000"
+      "proxy_pass": "https://emea.universal-api.travelport.com/B2BGateway/connect/uAPI",
+      "pii": {
+        "enabled": true,
+        "force_redact": true
+      }
     }
   ]
 }

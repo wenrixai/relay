@@ -476,8 +476,8 @@ The chart must ship secure-by-default:
   `readOnlyRootFilesystem: true` (writable `emptyDir` only where needed, e.g. tmp/otelcol),
   `allowPrivilegeEscalation: false`, drop all capabilities, seccomp `RuntimeDefault`.
 - **Resource requests/limits**: CPU/memory set (align with §13.4 baseline).
-- **NetworkPolicy**: default-deny; allow ingress only from the Wenrix client source; **egress
-  allow-list** to configured channel hosts + telemetry endpoint + DNS.
+- **Network segmentation**: delegated to cluster/cloud controls (security groups, a
+  customer-managed `NetworkPolicy`, service mesh policy) — the chart ships no `NetworkPolicy`.
 - **HPA**: scale on CPU/RPS; **PDB**: minAvailable for rolling updates.
 - **ServiceMonitor**: expose metrics for Prometheus scraping (guarded by a values flag).
 - **Secret mounting**: PII key and TLS/basic-auth material mounted from Secrets (not env where

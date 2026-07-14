@@ -34,9 +34,6 @@ piiKeyring:
 basicAuth:
   enabled: false
 
-tls:
-  enabled: false
-
 autoscaling:
   enabled: false
 
@@ -50,9 +47,3 @@ resources:
   limits:
     cpu: "500m"
     memory: "256Mi"
-
-# Default-deny NetworkPolicy needs egressToCIDRs for Sabre/Amadeus IPs to allow egress, which you
-# don't have handy for a quick test. Disabled here so egress/ingress aren't blocked; turn back on
-# and set real ingressFromCIDRs + egressToCIDRs (Sabre/Amadeus prod IP ranges) before real use.
-networkPolicy:
-  enabled: false

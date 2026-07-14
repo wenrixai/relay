@@ -17,10 +17,5 @@ PII keyring:
   epochs so existing tokens stay decryptable.
 {{- end }}
 
-{{- if not .Values.networkPolicy.ingressFromCIDRs }}
-{{- if not .Values.networkPolicy.ingressFromNamespaceSelectors }}
-
-WARNING: networkPolicy is enabled but no ingress source is configured — all ingress is denied.
-Set networkPolicy.ingressFromCIDRs or networkPolicy.ingressFromNamespaceSelectors.
-{{- end }}
-{{- end }}
+Network segmentation: this chart does not ship a NetworkPolicy. Restrict ingress/egress using your
+cluster or cloud controls (e.g. security groups, a customer-managed NetworkPolicy).

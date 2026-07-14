@@ -1,5 +1,38 @@
 locals {
   image_tag = var.image
+
+  # T6: only append RELAY_RULES_API_URL when configured.
+  container_environment = concat(
+    [
+      { name = "RELAY_CONFIG_FILE", value = "/tmp/relay.json" },
+      { name = "RELAY_CONFIG_JSON", value = var.relay_config_json },
+      { name = "RELAY_PORT", value = tostring(var.container_port) },
+      { name = "RELAY_PII_KEY_EPOCH_ACTIVE", value = tostring(var.pii_key_epoch_active) },
+      { name = "RELAY_BASIC_AUTH_ENABLED", value = tostring(var.basic_auth_enabled) },
+      { name = "RELAY_OTLP_ENDPOINT", value = var.otlp_endpoint },
+    ],
+    var.rules_api_url != "" ? [{ name = "RELAY_RULES_API_URL", value = var.rules_api_url }] : []
+  )
+
+  # T1: basic-auth credentials only injected when basic auth is enabled.
+  container_secrets = concat(
+    [
+      { name = "RELAY_PII_KEYRING", valueFrom = aws_secretsmanager_secret.pii_keyring.arn }
+    ],
+    var.basic_auth_enabled ? [
+      { name = "RELAY_BASIC_AUTH_USER", valueFrom = "${aws_secretsmanager_secret.basic_auth[0].arn}:user::" },
+      { name = "RELAY_BASIC_AUTH_PASS", valueFrom = "${aws_secretsmanager_secret.basic_auth[0].arn}:pass::" },
+    ] : []
+  )
+}
+
+# T1: basic_auth_enabled implies both credentials are actually set, otherwise the app
+# crash-loops on startup. Fail plan/apply early with a clear message.
+check "basic_auth_credentials_present" {
+  assert {
+    condition     = !var.basic_auth_enabled || (var.basic_auth_user != "" && var.basic_auth_pass != "")
+    error_message = "basic_auth_enabled = true requires non-empty basic_auth_user and basic_auth_pass (the relay crash-loops without them)."
+  }
 }
 
 # --- Security groups --------------------------------------------------------
@@ -63,6 +96,8 @@ resource "aws_lb" "this" {
 
   drop_invalid_header_fields = true
   enable_deletion_protection = false
+  # T8: app upstream read timeout is 120s; keep the ALB idle timeout above it.
+  idle_timeout = 130
 }
 
 resource "aws_lb_target_group" "this" {
@@ -71,6 +106,9 @@ resource "aws_lb_target_group" "this" {
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "ip"
+
+  # T4: let in-flight requests drain for up to the container's stopTimeout before deregistering.
+  deregistration_delay = 120
 
   health_check {
     path                = "/readiness"
@@ -109,6 +147,23 @@ resource "aws_secretsmanager_secret_version" "pii_keyring" {
   secret_string = var.pii_keyring_json != "" ? var.pii_keyring_json : "{}"
 }
 
+# T1: basic-auth credentials, only created when basic auth is enabled.
+resource "aws_secretsmanager_secret" "basic_auth" {
+  count                   = var.basic_auth_enabled ? 1 : 0
+  name                    = "${var.name}/basic-auth"
+  description             = "Relay basic-auth credentials. Never regenerate while clients depend on the current password."
+  recovery_window_in_days = 30
+}
+
+resource "aws_secretsmanager_secret_version" "basic_auth" {
+  count     = var.basic_auth_enabled ? 1 : 0
+  secret_id = aws_secretsmanager_secret.basic_auth[0].id
+  secret_string = jsonencode({
+    user = var.basic_auth_user
+    pass = var.basic_auth_pass
+  })
+}
+
 # --- Logging ----------------------------------------------------------------
 
 resource "aws_cloudwatch_log_group" "this" {
@@ -138,11 +193,16 @@ resource "aws_iam_role_policy_attachment" "execution_managed" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# Scope the execution role to read ONLY this relay's secret.
+# Scope the execution role to read ONLY this relay's secrets (PII keyring, optional
+# basic-auth credentials, optional private-registry pull credentials).
 data "aws_iam_policy_document" "secret_read" {
   statement {
-    actions   = ["secretsmanager:GetSecretValue"]
-    resources = [aws_secretsmanager_secret.pii_keyring.arn]
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = concat(
+      [aws_secretsmanager_secret.pii_keyring.arn],
+      var.basic_auth_enabled ? [aws_secretsmanager_secret.basic_auth[0].arn] : [],
+      var.ghcr_credentials_secret_arn != "" ? [var.ghcr_credentials_secret_arn] : [],
+    )
   }
 }
 
@@ -152,6 +212,9 @@ resource "aws_iam_role_policy" "execution_secret" {
   policy = data.aws_iam_policy_document.secret_read.json
 }
 
+# Intentionally has no attached policies: the relay makes no AWS API calls at runtime
+# (config and secrets are injected by the execution role at task startup, not fetched by
+# the app itself). Keep this role as the task role purely for least-privilege posture.
 resource "aws_iam_role" "task" {
   name               = "${var.name}-task"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs.json
@@ -183,43 +246,42 @@ resource "aws_ecs_task_definition" "this" {
   }
 
   container_definitions = jsonencode([
-    {
-      name                   = "relay"
-      image                  = local.image_tag
-      essential              = true
-      user                   = "100"
-      readonlyRootFilesystem = true
-      # Write the (non-secret) channel config to a writable path, then exec the relay.
-      entryPoint = ["/bin/sh", "-c"]
-      command = [
-        "printf '%s' \"$RELAY_CONFIG_JSON\" > /tmp/relay.json && exec channel-relay"
-      ]
-      portMappings = [
-        { containerPort = var.container_port, protocol = "tcp" }
-      ]
-      environment = [
-        { name = "RELAY_CONFIG_FILE", value = "/tmp/relay.json" },
-        { name = "RELAY_CONFIG_JSON", value = var.relay_config_json },
-        { name = "RELAY_PORT", value = tostring(var.container_port) },
-        { name = "RELAY_PII_KEY_EPOCH_ACTIVE", value = tostring(var.pii_key_epoch_active) },
-        { name = "RELAY_BASIC_AUTH_ENABLED", value = tostring(var.basic_auth_enabled) },
-        { name = "RELAY_OTLP_ENDPOINT", value = var.otlp_endpoint },
-      ]
-      secrets = [
-        { name = "RELAY_PII_KEYRING", valueFrom = aws_secretsmanager_secret.pii_keyring.arn }
-      ]
-      mountPoints = [
-        { sourceVolume = "tmp", containerPath = "/tmp", readOnly = false }
-      ]
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.this.name
-          "awslogs-region"        = var.region
-          "awslogs-stream-prefix" = "relay"
+    merge(
+      {
+        name                   = "relay"
+        image                  = local.image_tag
+        essential              = true
+        user                   = "100"
+        readonlyRootFilesystem = true
+        # T4: give the app time to drain in-flight requests on SIGTERM before SIGKILL.
+        stopTimeout = 120
+        # Write the (non-secret) channel config to a writable path, then exec the relay.
+        entryPoint = ["/bin/sh", "-c"]
+        command = [
+          "printf '%s' \"$RELAY_CONFIG_JSON\" > /tmp/relay.json && exec channel-relay"
+        ]
+        portMappings = [
+          { containerPort = var.container_port, protocol = "tcp" }
+        ]
+        environment = local.container_environment
+        secrets     = local.container_secrets
+        mountPoints = [
+          { sourceVolume = "tmp", containerPath = "/tmp", readOnly = false }
+        ]
+        logConfiguration = {
+          logDriver = "awslogs"
+          options = {
+            "awslogs-group"         = aws_cloudwatch_log_group.this.name
+            "awslogs-region"        = var.region
+            "awslogs-stream-prefix" = "relay"
+          }
         }
-      }
-    }
+      },
+      # T7: pull the image with registry credentials only when configured.
+      var.ghcr_credentials_secret_arn != "" ? {
+        repositoryCredentials = { credentialsParameter = var.ghcr_credentials_secret_arn }
+      } : {}
+    )
   ])
 }
 
@@ -247,6 +309,15 @@ resource "aws_ecs_service" "this" {
 
   deployment_minimum_healthy_percent = 100
   deployment_maximum_percent         = 200
+
+  # T3: automatically roll back a bad deployment instead of leaving the service degraded.
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+
+  # T5: give the app time to pass its first health check before the deployment considers it unhealthy.
+  health_check_grace_period_seconds = 60
 
   depends_on = [aws_lb_listener.https]
 }
@@ -291,4 +362,47 @@ resource "aws_appautoscaling_policy" "alb_requests" {
     # ~50 rps/instance target.
     target_value = 50 * 60
   }
+}
+
+# --- Alarms -------------------------------------------------------------------
+
+resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
+  alarm_name          = "${var.name}-alb-5xx"
+  alarm_description   = "ALB returned >= 10 5XX responses in a 5 minute window."
+  namespace           = "AWS/ApplicationELB"
+  metric_name         = "HTTPCode_ELB_5XX_Count"
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  threshold           = 10
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    LoadBalancer = aws_lb.this.arn_suffix
+  }
+
+  alarm_actions = var.alarm_sns_topic_arn != "" ? [var.alarm_sns_topic_arn] : []
+  ok_actions    = var.alarm_sns_topic_arn != "" ? [var.alarm_sns_topic_arn] : []
+}
+
+resource "aws_cloudwatch_metric_alarm" "unhealthy_hosts" {
+  alarm_name          = "${var.name}-unhealthy-hosts"
+  alarm_description   = "At least one target behind the relay target group is unhealthy."
+  namespace           = "AWS/ApplicationELB"
+  metric_name         = "UnHealthyHostCount"
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 2
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  threshold           = 1
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    LoadBalancer = aws_lb.this.arn_suffix
+    TargetGroup  = aws_lb_target_group.this.arn_suffix
+  }
+
+  alarm_actions = var.alarm_sns_topic_arn != "" ? [var.alarm_sns_topic_arn] : []
+  ok_actions    = var.alarm_sns_topic_arn != "" ? [var.alarm_sns_topic_arn] : []
 }

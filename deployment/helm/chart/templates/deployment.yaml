@@ -58,16 +58,17 @@ spec:
             - name: RELAY_PII_KEY_EPOCH_ACTIVE
               value: {{ .Values.piiKeyring.activeEpoch | quote }}
             {{- end }}
-            {{- if and .Values.basicAuth.enabled .Values.basicAuth.secretName }}
+            {{- if .Values.basicAuth.enabled }}
+            {{- $basicAuthSecretName := required "basicAuth.secretName is required when basicAuth.enabled=true — create it first: kubectl create secret generic <name> --from-literal=user=... --from-literal=pass=..." .Values.basicAuth.secretName }}
             - name: RELAY_BASIC_AUTH_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.basicAuth.secretName }}
+                  name: {{ $basicAuthSecretName }}
                   key: user
             - name: RELAY_BASIC_AUTH_PASS
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.basicAuth.secretName }}
+                  name: {{ $basicAuthSecretName }}
                   key: pass
             {{- end }}
             {{- range $k, $v := .Values.config.env }}
@@ -92,11 +93,6 @@ spec:
               mountPath: {{ .Values.piiKeyring.mountPath }}
               readOnly: true
             {{- end }}
-            {{- if .Values.tls.enabled }}
-            - name: tls
-              mountPath: /etc/wenrix/tls
-              readOnly: true
-            {{- end }}
       volumes:
         - name: config
           configMap:
@@ -107,11 +103,6 @@ spec:
         - name: pii-keyring
           secret:
             secretName: {{ include "wenrix-relay.piiKeyringSecretName" . }}
-        {{- end }}
-        {{- if .Values.tls.enabled }}
-        - name: tls
-          secret:
-            secretName: {{ required "tls.secretName is required when tls.enabled" .Values.tls.secretName }}
         {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

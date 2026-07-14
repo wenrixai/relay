@@ -19,10 +19,8 @@ pytestmark = pytest.mark.integration
 
 CHART_DIR = Path(__file__).resolve().parents[2] / "deployment" / "helm" / "chart"
 
-_INGRESS_CIDR = "networkPolicy.ingressFromCIDRs={10.0.0.0/8}"
-_EGRESS_CIDR = "networkPolicy.egressToCIDRs={203.0.113.0/24}"
-_OTLP_HOST = "config.telemetry.otlpHost=10.1.2.3"
 _OTLP_ENDPOINT = "config.telemetry.otlpEndpoint=10.1.2.3:4317"
+_BASIC_AUTH_SECRET = "basicAuth.secretName=relay-basic-auth"
 
 
 def _helm_available() -> bool:
@@ -34,7 +32,7 @@ requires_helm = pytest.mark.skipif(not _helm_available(), reason="helm binary no
 
 def _render(*set_values: str) -> list[dict]:
     args = ["helm", "template", "rel", str(CHART_DIR)]
-    for value in (_INGRESS_CIDR, _EGRESS_CIDR, _OTLP_HOST, _OTLP_ENDPOINT, *set_values):
+    for value in (_OTLP_ENDPOINT, _BASIC_AUTH_SECRET, *set_values):
         args += ["--set", value]
     out = subprocess.run(args, capture_output=True, text=True, check=True, timeout=30)
     return [doc for doc in yaml.safe_load_all(out.stdout) if doc]
@@ -48,7 +46,7 @@ def _by_kind(docs: list[dict], kind: str) -> list[dict]:
 @pytest.mark.fail_slow("30s")
 def test_chart_lints_clean() -> None:
     result = subprocess.run(
-        ["helm", "lint", str(CHART_DIR), "--set", _INGRESS_CIDR],
+        ["helm", "lint", str(CHART_DIR), "--set", _BASIC_AUTH_SECRET],
         capture_output=True,
         text=True,
         timeout=30,
@@ -91,18 +89,41 @@ def test_configmap_has_no_secrets() -> None:
 
 @requires_helm
 @pytest.mark.fail_slow("30s")
-def test_networkpolicy_is_default_deny_with_egress_allowlist() -> None:
-    netpol = _by_kind(_render(), "NetworkPolicy")[0]
-    spec = netpol["spec"]
-    assert set(spec["policyTypes"]) == {"Ingress", "Egress"}
-    # DNS egress + channel CIDR + telemetry endpoint present; no blanket allow-all.
-    egress_ports = [p["port"] for rule in spec["egress"] for p in rule.get("ports", [])]
-    assert 53 in egress_ports
-    assert 443 in egress_ports
-    assert 4317 in egress_ports
-    cidrs = [peer["ipBlock"]["cidr"] for rule in spec["egress"] for peer in rule.get("to", []) if "ipBlock" in peer]
-    assert "203.0.113.0/24" in cidrs
-    assert "0.0.0.0/0" not in cidrs
+def test_no_networkpolicy_rendered() -> None:
+    # NetworkPolicy was removed from the chart (its default ingress rule was allow-all — an empty
+    # `from:` matches all sources). Network segmentation is delegated to cluster/cloud controls.
+    out = subprocess.run(
+        ["helm", "template", "rel", str(CHART_DIR), "--set", _OTLP_ENDPOINT, "--set", _BASIC_AUTH_SECRET],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=30,
+    )
+    assert "kind: NetworkPolicy" not in out.stdout
+
+
+@requires_helm
+@pytest.mark.fail_slow("30s")
+def test_basic_auth_enabled_without_secret_fails_render() -> None:
+    result = subprocess.run(
+        ["helm", "template", "rel", str(CHART_DIR), "--set", _OTLP_ENDPOINT],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode != 0
+    assert "basicAuth.secretName is required" in (result.stdout + result.stderr)
+
+
+@requires_helm
+@pytest.mark.fail_slow("30s")
+def test_basic_auth_disabled_renders() -> None:
+    docs = _render("basicAuth.enabled=false", "config.env.RELAY_BASIC_AUTH_ENABLED=false")
+    deploy = _by_kind(docs, "Deployment")[0]
+    container = deploy["spec"]["template"]["spec"]["containers"][0]
+    env_names = {e["name"] for e in container["env"]}
+    assert "RELAY_BASIC_AUTH_USER" not in env_names
+    assert "RELAY_BASIC_AUTH_PASS" not in env_names
 
 
 @requires_helm

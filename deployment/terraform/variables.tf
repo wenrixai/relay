@@ -99,6 +99,7 @@ variable "certificate_arn" {
 variable "relay_config_json" {
   description = "Channel configuration JSON (no secrets), written to the config file at startup."
   type        = string
+  sensitive   = true
   default     = "{\"channels\":[]}"
 }
 
@@ -127,8 +128,40 @@ variable "basic_auth_enabled" {
   default     = true
 }
 
+variable "basic_auth_user" {
+  description = "Basic auth username. Required (non-empty) when basic_auth_enabled = true; stored in Secrets Manager, never in the config JSON."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "basic_auth_pass" {
+  description = "Basic auth password. Required (non-empty) when basic_auth_enabled = true; stored in Secrets Manager, never in the config JSON."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "log_retention_days" {
   description = "CloudWatch log retention in days."
   type        = number
   default     = 30
+}
+
+variable "rules_api_url" {
+  description = "Optional PII rules API URL. When empty, RELAY_RULES_API_URL is omitted from the container environment (relay falls back to its bundled/local rules)."
+  type        = string
+  default     = ""
+}
+
+variable "ghcr_credentials_secret_arn" {
+  description = "Optional Secrets Manager ARN of a secret holding {\"username\":...,\"password\":...} for pulling the relay image from a private registry (e.g. GHCR). When empty, no repositoryCredentials are set and the execution role is not granted read access to it."
+  type        = string
+  default     = ""
+}
+
+variable "alarm_sns_topic_arn" {
+  description = "Optional SNS topic ARN to notify on the ALB 5XX and unhealthy-host alarms. When empty, alarms are created without any alarm/ok actions."
+  type        = string
+  default     = ""
 }

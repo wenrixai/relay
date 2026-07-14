@@ -4,7 +4,7 @@ description: Wenrix Channel Relay — a safe, PII-redacting, channel-aware rever
 type: application
 # version is the chart version (SemVer); appVersion tracks the released image tag and is bumped by
 # .github/workflows/release.yml on each `v*` tag.
-version: 0.1.0
+version: 0.2.0
 appVersion: "0.1.0"
 kubeVersion: ">=1.25.0-0"
 home: https://github.com/wenrixai/wenrix-proxy

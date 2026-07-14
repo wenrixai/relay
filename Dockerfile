@@ -2,9 +2,11 @@
 # Multi-stage Alpine image (§13.1): non-root, musllinux wheels for lxml/cryptography,
 # no compiler in the final stage.
 
-FROM ghcr.io/astral-sh/uv:0.11.28 AS uv
+# Base images digest-pinned (supply-chain: a tag can be repointed upstream with no repo
+# diff); Dependabot's docker ecosystem keeps the pins fresh.
+FROM ghcr.io/astral-sh/uv:0.11.28@sha256:0f36cb9361a3346885ca3677e3767016687b5a170c1a6b88465ec14aefec90aa AS uv
 
-FROM python:3.14-alpine AS builder
+FROM python:3.14-alpine@sha256:26730869004e2b9c4b9ad09cab8625e81d256d1ce97e72df5520e806b1709f92 AS builder
 COPY --from=uv /uv /usr/local/bin/uv
 WORKDIR /app
 ENV UV_LINK_MODE=copy \
@@ -19,7 +21,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-editable && \
     find /app/.venv -type f \( -name "*.c" -o -name "*.h" \) -delete
 
-FROM python:3.14-alpine AS runtime
+FROM python:3.14-alpine@sha256:26730869004e2b9c4b9ad09cab8625e81d256d1ce97e72df5520e806b1709f92 AS runtime
 # Drop to a non-root user.
 RUN addgroup -g 101 -S relay && adduser -u 100 -S -G relay relay
 WORKDIR /app

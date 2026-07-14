@@ -38,9 +38,6 @@ config:
   # OTLP/gRPC telemetry endpoint. Use http:// for a plaintext collector.
   telemetry:
     otlpEndpoint: ""
-    # Host and port broken out for the NetworkPolicy egress rule.
-    otlpHost: ""
-    otlpPort: 4317
 
 # --- PII master-key Secret (PROJECT.md §13.2, §8.3, D4) ---
 # Created create-if-absent by a pre-install hook; NEVER regenerated on `helm upgrade`.
@@ -54,13 +51,11 @@ piiKeyring:
   key: keyring.json
   mountPath: /etc/wenrix/keys
   activeEpoch: 0
-  # When true, a pre-install/pre-upgrade hook Job generates the key only if the Secret is absent.
+  # When true, a plain (non-hook) template guarded by a `lookup` generates the key only if the
+  # Secret is absent. `lookup` needs install-time RBAC and always returns empty under offline
+  # rendering (`helm template`, GitOps controllers) — see README's GitOps section before using this
+  # with ArgoCD/Flux, or set piiKeyring.secretName to an externally-managed Secret instead.
   createIfAbsent: true
-
-# --- Inbound TLS material (optional). Mounted from a Secret; base64(PEM). ---
-tls:
-  enabled: false
-  secretName: ""
 
 # --- Basic auth (optional). Credentials from a Secret, never from values/ConfigMap. ---
 basicAuth:
@@ -85,23 +80,13 @@ autoscaling:
   minReplicas: 2
   maxReplicas: 10
   targetCPUUtilizationPercentage: 70
-  # Optional RPS-based scaling (requires metrics support in the cluster).
-  targetRequestsPerSecond: 50
+  # Optional RPS-based scaling. Off (0) by default: requires a custom-metrics adapter exposing the
+  # http_server_requests_per_second metric; no scrape surface exists yet (serviceMonitor is inert).
+  targetRequestsPerSecond: 0
 
 podDisruptionBudget:
   enabled: true
   minAvailable: 1
-
-# Default-deny NetworkPolicy with an egress allow-list (PROJECT.md §13.5).
-networkPolicy:
-  enabled: true
-  # CIDRs allowed to reach the relay (the Wenrix client source).
-  ingressFromCIDRs: []
-  # Namespace/pod selectors allowed ingress (alternative to CIDRs).
-  ingressFromNamespaceSelectors: []
-  # Extra egress CIDRs for channel hosts (channels resolved by DNS still need these).
-  egressToCIDRs: []
-  dnsPort: 53
 
 serviceMonitor:
   # OFF by default: the app is OTLP-push only and exposes no Prometheus scrape endpoint yet.

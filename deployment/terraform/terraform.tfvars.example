@@ -13,10 +13,11 @@ wenrix_ingress_cidrs = ["203.0.113.0/24"]
 # ACM certificate for the HTTPS listener (must be in var.region).
 certificate_arn = "arn:aws:acm:eu-west-1:111122223333:certificate/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-# Channel config (no secrets). Credentials belong in Secrets Manager references, not here.
+# Channel config. This deployment does not use channel credential swap, so the config JSON
+# carries no secrets — basic-auth and PII secrets live in Secrets Manager (see below), not here.
 relay_config_json = "{\"channels\":[{\"name\":\"travelport\",\"type\":\"travelport\"}]}"
 
-# PII keyring — supply via a secret var file / TF_VAR, not committed. {"<epoch>":"<base64(32B)>"}.
+# PII keyring — supply via a secret var file / TF_VAR, not committed. {"<epoch>":"\"base64-32-bytes\""}.
 # pii_keyring_json     = "{\"0\":\"...base64-32-bytes...\"}"
 pii_key_epoch_active = 0
 
@@ -25,3 +26,19 @@ otlp_endpoint = "http://otel-collector.telemetry.internal:4317"
 desired_count = 2
 min_capacity  = 2
 max_capacity  = 10
+
+# Basic auth: required when basic_auth_enabled = true (the default) or the app crash-loops.
+# Supply out-of-band (TF_VAR_basic_auth_user / TF_VAR_basic_auth_pass), never commit them.
+# basic_auth_enabled = true
+# basic_auth_user    = "..."
+# basic_auth_pass    = "..."
+
+# Optional PII rules API. Leave unset to omit RELAY_RULES_API_URL entirely.
+# rules_api_url = "https://rules.internal.example.com"
+
+# Optional private-registry (e.g. GHCR) pull credentials, as a Secrets Manager ARN holding
+# {"username":...,"password":...}. Leave unset to pull without repositoryCredentials.
+# ghcr_credentials_secret_arn = "arn:aws:secretsmanager:eu-west-1:111122223333:secret:ghcr-pull-xxxxxx"
+
+# Optional SNS topic notified by the ALB 5XX / unhealthy-host alarms.
+# alarm_sns_topic_arn = "arn:aws:sns:eu-west-1:111122223333:wenrix-relay-alerts"
