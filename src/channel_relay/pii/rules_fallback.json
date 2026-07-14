@@ -337,13 +337,25 @@
     {
       "id": "sabre.pq.name_attributes",
       "channel": "sabre",
-      "operation": "^(GetPriceQuoteRS|GetReservationRS)$",
+      "operation": "^GetReservationRS$",
       "path": "//p:NameAssociation/@firstName | //p:NameAssociation/@lastName | //p:NameAssociationInfo/@firstName | //p:NameAssociationInfo/@lastName | //p:PassengerName/@firstName | //p:PassengerName/@lastName",
       "namespaces": {
         "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
       },
       "pii_type": "person",
       "method": "encrypt"
+    },
+    {
+      "id": "sabre.pq.name_anchor",
+      "channel": "sabre",
+      "operation": "^GetPriceQuoteRS$",
+      "path": "//p:NameAssociation/@firstName | //p:NameAssociation/@lastName | //p:NameAssociationInfo/@firstName | //p:NameAssociationInfo/@lastName | //p:PassengerName/@firstName | //p:PassengerName/@lastName",
+      "namespaces": {
+        "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "required": true
     },
     {
       "id": "sabre.pq.card_number_attribute",
@@ -392,7 +404,8 @@
         "at": "http://services.sabre.com/sp/air/ticket/v1"
       },
       "pii_type": "person",
-      "method": "encrypt"
+      "method": "encrypt",
+      "required": true
     },
     {
       "id": "sabre.sales.person_name",
@@ -403,7 +416,8 @@
         "sx": "http://webservices.sabre.com/sabreXML/2011/10"
       },
       "pii_type": "person",
-      "method": "encrypt"
+      "method": "encrypt",
+      "required": true
     },
     {
       "id": "sabre.itin.passenger_data",
@@ -414,7 +428,8 @@
         "t3": "http://services.sabre.com/res/tir/v3_10"
       },
       "pii_type": "person",
-      "method": "encrypt"
+      "method": "encrypt",
+      "required": true
     },
     {
       "id": "travelfusion.booking.traveller_name",

@@ -117,6 +117,39 @@ class TestAirTicket:
         assert b"356.81" in redacted
 
 
+class TestRequiredAnchorsFailClosed:
+    """Each PII-heavy Sabre op has a required passenger-name anchor: drift → RedactionError (502).
+
+    An anchor that locates no nodes (schema rename on a version bump) must fail closed rather
+    than forward an unredacted response (fix-sabre-anchor-rules-required, sabre-pii-baseline spec).
+    """
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            b'<AirTicketRS xmlns="http://services.sabre.com/sp/air/ticket/v1"/>',
+            b'<DailySalesReportRS xmlns="http://webservices.sabre.com/sabreXML/2011/10"/>',
+            b'<TravelItineraryReadRS xmlns="http://services.sabre.com/res/tir/v3_10"/>',
+            b'<GetPriceQuoteRS xmlns="http://www.sabre.com/ns/Ticketing/pqs/1.0"/>',
+        ],
+        ids=["AirTicketRS", "DailySalesReportRS", "TravelItineraryReadRS", "GetPriceQuoteRS"],
+    )
+    def test_missing_anchor_fails_closed(self, body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        with pytest.raises(RedactionError):
+            _redact(body, baked_ruleset, pii_keyring)
+
+    def test_normal_fixtures_still_redact(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        # The anchors must match on the real fixtures (no false 502).
+        for fixture in (
+            "air_ticket_emd_response.xml",
+            "daily_sales_report_response.xml",
+            "travel_itinerary_read_response.xml",
+            "get_price_quote_response.xml",
+        ):
+            _, counts = _redact(_fixture(fixture), baked_ruleset, pii_keyring)
+            assert counts.get("person", 0) >= 1
+
+
 class TestUncoveredOperation:
     """A Sabre operation without baseline rules passes through unchanged."""
 
