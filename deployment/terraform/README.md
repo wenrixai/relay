@@ -18,12 +18,24 @@ terraform plan
 terraform apply
 ```
 
-Provide the PII keyring out-of-band (never commit it):
+Seed the PII keyring **once**, out-of-band (never commit it):
 
 ```bash
 export TF_VAR_pii_keyring_json='{"0":"'"$(head -c32 /dev/urandom | base64)"'"}'
-terraform apply
+terraform apply   # seeds the secret on first create
 ```
+
+After the initial seed the secret value is managed out-of-band and Terraform **ignores changes to
+it** (`lifecycle { ignore_changes = [secret_string] }`). Routine applies — scaling the service, any
+run without `TF_VAR_pii_keyring_json` re-exported — will **not** overwrite the live master key, so
+outstanding `ENC_` tokens are never orphaned. To rotate, add a new epoch out-of-band:
+
+```bash
+aws secretsmanager put-secret-value --secret-id <name>/pii-keyring \
+  --secret-string '{"0":"<old>","1":"<new>"}'   # then bump pii_key_epoch_active
+```
+
+The basic-auth secret uses the same seed-once / `ignore_changes` treatment.
 
 ## Security posture
 
@@ -44,7 +56,8 @@ terraform apply
   JSON and bumping `pii_key_epoch_active`; keep prior epochs so existing tokens stay decryptable.
 - **Basic auth** (`basic_auth_enabled`, default `true`): the app crash-loops if enabled without
   credentials, so `basic_auth_user` / `basic_auth_pass` are required (non-empty) whenever it's
-  enabled — a `check` block fails `plan`/`apply` early with a clear error if they're missing.
+  enabled — a resource `precondition` on the ECS task definition **halts** `plan`/`apply` with a
+  clear error if they're missing (a `check` block only warns and would let apply exit 0).
   When enabled, a `${var.name}/basic-auth` secret (`{"user":...,"pass":...}`) is created in
   Secrets Manager (same recovery-window treatment as the PII keyring) and its `user`/`pass` JSON
   keys are injected as `RELAY_BASIC_AUTH_USER` / `RELAY_BASIC_AUTH_PASS`. Supply the values

@@ -27,13 +27,8 @@ locals {
 }
 
 # T1: basic_auth_enabled implies both credentials are actually set, otherwise the app
-# crash-loops on startup. Fail plan/apply early with a clear message.
-check "basic_auth_credentials_present" {
-  assert {
-    condition     = !var.basic_auth_enabled || (var.basic_auth_user != "" && var.basic_auth_pass != "")
-    error_message = "basic_auth_enabled = true requires non-empty basic_auth_user and basic_auth_pass (the relay crash-loops without them)."
-  }
-}
+# crash-loops on startup. Enforced as a resource precondition (below, on the ECS task
+# definition) which HALTS apply — a `check` block only warns and lets apply exit 0.
 
 # --- Security groups --------------------------------------------------------
 
@@ -145,6 +140,14 @@ resource "aws_secretsmanager_secret" "pii_keyring" {
 resource "aws_secretsmanager_secret_version" "pii_keyring" {
   secret_id     = aws_secretsmanager_secret.pii_keyring.id
   secret_string = var.pii_keyring_json != "" ? var.pii_keyring_json : "{}"
+
+  # Seed once, then never overwrite. A routine apply that does not re-export
+  # TF_VAR_pii_keyring_json (CI scaling the service, a forgotten env var) would otherwise
+  # diff the live master key back to "{}" and orphan every outstanding ENC_ token. The key
+  # is managed out-of-band (aws secretsmanager put-secret-value) after the initial seed.
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
 }
 
 # T1: basic-auth credentials, only created when basic auth is enabled.
@@ -162,6 +165,12 @@ resource "aws_secretsmanager_secret_version" "basic_auth" {
     user = var.basic_auth_user
     pass = var.basic_auth_pass
   })
+
+  # Seed once; thereafter managed out-of-band so a routine apply never rotates the live
+  # password out from under connected clients.
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
 }
 
 # --- Logging ----------------------------------------------------------------
@@ -243,6 +252,16 @@ resource "aws_ecs_task_definition" "this" {
   # Writable /tmp for the read-only root filesystem.
   volume {
     name = "tmp"
+  }
+
+  # Halt apply (not merely warn) when basic auth is enabled without both credentials —
+  # the relay crash-loops on startup otherwise. A resource precondition fails apply; a
+  # `check` block would only warn and let apply exit 0.
+  lifecycle {
+    precondition {
+      condition     = !var.basic_auth_enabled || (var.basic_auth_user != "" && var.basic_auth_pass != "")
+      error_message = "basic_auth_enabled = true requires non-empty basic_auth_user and basic_auth_pass (the relay crash-loops without them)."
+    }
   }
 
   container_definitions = jsonencode([
