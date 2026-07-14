@@ -49,16 +49,21 @@ def client_limits(settings: Settings) -> httpx.Limits:
     )
 
 
-def build_http_client(settings: Settings) -> httpx.AsyncClient:
-    """The one shared upstream client: tuned pool, HTTP/1.1, connect-only retries (§10.5, D12).
+def build_http_client(settings: Settings, *, verify: bool = True) -> httpx.AsyncClient:
+    """The shared upstream client: tuned pool, HTTP/1.1, connect-only retries (§10.5, D12).
 
     ``retries`` here retries a failed TCP/TLS *connection attempt* only (httpcore semantics);
     it never re-sends a request once bytes have gone out, so it cannot double-process an
     upstream operation. The relay still does not retry at the request level — that policy
     stays with the calling client.
+
+    ``verify=False`` builds the second, insecure-TLS pool used only by channels that
+    opt out of upstream certificate verification (`tls.insecure_skip_verify`).
     """
-    transport = httpx.AsyncHTTPTransport(retries=settings.upstream_connect_retries, limits=client_limits(settings))
-    return httpx.AsyncClient(transport=transport)
+    transport = httpx.AsyncHTTPTransport(
+        retries=settings.upstream_connect_retries, limits=client_limits(settings), verify=verify
+    )
+    return httpx.AsyncClient(transport=transport, verify=verify)
 
 
 def build_keyring(settings: Settings, config: RelayConfig | None) -> Keyring | None:
@@ -129,6 +134,24 @@ def warn_unenforced_config(config: RelayConfig | None) -> None:
             )
 
 
+def warn_insecure_tls_config(config: RelayConfig | None) -> None:
+    """Warn loudly for every channel that disables upstream TLS certificate verification.
+
+    `tls.insecure_skip_verify` is an explicit opt-out (default false); startup does not
+    abort because of it, but every boot must surface which channels weakened transport
+    security, matching `warn_unenforced_config`'s shape for `authorization.external`.
+    """
+    if config is None:
+        return
+    for channel in config.channels:
+        if channel.tls.insecure_skip_verify:
+            logger.warning(
+                "channel {channel!r}: tls.insecure_skip_verify is enabled; upstream TLS "
+                "server certificate verification is DISABLED for this channel",
+                channel=channel.name,
+            )
+
+
 def _load_startup_config(settings: Settings) -> RelayConfig | None:
     """Load config on startup.
 
@@ -143,6 +166,7 @@ def _load_startup_config(settings: Settings) -> RelayConfig | None:
 def create_app(
     config: RelayConfig | None = None,
     http_client: httpx.AsyncClient | None = None,
+    insecure_http_client: httpx.AsyncClient | None = None,
     metric_reader: MetricReader | None = None,
 ) -> FastAPI:
     """Build the FastAPI application.
@@ -152,6 +176,9 @@ def create_app(
             from ``Settings.config_file``.
         http_client: an explicit httpx client (used in tests). When omitted, the lifespan
             creates and owns one.
+        insecure_http_client: an explicit ``verify=False`` httpx client (used in tests) for
+            channels with ``tls.insecure_skip_verify``. When omitted, the lifespan creates
+            and owns one only if some configured channel needs it.
         metric_reader: an explicit metric reader (used in tests) to collect metrics in
             memory; production uses the OTLP periodic exporter.
 
@@ -179,16 +206,28 @@ def create_app(
             validate_credential_config(application.state.config)
         # Accepted-but-unenforced config (e.g. authorization.external) → loud warning.
         warn_unenforced_config(application.state.config)
+        # Explicit TLS verification opt-out (e.g. self-signed staging upstream) → loud warning.
+        warn_insecure_tls_config(application.state.config)
         # PII keyring: invalid → abort; missing while PII enabled → abort (§8.3).
         application.state.keyring = build_keyring(settings, application.state.config)
         owns_client = application.state.client is None
         if owns_client:
             application.state.client = build_http_client(settings)
+        owns_insecure_client = application.state.insecure_client is None
+        insecure_tls_required = application.state.config is not None and any(
+            channel.tls.insecure_skip_verify for channel in application.state.config.channels
+        )
+        if owns_insecure_client and insecure_tls_required:
+            application.state.insecure_client = build_http_client(settings, verify=False)
         # RED metrics via OTel auto-instrumentation, bound to this app's per-app meter provider
         # (never the global one, §11) so parallel app instances in tests don't cross-contaminate.
         # Per-client, not global, for the same isolation reason; uninstrumented on teardown.
         if metrics_instrumentation:
             HTTPXClientInstrumentor.instrument_client(application.state.client, meter_provider=meter_provider)
+            if application.state.insecure_client is not None:
+                HTTPXClientInstrumentor.instrument_client(
+                    application.state.insecure_client, meter_provider=meter_provider
+                )
         # Rules: one startup fetch with baked fallback; no polling (§8.8, D7).
         pii_required = application.state.config is not None and any(
             channel.pii.enabled for channel in application.state.config.channels
@@ -205,8 +244,12 @@ def create_app(
         finally:
             if metrics_instrumentation and application.state.client is not None:
                 HTTPXClientInstrumentor.uninstrument_client(application.state.client)
+            if metrics_instrumentation and application.state.insecure_client is not None:
+                HTTPXClientInstrumentor.uninstrument_client(application.state.insecure_client)
             if owns_client:
                 await application.state.client.aclose()
+            if owns_insecure_client and application.state.insecure_client is not None:
+                await application.state.insecure_client.aclose()
             if metrics_instrumentation:
                 FastAPIInstrumentor.uninstrument_app(application)
             meter_provider.shutdown()
@@ -222,6 +265,7 @@ def create_app(
     application.state.settings = settings
     application.state.config = config
     application.state.client = http_client
+    application.state.insecure_client = insecure_http_client
     application.state.rules = None
     application.state.metrics = metrics
     application.state.meter_provider = meter_provider
@@ -276,9 +320,12 @@ def create_app(
         channel = find_channel(request.app.state.config, name)
         if channel is None:
             return JSONResponse(status_code=404, content={"error": "unknown_channel"})
+        upstream_client = (
+            request.app.state.insecure_client if channel.tls.insecure_skip_verify else request.app.state.client
+        )
         start = time.perf_counter()
         response = await forward(
-            request.app.state.client,
+            upstream_client,
             channel,
             path,
             request,

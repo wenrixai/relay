@@ -64,6 +64,17 @@ class ChannelPII(BaseModel):
     )
 
 
+class ChannelTLS(BaseModel):
+    """Per-channel upstream TLS verification toggle; verification is on by default."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    insecure_skip_verify: bool = Field(
+        default=False,
+        description="Skip upstream TLS server certificate verification for this channel only.",
+    )
+
+
 class Credentials(BaseModel):
     """Per-channel credential swap config. Credential values are extra string keys."""
 
@@ -131,6 +142,7 @@ class ChannelConfig(BaseModel):
         default_factory=Credentials, description="Credential values used for structural swap into requests."
     )
     pii: ChannelPII = Field(default_factory=ChannelPII)
+    tls: ChannelTLS = Field(default_factory=ChannelTLS, description="Upstream TLS verification settings.")
     authorization: Authorization = Field(
         default_factory=Authorization, description="Allowed operations and external auth checks."
     )
