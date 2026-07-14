@@ -116,7 +116,10 @@ def test_admin_flare_returns_redacted_diagnostics_snapshot() -> None:
 def test_admin_flare_includes_in_process_statistics() -> None:
     client = _admin_client()
     app = cast(FastAPI, client.app)
+    app.state.metrics.record_request("sabre-prod", 200)
+    app.state.metrics.record_request("sabre-prod", 502)
     app.state.metrics.record_upstream_timeout("sabre-prod")
+    app.state.metrics.record_upstream_error("sabre-prod")
     app.state.metrics.record_pii_redacted("sabre-prod", {"person": 2, "email": 1})
     app.state.metrics.record_pii_decrypted("sabre-prod", 3)
     app.state.metrics.record_xml_parse_error("sabre-prod", "invalid_xml")
@@ -132,7 +135,9 @@ def test_admin_flare_includes_in_process_statistics() -> None:
     assert body["statistics"] == {
         "channels_configured": 1,
         "rules_version": body["rules"]["rules_version"],
+        "requests_total": {"sabre-prod": {"2xx": 1, "5xx": 1}},
         "upstream_timeouts_total": {"sabre-prod": 1},
+        "upstream_errors_total": {"sabre-prod": 1},
         "pii_fields_redacted_total": {"sabre-prod": {"email": 1, "person": 2}},
         "pii_fields_decrypted_total": {"sabre-prod": 3},
         "xml_parse_errors_total": {"sabre-prod": {"invalid_xml": 1}},

@@ -31,10 +31,12 @@ def _metric_name(name: str) -> str:
 
 
 @dataclass
-class _MetricTotals:
-    """In-process totals mirroring the write-only OTel counters."""
+class _MetricTotals:  # pylint: disable=too-many-instance-attributes
+    """In-process totals mirroring the write-only OTel counters; one field per counter."""
 
+    requests: dict[str, dict[str, int]] = field(default_factory=dict)
     upstream_timeouts: dict[str, int] = field(default_factory=dict)
+    upstream_errors: dict[str, int] = field(default_factory=dict)
     pii_redacted: dict[str, dict[str, int]] = field(default_factory=dict)
     pii_decrypted: dict[str, int] = field(default_factory=dict)
     xml_parse_errors: dict[str, dict[str, int]] = field(default_factory=dict)
@@ -58,7 +60,11 @@ class _MetricTotals:
         return {
             "channels_configured": channels_configured,
             "rules_version": rules_version,
+            "requests_total": {
+                channel: dict(sorted(counts.items())) for channel, counts in sorted(self.requests.items())
+            },
             "upstream_timeouts_total": dict(sorted(self.upstream_timeouts.items())),
+            "upstream_errors_total": dict(sorted(self.upstream_errors.items())),
             "pii_fields_redacted_total": {
                 channel: dict(sorted(counts.items())) for channel, counts in sorted(self.pii_redacted.items())
             },
@@ -108,10 +114,20 @@ class RelayMetrics:  # pylint: disable=too-many-instance-attributes
         self._channels_configured = 0
         self._rules_version: str | None = None
         self._totals = _MetricTotals()
+        self._requests: OtelCounter = meter.create_counter(
+            _metric_name("requests_total"),
+            unit="1",
+            description="Relayed requests by channel and response status class (2xx/4xx/5xx).",
+        )
         self._upstream_timeouts: OtelCounter = meter.create_counter(
             _metric_name("upstream_timeouts_total"),
             unit="1",
             description="Upstream channel timeouts (504s).",
+        )
+        self._upstream_errors: OtelCounter = meter.create_counter(
+            _metric_name("upstream_errors_total"),
+            unit="1",
+            description="Upstream request failures other than timeout (no response received).",
         )
         meter.create_observable_gauge(
             _metric_name("channels_configured"),
@@ -180,10 +196,31 @@ class RelayMetrics:  # pylint: disable=too-many-instance-attributes
         """Set the gauge value reported for configured channels."""
         self._channels_configured = count
 
+    @staticmethod
+    def _status_class(status_code: int) -> str:
+        """Bucket a status code into a low-cardinality class label."""
+        return f"{status_code // 100}xx"
+
+    def record_request(self, channel: str, status_code: int) -> None:
+        """Count one relayed request by channel and response status class (2xx/4xx/5xx)."""
+        status_class = self._status_class(status_code)
+        self._totals.increment_nested(self._totals.requests, channel, status_class, 1)
+        self._requests.add(1, {"channel": channel, "status_class": status_class})
+
     def record_upstream_timeout(self, channel: str) -> None:
         """Increment the upstream-timeout counter for a channel."""
         self._totals.increment(self._totals.upstream_timeouts, channel)
         self._upstream_timeouts.add(1, {"channel": channel})
+
+    def record_upstream_error(self, channel: str) -> None:
+        """Increment the upstream non-timeout error counter for a channel.
+
+        Complements ``record_upstream_timeout``: httpx client auto-instrumentation emits no
+        duration datapoint when the request raises before a response (timeout or connect/protocol
+        error), so these two counters are the only signal for response-less upstream failures.
+        """
+        self._totals.increment(self._totals.upstream_errors, channel)
+        self._upstream_errors.add(1, {"channel": channel})
 
     def record_pii_redacted(self, channel: str, counts: Mapping[str, int]) -> None:
         """Record redacted-field counts per ``pii_type`` (label values, never field data)."""
@@ -193,7 +230,13 @@ class RelayMetrics:  # pylint: disable=too-many-instance-attributes
                 self._pii_redacted.add(count, {"channel": channel, "pii_type": pii_type})
 
     def record_pii_decrypted(self, channel: str, count: int) -> None:
-        """Record how many tokens were de-anonymized on a request."""
+        """Record how many tokens were de-anonymized on a request.
+
+        Deliberately a flat per-channel count with no ``pii_type`` label — unlike
+        :meth:`record_pii_redacted`, which is rule-driven and knows each field's type.
+        De-anonymization is envelope-driven whole-token decryption (§8.6): an ``ENC_`` token
+        carries no field type, so there is nothing to bucket by. Do not add a synthetic type label.
+        """
         if count:
             self._totals.increment(self._totals.pii_decrypted, channel, count)
             self._pii_decrypted.add(count, {"channel": channel})

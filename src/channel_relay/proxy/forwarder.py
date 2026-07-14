@@ -122,7 +122,27 @@ def _gzip_encode(body: bytes) -> bytes:
     return gzip.compress(body)
 
 
-async def forward(  # pylint: disable=too-many-locals,too-many-return-statements,too-many-branches,too-many-statements
+async def forward(
+    client: httpx.AsyncClient,
+    channel: ChannelConfig,
+    path: str,
+    request: Request,
+    max_inspect_bytes: int,
+) -> Response:
+    """Relay the request and count the outgoing response by channel + status class.
+
+    Thin wrapper over :func:`_forward` so every terminal exit — success and each
+    contract-defined error shape — funnels through a single ``requests_total`` record with
+    the friendly channel name (§11.1). Delegates all pipeline logic to :func:`_forward`.
+    """
+    response = await _forward(client, channel, path, request, max_inspect_bytes)
+    metrics: RelayMetrics | None = request.app.state.metrics
+    if metrics is not None:
+        metrics.record_request(channel.name, response.status_code)
+    return response
+
+
+async def _forward(  # pylint: disable=too-many-locals,too-many-return-statements,too-many-branches,too-many-statements
     client: httpx.AsyncClient,
     channel: ChannelConfig,
     path: str,
@@ -235,6 +255,8 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
         return upstream_timeout_response()
     except httpx.HTTPError:
         logger.bind(channel=channel.name).error("Upstream request failed")
+        if metrics is not None:
+            metrics.record_upstream_error(channel.name)
         return internal_error_response(ErrorReason.INTERNAL_ERROR, "upstream request failed", trace_id)
 
     content = upstream.content
