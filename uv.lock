@@ -157,6 +157,7 @@ source = { editable = "." }
 dependencies = [
     { name = "cryptography" },
     { name = "fastapi" },
+    { name = "httptools" },
     { name = "httpx" },
     { name = "loguru" },
     { name = "lxml" },
@@ -166,6 +167,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "uvicorn", extra = ["standard"] },
+    { name = "uvloop" },
 ]
 
 [package.dev-dependencies]
@@ -188,6 +190,7 @@ dev = [
 requires-dist = [
     { name = "cryptography", specifier = ">=44" },
     { name = "fastapi", specifier = ">=0.115" },
+    { name = "httptools", specifier = ">=0.6" },
     { name = "httpx", specifier = ">=0.28" },
     { name = "loguru", specifier = ">=0.7" },
     { name = "lxml", specifier = ">=5.3" },
@@ -197,6 +200,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.9" },
     { name = "pydantic-settings", specifier = ">=2.6" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.51.0" },
+    { name = "uvloop", specifier = ">=0.22" },
 ]
 
 [package.metadata.requires-dev]
