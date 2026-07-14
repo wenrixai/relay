@@ -195,9 +195,9 @@ def test_namespaces_accepted() -> None:
     assert loaded.rules[0].namespaces == {"m": "urn:mock:pnr"}
 
 
-def test_jsonpath_path_type_accepted() -> None:
-    loaded = RuleSet.model_validate(ruleset(rule(path_type="jsonpath", path="$.traveler.name")))
-    assert loaded.rules[0].path_type == "jsonpath"
+def test_jsonpath_path_type_rejected_until_json_inspection_is_supported() -> None:
+    with pytest.raises(ValidationError):
+        RuleSet.model_validate(ruleset(rule(path_type="jsonpath", path="$.traveler.name")))
 
 
 def test_incompatible_schema_version_rejected() -> None:

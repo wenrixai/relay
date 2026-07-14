@@ -114,7 +114,7 @@ class _BaseRule(BaseModel):
     channel: str = Field(min_length=1)
     operation: str
     path: str = Field(min_length=1)
-    path_type: Literal["xpath", "jsonpath"] = "xpath"
+    path_type: Literal["xpath"] = "xpath"
     namespaces: dict[str, str] = Field(
         default_factory=dict,
         description="XPath prefix → namespace URI declarations used by `path`.",

@@ -1,7 +1,7 @@
 # token-codec Specification
 
 ## Purpose
-TBD - created by archiving change slice-2-pii-core. Update Purpose after archive.
+Define the versioned, self-describing, reversible wire format for encrypted PII tokens.
 ## Requirements
 ### Requirement: Token format
 PII tokens SHALL be encoded as `ENC_ + base64url_nopad(control ‖ body)` where `control` is 1 byte

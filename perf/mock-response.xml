@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CommandList>
+  <GetBookingDetails>
+    <Status>Succeeded</Status>
+    <BookingProfile>
+      <TravellerList>
+        <Traveller>
+          <Name>
+            <NamePartList>
+              <NamePart>PERF TRAVELLER</NamePart>
+            </NamePartList>
+          </Name>
+        </Traveller>
+      </TravellerList>
+    </BookingProfile>
+  </GetBookingDetails>
+</CommandList>

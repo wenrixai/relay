@@ -12,7 +12,8 @@ channels. Wenrix calls the relay at:
 ```
 
 `{channel_name}` selects one configured channel. The remaining path is forwarded to that channel's
-configured upstream service.
+configured upstream service. `/channel/{channel_name}` is also supported as the empty-path
+compatibility form and follows the same processing pipeline.
 
 ## Configuration Overview
 
@@ -195,6 +196,17 @@ Key rotation uses integer epochs:
 3. Keep old epochs until no outstanding tokens reference them.
 
 Never replace or remove an existing epoch while tokens created with that epoch may still be in use.
+
+### Supported content for inspection
+
+PII processing and structural body credential handling support XML/SOAP only. Gzip-encoded XML is
+decoded for inspection and processed structurally. JSON, MTOM/multipart, deflate, and unknown content
+can pass through opaquely only when the channel configuration does not require body inspection.
+
+If an unsupported request body requires inspection, the relay rejects it with HTTP 415 and reason
+`unsupported_content_type` without contacting the channel. If an unsupported upstream response
+requires PII redaction or structural credential cleanup, the relay returns HTTP 502 with the same
+reason and does not return the upstream body.
 
 ## Relay Process Settings
 

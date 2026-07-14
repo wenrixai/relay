@@ -28,13 +28,14 @@ class MockChannel:
     """Serves the Amadeus PNR reply and records bodies the relay forwards upstream."""
 
     def __init__(self) -> None:
+        self.body = FIXTURE.read_bytes()
         self.channel_bodies: list[bytes] = []
 
     def handler(self, request: httpx.Request) -> httpx.Response:
         self.channel_bodies.append(request.read())
         return httpx.Response(
             200,
-            content=FIXTURE.read_bytes(),
+            content=self.body,
             headers={"content-type": "text/xml; charset=utf-8"},
         )
 
@@ -72,7 +73,7 @@ def _text(body: bytes, local_name: str) -> str:
 
 def test_response_redacted_for_client(client: TestClient) -> None:
     with client:
-        response = client.post("/channel/amadeus/op", content=b"<Ping/>")
+        response = client.post("/channel/amadeus/op", content=b"<Ping/>", headers={"content-type": "text/xml"})
     assert response.status_code == 200
     # No plaintext PII survives; names became reversible tokens.
     for gone in (b"PARK", b"JANGBIN", b"00852-62374313", b"SEAFLY314", b"M037B6058", b"NH4144402077"):
@@ -84,7 +85,7 @@ def test_response_redacted_for_client(client: TestClient) -> None:
 
 def test_encrypted_name_round_trips_upstream(client: TestClient, mock_channel: MockChannel) -> None:
     with client:
-        redacted = client.post("/channel/amadeus/op", content=b"<Ping/>").content
+        redacted = client.post("/channel/amadeus/op", content=b"<Ping/>", headers={"content-type": "text/xml"}).content
         surname_token = _text(redacted, "surname")
         assert surname_token.startswith("ENC_")
         request_xml = (
@@ -98,3 +99,16 @@ def test_encrypted_name_round_trips_upstream(client: TestClient, mock_channel: M
     forwarded = mock_channel.channel_bodies[-1]
     assert b"ENC_" not in forwarded
     assert b"<pnr:surname>PARK</pnr:surname>" in forwarded
+
+
+def test_required_surname_anchor_schema_drift_fails_closed(client: TestClient, mock_channel: MockChannel) -> None:
+    mock_channel.body = mock_channel.body.replace(b"<surname>", b"<renamedSurname>").replace(
+        b"</surname>", b"</renamedSurname>"
+    )
+
+    with client:
+        response = client.post("/channel/amadeus/op", content=b"<Ping/>", headers={"content-type": "text/xml"})
+
+    assert response.status_code == 502
+    assert response.json()["reason"] == "pii_redaction_failed"
+    assert b"renamedSurname" not in response.content

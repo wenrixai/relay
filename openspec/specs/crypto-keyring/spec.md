@@ -1,7 +1,7 @@
 # crypto-keyring Specification
 
 ## Purpose
-TBD - created by archiving change slice-2-pii-core. Update Purpose after archive.
+Define key derivation, epoch rotation, and secret-loading requirements for PII cryptography.
 ## Requirements
 ### Requirement: Epoch-indexed keyring
 The relay SHALL load a PII master keyring of the form `{epoch_int: base64(32 bytes)}` from the

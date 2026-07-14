@@ -43,6 +43,7 @@ class _CountingMetrics:
         self.decrypted: list[tuple[str, int]] = []
         self.redacted: list[tuple[str, dict[str, int]]] = []
         self.uncovered: list[tuple[str, str]] = []
+        self.path_errors: list[tuple[str, str]] = []
 
     def record_xml_parse_error(self, channel: str, kind: str) -> None:
         self.xml_errors.append((channel, kind))
@@ -55,6 +56,9 @@ class _CountingMetrics:
 
     def record_uncovered_operation(self, channel: str, operation: str) -> None:
         self.uncovered.append((channel, operation))
+
+    def record_pii_rule_path_error(self, channel: str, rule_id: str) -> None:
+        self.path_errors.append((channel, rule_id))
 
 
 def _person_ruleset(operation: str) -> RuleSet:
@@ -250,6 +254,54 @@ def test_malformed_request_xml_during_credential_swap_returns_xml_parse_error(
         resp = client.post("/channel/tf/op", content=b"<broken", headers={"content-type": "application/xml"})
 
     assert_proxy_error(resp, 502, "xml_parse_error")
+
+
+def test_non_xml_request_requiring_structural_swap_fails_closed(
+    relay_client_factory: RelayClientFactory,
+    unreachable_transport: httpx.MockTransport,
+    assert_proxy_error: ProxyErrorAssertion,
+) -> None:
+    channel = ChannelConfig(
+        name="tf",
+        type=ChannelType.TRAVELFUSION,
+        credentials={"enabled": True, "login_id": "login", "xml_login_id": "xml"},
+    )
+
+    with relay_client_factory(channel, unreachable_transport) as client:
+        resp = client.post(
+            "/channel/tf/op",
+            content=b'{"LoginId":"caller"}',
+            headers={"content-type": "application/json", "x-wenrix-trace-id": "trace-json"},
+        )
+
+    assert_proxy_error(resp, 415, "unsupported_content_type", "trace-json")
+
+
+def test_non_xml_response_requiring_pii_redaction_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+    relay_client_factory: RelayClientFactory,
+    assert_proxy_error: ProxyErrorAssertion,
+) -> None:
+    monkeypatch.setenv("RELAY_PII_KEYRING", KEYRING_JSON)
+    channel = ChannelConfig(
+        name="tf",
+        type=ChannelType.TRAVELFUSION,
+        pii={"enabled": True},
+    )
+    upstream_body = b'{"passenger":"SECRET NAME"}'
+    transport = httpx.MockTransport(
+        lambda _request: httpx.Response(200, content=upstream_body, headers={"content-type": "application/json"})
+    )
+
+    with relay_client_factory(channel, transport) as client:
+        resp = client.post(
+            "/channel/tf/op",
+            content=b"<Ping/>",
+            headers={"content-type": "application/xml", "x-wenrix-trace-id": "trace-upstream-json"},
+        )
+
+    assert_proxy_error(resp, 502, "unsupported_content_type", "trace-upstream-json")
+    assert upstream_body not in resp.content
 
 
 def test_response_credential_cleanup_parse_failure_returns_xml_parse_error(
@@ -448,6 +500,41 @@ def test_response_pii_stage_covered_does_not_record_uncovered() -> None:
     assert isinstance(result, bytes)
     assert metrics.uncovered == []
     assert metrics.redacted == [("tf", {"person": 1})]
+
+
+def test_response_pii_stage_records_invalid_xpath_rule_id() -> None:
+    metrics = _CountingMetrics()
+    ruleset = RuleSet.model_validate(
+        {
+            "schema_version": "1.0",
+            "rules_version": "t",
+            "rules": [
+                {
+                    "id": "tf.invalid-prefix",
+                    "channel": "travelfusion",
+                    "operation": "^Search$",
+                    "path": "//missing:Name",
+                    "pii_type": "person",
+                    "method": "encrypt",
+                }
+            ],
+        }
+    )
+
+    result = _response_pii_stage(
+        keyring=_keyring(),
+        rules=ruleset,
+        content=b"<Root><Search><Name>Jane</Name></Search></Root>",
+        ctx=_StageContext(
+            channel=ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION),
+            max_inspect_bytes=1024,
+            trace_id=None,
+            metrics=cast(Any, metrics),
+        ),
+    )
+
+    assert isinstance(result, bytes)
+    assert metrics.path_errors == [("tf", "tf.invalid-prefix")]
 
 
 @pytest.mark.parametrize("method", ["GET", "POST", "PUT", "DELETE", "PATCH"])

@@ -85,7 +85,7 @@ def extract_token(body: bytes, local_name: str) -> str:
 
 def test_response_is_redacted(client: TestClient) -> None:
     with client:
-        response = client.post("/channel/mock/op", content=b"<Ping/>")
+        response = client.post("/channel/mock/op", content=b"<Ping/>", headers={"content-type": "text/xml"})
     assert response.status_code == 200
     assert b"John Smith" not in response.content
     assert b"john.smith@example.com" not in response.content
@@ -95,7 +95,7 @@ def test_response_is_redacted(client: TestClient) -> None:
 
 def test_round_trip_channel_receives_plaintext(client: TestClient, mock_channel: MockChannel) -> None:
     with client:
-        redacted = client.post("/channel/mock/op", content=b"<Ping/>").content
+        redacted = client.post("/channel/mock/op", content=b"<Ping/>", headers={"content-type": "text/xml"}).content
         name_token = extract_token(redacted, "Name")
         root = parse_bytes(redacted)
         attr_token = root.xpath("//*[local-name()='Traveler']/@loyalty")[0]
@@ -114,7 +114,7 @@ def test_round_trip_channel_receives_plaintext(client: TestClient, mock_channel:
 
 def test_gzip_request_round_trips(client: TestClient, mock_channel: MockChannel) -> None:
     with client:
-        redacted = client.post("/channel/mock/op", content=b"<Ping/>").content
+        redacted = client.post("/channel/mock/op", content=b"<Ping/>", headers={"content-type": "text/xml"}).content
         name_token = extract_token(redacted, "Name")
         request_xml = REQUEST_TEMPLATE.format(name=name_token, attr="none")
         reply = client.post(
@@ -198,7 +198,7 @@ def test_force_redact_channel_needs_no_keyring(mock_channel: MockChannel, monkey
         http_client=httpx.AsyncClient(transport=httpx.MockTransport(mock_channel.handler)),
     )
     with TestClient(app) as test_client:
-        response = test_client.post("/channel/mock/op", content=b"<Ping/>")
+        response = test_client.post("/channel/mock/op", content=b"<Ping/>", headers={"content-type": "text/xml"})
     assert response.status_code == 200
     assert b"John Smith" not in response.content
     assert b"john.smith@example.com" not in response.content
@@ -216,7 +216,7 @@ def test_logs_never_contain_pii_or_tokens(client: TestClient, mock_channel: Mock
     handle = logger.add(sink, level="DEBUG")
     try:
         with client:
-            redacted = client.post("/channel/mock/op", content=b"<Ping/>").content
+            redacted = client.post("/channel/mock/op", content=b"<Ping/>", headers={"content-type": "text/xml"}).content
             name_token = extract_token(redacted, "Name")
             client.post(
                 "/channel/mock/op",

@@ -1,4 +1,4 @@
-"""Concrete channel handlers for Slice 3 credential swap."""
+"""Concrete channel handlers for structural credential swap."""
 
 # Handler method names are defined by the ChannelHandler protocol; class docstrings carry
 # the supplier-specific behavior, so repeating method docstrings adds noise.

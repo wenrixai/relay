@@ -59,6 +59,7 @@ class _RedactionCtx:
     collector: _Collector
     token_cache: _TokenCache
     force_redact: bool
+    path_error_callback: Callable[[str], None] | None
 
 
 @dataclass(frozen=True)
@@ -89,7 +90,7 @@ def _local_name(element: etree._Element) -> str:
 
 
 def parse_operation(root: etree._Element) -> str:
-    """Generic body-derived operation (interim until per-channel parsers, T3.2).
+    """Generic body-derived operation fallback.
 
     SOAP: the Body's first element child's local-name. Otherwise: the root local-name.
     Never derived from headers (§5.3, D6).
@@ -136,11 +137,17 @@ def _apply_action(rule: FieldRule, value: str, ctx: _RedactionCtx) -> str | None
             assert_never(action)
 
 
-def _locate(root: etree._Element, rule: FieldRule | ReferenceRule) -> list[object]:
+def _locate(
+    root: etree._Element,
+    rule: FieldRule | ReferenceRule,
+    path_error_callback: Callable[[str], None] | None = None,
+) -> list[object]:
     """Evaluate the rule's XPath; unknown prefixes/invalid paths are a no-match (§9.4)."""
     try:
         result = root.xpath(rule.path, namespaces=rule.namespaces or None)
     except etree.XPathError:
+        if path_error_callback is not None:
+            path_error_callback(rule.id)
         return []
     return list(result) if isinstance(result, list) else []
 
@@ -243,7 +250,7 @@ def _rewrite_node(node: object, rule: FieldRule, ctx: _RedactionCtx) -> int:
 
 
 def select_rules(ruleset: RuleSet, channel: str, operation: str) -> list[Rule]:
-    """Rules applicable to this channel + operation; jsonpath rules are deferred (O6)."""
+    """Rules applicable to this channel and body-derived operation."""
     return [
         rule
         for rule in ruleset.rules
@@ -300,7 +307,7 @@ def _redact_reference_rule(
         assert ctx.keyring is not None
     keyring = ctx.keyring
     deterministic = rule.action.deterministic
-    for node in _locate(root, rule):
+    for node in _locate(root, rule, ctx.path_error_callback):
         if not isinstance(node, etree._Element):  # pylint: disable=protected-access  # lxml public-in-practice
             continue
         text = node.text
@@ -322,7 +329,7 @@ def _redact_reference_rule(
 
 def _redact_field_rule(root: etree._Element, rule: FieldRule, ctx: _RedactionCtx) -> int:
     """Apply one field rule and return the number of rewritten fields/spans."""
-    located = _locate(root, rule)
+    located = _locate(root, rule, ctx.path_error_callback)
     if rule.required and not located:
         msg = f"required rule {rule.id!r} matched no nodes"
         raise RedactionError(msg)
@@ -342,6 +349,7 @@ def redact_response(  # pylint: disable=too-many-arguments,too-many-locals
     force_redact: bool = False,
     max_bytes: int | None = None,
     operation_parser: Callable[[etree._Element], str] = parse_operation,
+    path_error_callback: Callable[[str], None] | None = None,
 ) -> RedactionOutcome:
     """Redact a channel response per the matching rules (§8.5).
 
@@ -360,7 +368,13 @@ def redact_response(  # pylint: disable=too-many-arguments,too-many-locals
     kwargs = {"max_bytes": max_bytes} if max_bytes is not None else {}
     root = parse_bytes(body, **kwargs)
     counts: dict[str, int] = {}
-    ctx = _RedactionCtx(keyring=keyring, collector={}, token_cache={}, force_redact=force_redact)
+    ctx = _RedactionCtx(
+        keyring=keyring,
+        collector={},
+        token_cache={},
+        force_redact=force_redact,
+        path_error_callback=path_error_callback,
+    )
     try:
         operation = operation_parser(root)
         selected = _select_rules_for_channels(ruleset, channel, operation)
@@ -393,6 +407,7 @@ def redact_response_body(  # pylint: disable=too-many-arguments
     force_redact: bool = False,
     max_bytes: int | None = None,
     operation_parser: Callable[[etree._Element], str] = parse_operation,
+    path_error_callback: Callable[[str], None] | None = None,
 ) -> tuple[bytes, dict[str, int]]:
     """``(body, counts)`` wrapper over :func:`redact_response` (see it for full semantics)."""
     outcome = redact_response(
@@ -403,6 +418,7 @@ def redact_response_body(  # pylint: disable=too-many-arguments
         force_redact=force_redact,
         max_bytes=max_bytes,
         operation_parser=operation_parser,
+        path_error_callback=path_error_callback,
     )
     return outcome.body, outcome.counts
 

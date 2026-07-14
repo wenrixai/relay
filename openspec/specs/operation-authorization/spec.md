@@ -1,7 +1,7 @@
 # operation-authorization Specification
 
 ## Purpose
-TBD - created by archiving change add-operation-authorization. Update Purpose after archive.
+Define body-derived per-channel operation allow-list enforcement and denial telemetry.
 ## Requirements
 ### Requirement: Operation-name allow-list enforcement
 The relay SHALL enforce operation allow-lists only for channels whose `authorization.enabled` is true

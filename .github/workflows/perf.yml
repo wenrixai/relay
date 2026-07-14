@@ -4,10 +4,6 @@ name: Perf
 # the build on threshold breaches. Runs on demand and weekly.
 on:
   workflow_dispatch:
-    inputs:
-      payload_size:
-        description: "Payload size in bytes"
-        default: "2048"
   schedule:
     - cron: "0 5 * * 1"
 
@@ -16,8 +12,12 @@ permissions:
 
 jobs:
   k6:
-    name: k6 load test
+    name: k6 load test (${{ matrix.payload_size }} bytes)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        payload_size: [2048, 32768, 262144]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -41,14 +41,25 @@ jobs:
 
       - name: Start mock upstream (fixed 50ms latency)
         run: |
-          MOCK_PORT=9000 MOCK_LATENCY_MS=50 uv run python deployment/mock_channel.py &
+          MOCK_PORT=9000 \
+          MOCK_LATENCY_MS=50 \
+          MOCK_BODY_FILE=perf/mock-response.xml \
+          MOCK_CONTENT_TYPE=application/xml \
+          MOCK_EXPECTED_LOGIN=perf-login \
+          MOCK_EXPECTED_ROUNDTRIP=PERF_ROUNDTRIP_PLAINTEXT \
+          uv run python deployment/mock_channel.py &
           sleep 1
+
+      - name: Generate ephemeral perf key
+        run: |
+          key_b64="$(openssl rand -base64 32 | tr -d '\n')"
+          echo "::add-mask::$key_b64"
+          printf 'RELAY_PII_KEYRING={"0":"%s"}\n' "$key_b64" >> "$GITHUB_ENV"
 
       - name: Start relay
         run: |
           RELAY_CONFIG_FILE=perf/relay.perf.json \
           RELAY_BASIC_AUTH_ENABLED=false \
-          RELAY_PII_KEYRING="{\"0\":\"$(head -c32 /dev/urandom | base64)\"}" \
           RELAY_PII_KEY_EPOCH_ACTIVE=0 \
           uv run uvicorn channel_relay.main:app --port 8080 &
           for _ in $(seq 1 30); do
@@ -56,18 +67,25 @@ jobs:
             sleep 1
           done
 
+      - name: Preflight measured stages
+        env:
+          RELAY_PII_KEY_EPOCH_ACTIVE: "0"
+        run: uv run python perf/preflight.py --token-output /tmp/perf-roundtrip-token
+
       - name: Run k6
         # Non-gating: do not fail the job on threshold breaches.
         continue-on-error: true
         run: |
           k6 run \
             -e RELAY_URL=http://127.0.0.1:8080 \
-            -e PAYLOAD_SIZE=${{ github.event.inputs.payload_size || '2048' }} \
+            -e PAYLOAD_SIZE=${{ matrix.payload_size }} \
+            -e ROUNDTRIP_TOKEN="$(cat /tmp/perf-roundtrip-token)" \
+            -e SUMMARY_PATH=summary-${{ matrix.payload_size }}.json \
             perf/relay-load.js
 
       - name: Upload summary
         uses: actions/upload-artifact@v7
         with:
-          name: k6-summary
-          path: summary.json
+          name: k6-summary-${{ matrix.payload_size }}
+          path: summary-${{ matrix.payload_size }}.json
           if-no-files-found: warn

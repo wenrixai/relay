@@ -12,6 +12,7 @@ from channel_relay.proxy.errors import (
     forbidden_operation_response,
     internal_error_response,
     upstream_timeout_response,
+    unsupported_content_response,
 )
 
 
@@ -33,6 +34,17 @@ def test_upstream_timeout_response_shape() -> None:
     assert resp.status_code == 504
     assert resp.headers["X-Wenrix-Error"] == "upstream_timeout"
     assert resp.media_type == "text/html"
+
+
+def test_unsupported_content_response_shapes() -> None:
+    request_response = unsupported_content_response(upstream=False, trace_id="request-trace")
+    upstream_response = unsupported_content_response(upstream=True, trace_id="response-trace")
+
+    assert request_response.status_code == 415
+    assert upstream_response.status_code == 502
+    assert request_response.headers["X-Wenrix-Error"] == "unsupported_content_type"
+    assert upstream_response.headers["X-Wenrix-Error"] == "unsupported_content_type"
+    assert request_response.body != upstream_response.body
 
 
 def _client(channel: ChannelConfig, handler: httpx.MockTransport) -> TestClient:

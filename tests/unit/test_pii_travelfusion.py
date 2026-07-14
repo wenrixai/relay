@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import pytest
+
 from channel_relay.channels import get_handler
 from channel_relay.config.models import ChannelType
 from channel_relay.pii.codec import TOKEN_RE, decrypt
 from channel_relay.pii.crypto import Keyring
-from channel_relay.pii.engine import deanonymize_request_body, redact_response_body
+from channel_relay.pii.engine import RedactionError, deanonymize_request_body, redact_response_body
 from channel_relay.pii.rules import RuleSet
 from channel_relay.pii.xml_ops import parse_bytes
 from tests.conftest import FIXTURES_DIR, XmlTexts
@@ -133,3 +135,12 @@ def test_unknown_travelfusion_operation_passes_through(baked_ruleset: RuleSet, p
 def test_ruleset_version_covers_travelfusion(baked_ruleset: RuleSet) -> None:
     assert any(rule.channel == "travelfusion" for rule in baked_ruleset.rules)
     assert "travelfusion" in baked_ruleset.rules_version
+
+
+def test_required_traveller_name_anchor_fails_closed_on_schema_drift(
+    baked_ruleset: RuleSet, pii_keyring: Keyring
+) -> None:
+    body = _fixture("get_booking_details_response.xml")
+    drifted = body.replace(b"<NamePart>", b"<NamePartV2>").replace(b"</NamePart>", b"</NamePartV2>")
+    with pytest.raises(RedactionError):
+        _redact(drifted, baked_ruleset, pii_keyring)

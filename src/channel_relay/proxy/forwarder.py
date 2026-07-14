@@ -46,6 +46,7 @@ from channel_relay.proxy.errors import (
     forbidden_operation_response,
     internal_error_response,
     payload_too_large_response,
+    unsupported_content_response,
     upstream_timeout_response,
 )
 
@@ -163,6 +164,17 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
         if auth_outcome is not None:
             return auth_outcome
 
+    request_xml_inspection = (
+        channel.pii.enabled
+        or (channel.credential_swap_enabled and handler.requires_body_inspection(channel))
+        or handler.requires_response_keyring(channel)
+    )
+    if body and request_xml_inspection and kind is not ContentKind.XML:
+        logger.bind(channel=channel.name, content_kind=kind).warning(
+            "Rejected non-XML request requiring structured inspection"
+        )
+        return unsupported_content_response(upstream=False, trace_id=trace_id)
+
     # [8a] Credential header injection needs no body and runs for every credentialed channel;
     # header-only channels (NDC) forward the body byte-for-byte (§spec: body left unchanged).
     if channel.credential_swap_enabled:
@@ -228,6 +240,16 @@ async def forward(  # pylint: disable=too-many-locals,too-many-return-statements
     content = upstream.content
     response_headers = _headers_to_dict(clean_response_headers(upstream.headers.items()))
     response_kind = classify_content(upstream.headers.get("content-type"))
+    response_xml_inspection = (
+        channel.pii.enabled
+        or handler.requires_response_keyring(channel)
+        or (channel.credential_swap_enabled and handler.requires_body_inspection(channel))
+    )
+    if content and response_xml_inspection and response_kind is not ContentKind.XML:
+        logger.bind(channel=channel.name, content_kind=response_kind).warning(
+            "Rejected non-XML response requiring structured inspection"
+        )
+        return unsupported_content_response(upstream=True, trace_id=trace_id)
 
     if channel.credential_swap_enabled and content and response_kind is ContentKind.XML:
         response_swap_outcome = _response_credential_swap_stage(
@@ -320,6 +342,7 @@ def _request_credential_swap_stage(
     Only reached for handlers that require body inspection; ``body`` is already plaintext.
     """
     channel = ctx.channel
+
     try:
         root = parse_bytes(body, max_bytes=ctx.max_inspect_bytes)
         changed = handler.swap_request_body(root, SwapContext(channel, headers, keyring))
@@ -401,6 +424,12 @@ def _response_pii_stage(
     the coverage-gap metric is emitted so the gap is discoverable (§pii-coverage-policy, D1).
     """
     channel = ctx.channel
+
+    def record_path_error(rule_id: str) -> None:
+        logger.bind(channel=channel.name, rule_id=rule_id).warning("PII rule XPath could not be evaluated")
+        if ctx.metrics is not None:
+            ctx.metrics.record_pii_rule_path_error(channel.name, rule_id)
+
     try:
         # httpx already decoded any content-encoding, so `content` is plain XML.
         outcome = redact_response(
@@ -411,6 +440,7 @@ def _response_pii_stage(
             force_redact=channel.pii.force_redact,
             max_bytes=ctx.max_inspect_bytes,
             operation_parser=get_handler(channel.type).parse_operation,
+            path_error_callback=record_path_error,
         )
     except XmlOversizeError as exc:
         _record_xml_error(ctx.metrics, channel.name, exc.kind)

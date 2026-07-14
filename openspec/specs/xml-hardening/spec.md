@@ -1,7 +1,7 @@
 # xml-hardening Specification
 
 ## Purpose
-TBD - created by archiving change slice-2-pii-core. Update Purpose after archive.
+Define the single hardened XML parsing boundary and its resource and failure limits.
 ## Requirements
 ### Requirement: Hardened parser factory
 All XML parsing in the relay SHALL go through a single hardened lxml parser factory in

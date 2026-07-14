@@ -1,8 +1,8 @@
 # Wenrix Channel Relay (v2)
 
-A privacy-first, transparent Python/FastAPI relay for travel channels. It preserves v1
-`WP_*` behaviour and adds structural credential swap, PII redaction, and first-class
-observability — while staying invisible to the channel.
+A privacy-first, transparent Python/FastAPI relay for travel channels. It provides structural
+credential swap, PII redaction, and first-class observability while staying invisible to the
+channel.
 
 ## Documentation
 - **[openspec/specs/](openspec/specs/)** — canonical specification set (scope, architecture, security).
@@ -39,6 +39,10 @@ decrypted back to plaintext before reaching the channel. Requires a keyring
 (`RELAY_PII_KEYRING` / `RELAY_PII_KEYRING_FILE`) and redaction rules (fetched from
 `RELAY_RULES_API_URL` at startup, baked fallback otherwise). See
 `openspec/specs/relay-configuration/spec.md` and `openspec/specs/redaction-engine/spec.md`.
+
+Body inspection is supported for XML/SOAP only (including gzip-encoded XML). JSON, MTOM/multipart,
+deflate, and unknown content can pass through opaquely only when no configured stage needs to inspect
+them; otherwise the relay fails closed rather than forwarding unprocessed sensitive content.
 
 ## Layout
 ```

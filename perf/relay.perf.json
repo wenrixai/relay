@@ -9,17 +9,17 @@
       "name": "swap",
       "type": "travelfusion",
       "proxy_pass": "http://127.0.0.1:9000",
-      "credentials": { "login_id": "perf-login", "xml_login_id": "perf-xml" }
+      "credentials": { "enabled": true, "login_id": "perf-login", "xml_login_id": "perf-xml" }
     },
     {
       "name": "redact",
-      "type": "travelport",
+      "type": "travelfusion",
       "proxy_pass": "http://127.0.0.1:9000",
       "pii": { "enabled": true }
     },
     {
       "name": "roundtrip",
-      "type": "travelport",
+      "type": "travelfusion",
       "proxy_pass": "http://127.0.0.1:9000",
       "pii": { "enabled": true }
     }

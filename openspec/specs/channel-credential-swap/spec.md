@@ -1,7 +1,7 @@
 # channel-credential-swap Specification
 
 ## Purpose
-TBD - created by archiving change slice-3-channel-credential-swap. Update Purpose after archive.
+Define opt-in structural credential injection and response credential cleanup for each channel type.
 ## Requirements
 ### Requirement: Channel handler registry
 

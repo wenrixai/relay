@@ -1,7 +1,7 @@
 # client-authentication Specification
 
 ## Purpose
-TBD - created by archiving change slice-1-mvp. Update Purpose after archive.
+Define client authentication, startup validation, and health-route access boundaries.
 ## Requirements
 ### Requirement: Default HTTP basic auth
 The relay SHALL enforce HTTP basic auth on served channel and admin routes by default, using

@@ -68,15 +68,20 @@ helm-test:
 perf payload_size="2048":
     #!/usr/bin/env bash
     set -euo pipefail
-    MOCK_PORT=9000 MOCK_LATENCY_MS=50 uv run python deployment/mock_channel.py &
+    export RELAY_PII_KEYRING="{\"0\":\"$(head -c32 /dev/urandom | base64)\"}"
+    export RELAY_PII_KEY_EPOCH_ACTIVE=0
+    MOCK_PORT=9000 MOCK_LATENCY_MS=50 MOCK_BODY_FILE=perf/mock-response.xml \
+      MOCK_CONTENT_TYPE=application/xml MOCK_EXPECTED_LOGIN=perf-login \
+      MOCK_EXPECTED_ROUNDTRIP=PERF_ROUNDTRIP_PLAINTEXT uv run python deployment/mock_channel.py &
     mock_pid=$!
     RELAY_CONFIG_FILE=perf/relay.perf.json RELAY_BASIC_AUTH_ENABLED=false \
-      RELAY_PII_KEYRING="{\"0\":\"$(head -c32 /dev/urandom | base64)\"}" RELAY_PII_KEY_EPOCH_ACTIVE=0 \
       uv run uvicorn channel_relay.main:app --port 8080 &
     relay_pid=$!
     trap 'kill $mock_pid $relay_pid 2>/dev/null || true' EXIT
     for _ in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/readiness && break; sleep 1; done
-    k6 run -e RELAY_URL=http://127.0.0.1:8080 -e PAYLOAD_SIZE={{payload_size}} perf/relay-load.js
+    uv run python perf/preflight.py --token-output /tmp/wenrix-perf-roundtrip-token
+    k6 run -e RELAY_URL=http://127.0.0.1:8080 -e PAYLOAD_SIZE={{payload_size}} \
+      -e ROUNDTRIP_TOKEN="$(cat /tmp/wenrix-perf-roundtrip-token)" perf/relay-load.js
 
 # Run all pre-commit hooks against the whole tree.
 precommit:

@@ -74,7 +74,7 @@ def _remark_texts(body: bytes) -> list[str]:
 
 def test_name_scrubbed_from_remark_response(client: TestClient) -> None:
     with client:
-        response = client.post("/channel/amd/op", content=b"<Ping/>")
+        response = client.post("/channel/amd/op", content=b"<Ping/>", headers={"content-type": "text/xml"})
     assert response.status_code == 200
     # No plaintext name survives, in structured fields OR remark prose.
     assert b"JOHN" not in response.content
@@ -86,7 +86,7 @@ def test_name_scrubbed_from_remark_response(client: TestClient) -> None:
 
 def test_remark_token_round_trips_to_channel(client: TestClient, mock_channel: MockChannel) -> None:
     with client:
-        redacted = client.post("/channel/amd/op", content=b"<Ping/>").content
+        redacted = client.post("/channel/amd/op", content=b"<Ping/>", headers={"content-type": "text/xml"}).content
         redacted_remark = _remark_texts(redacted)[0]
         # Send the redacted remark (embedded ENC_ tokens) back to the channel.
         request_xml = (

@@ -139,4 +139,3 @@ extend it, don't fork it. Author others with `skill-creator` as needed.
 - Use `xmltodict`, unhardened XML parsing, regex find-and-replace on bodies, or text credential swap.
 - Add retries, periodic rule polling, or regenerate the PII master key on `helm upgrade`.
 - Introduce slow tests or real network calls in the suite.
-- Break `WP_*` backward compatibility without an OpenSpec change and a migration note.
