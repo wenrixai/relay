@@ -308,8 +308,11 @@ The relay is an HTTP/1.1 intermediary and must handle headers correctly, not jus
   `Keep-Alive`, `Proxy-Authenticate`, `Proxy-Authorization`, `TE`, `Trailer`,
   `Transfer-Encoding`, `Upgrade`, plus any header listed in the inbound `Connection` header.
 - **Forwarding/identity headers** stripped before the channel: `X-Forwarded-For`, `X-Forwarded-Host`,
-  `X-Forwarded-Proto`, `X-Real-IP`, `Forwarded`, `Via`, and all `x-wenrix-*`. The relay does **not**
-  add `Via`/`Forwarded`/`X-Forwarded-*` (transparency: the channel must not detect an intermediary).
+  `X-Forwarded-Proto`, `X-Real-IP`, `Forwarded`, `Via`, the client `Authorization` header, and all
+  `x-wenrix-*`. The relay does **not** add `Via`/`Forwarded`/`X-Forwarded-*` (transparency: the
+  channel must not detect an intermediary). The client `Authorization` authenticates the client to
+  the relay and must never reach a channel; only a credential-swap handler sets an outbound
+  `Authorization` (after header hygiene runs).
 - **Host**: rewrite `Host` to the channel host (per channel config), with SNI set accordingly.
 - **`Proxy-*`**: never forwarded to the channel (used only for the advanced-authz hop, §12.1).
 - **Compression**: `Accept-Encoding`/`Content-Encoding` handled per §5.4; do not blindly forward a

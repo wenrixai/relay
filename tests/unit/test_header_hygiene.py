@@ -53,6 +53,19 @@ def test_clean_request_strips_hop_by_hop_and_forwarding() -> None:
     assert host == ["api.travelfusion.com"]
 
 
+def test_clean_request_strips_client_authorization() -> None:
+    # The client Authorization header authenticates the client to the relay; it must never
+    # reach a channel (§9.1). Only a credential-swap handler may set an outbound Authorization.
+    incoming = [
+        ("host", "relay.local"),
+        ("content-type", "text/xml"),
+        ("authorization", "Basic Y2xpZW50OnNlY3JldA=="),
+        ("Authorization", "Basic mixedcase"),
+    ]
+    cleaned = clean_request_headers(incoming, "api.travelfusion.com")
+    assert "authorization" not in _keys(cleaned)
+
+
 def test_clean_response_strips_server_and_hop_by_hop() -> None:
     incoming = [
         ("server", "nginx"),
@@ -98,6 +111,20 @@ def test_upstream_request_is_clean() -> None:
     assert captured["req"].headers["host"] == "api.travelfusion.com"
     # No Server header reaches the client.
     assert "server" not in {k.lower() for k in resp.headers}
+
+
+def test_client_authorization_not_forwarded_to_channel() -> None:
+    captured: dict[str, httpx.Request] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["req"] = request
+        return httpx.Response(200)
+
+    # Travelfusion with no credentials = pass-through (no handler sets Authorization).
+    with _app_with_channel(httpx.MockTransport(handler)) as client:
+        client.get("/channel/tf/op", headers={"authorization": "Basic Y2xpZW50OnNlY3JldA=="})
+
+    assert "authorization" not in {k.lower() for k in captured["req"].headers}
 
 
 def test_no_server_header_on_health() -> None:

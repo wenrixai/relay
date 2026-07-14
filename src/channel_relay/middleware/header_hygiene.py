@@ -25,7 +25,9 @@ HOP_BY_HOP: frozenset[str] = frozenset(
     }
 )
 
-# Forwarding/identity headers stripped before the channel. Lowercase.
+# Forwarding/identity headers stripped before the channel. Lowercase. Includes the client
+# `authorization` header: it authenticates the client to the relay and must never reach a channel
+# (§9.1). A credential-swap handler sets its own outbound `Authorization` *after* hygiene runs.
 FORWARDING: frozenset[str] = frozenset(
     {
         "x-forwarded-for",
@@ -34,6 +36,7 @@ FORWARDING: frozenset[str] = frozenset(
         "x-real-ip",
         "forwarded",
         "via",
+        "authorization",
     }
 )
 
