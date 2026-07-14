@@ -65,6 +65,8 @@ jobs:
           echo '{"channels":[]}' > relay.json
           docker run -d --name relay \
             -p 8080:8080 \
+            -e RELAY_BASIC_AUTH_USER=smoke \
+            -e RELAY_BASIC_AUTH_PASS=smoke \
             -v "$PWD/relay.json:/etc/wenrix/relay.json:ro" \
             wenrix-relay:ci
           for _ in $(seq 1 30); do
