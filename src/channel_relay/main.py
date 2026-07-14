@@ -18,6 +18,7 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import MetricReader
 from starlette.responses import Response
 
@@ -152,6 +153,55 @@ def warn_insecure_tls_config(config: RelayConfig | None) -> None:
             )
 
 
+def _load_and_validate_startup_config(settings: Settings, application: FastAPI, metrics: RelayMetrics) -> None:
+    """Load config once, then run its fail-closed checks and accepted-but-notable warnings.
+
+    Missing file leaves ``application.state.config`` ``None`` (not-ready, §13.5); invalid
+    config or a swap-enabled channel missing credentials raises to abort startup.
+    """
+    if application.state.config is None:
+        application.state.config = _load_startup_config(settings)
+    if application.state.config is not None:
+        metrics.set_channels_configured(len(application.state.config.channels))
+        validate_credential_config(application.state.config)
+    warn_unenforced_config(application.state.config)
+    warn_insecure_tls_config(application.state.config)
+
+
+def _build_upstream_clients(settings: Settings, application: FastAPI) -> tuple[bool, bool]:
+    """Build the shared client and, if some channel needs it, the insecure-TLS client.
+
+    Returns ``(owns_client, owns_insecure_client)`` so the lifespan only closes what it
+    created (an injected test client is never closed here).
+    """
+    owns_client = application.state.client is None
+    if owns_client:
+        application.state.client = build_http_client(settings)
+    owns_insecure_client = application.state.insecure_client is None
+    insecure_tls_required = application.state.config is not None and any(
+        channel.tls.insecure_skip_verify for channel in application.state.config.channels
+    )
+    if owns_insecure_client and insecure_tls_required:
+        application.state.insecure_client = build_http_client(settings, verify=False)
+    return owns_client, owns_insecure_client
+
+
+def _instrument_http_clients(application: FastAPI, meter_provider: MeterProvider) -> None:
+    """RED metrics via OTel auto-instrumentation, bound to this app's per-app meter provider
+    (never the global one, §11) so parallel app instances in tests don't cross-contaminate.
+    Per-client, not global, for the same isolation reason; uninstrumented on teardown."""
+    HTTPXClientInstrumentor.instrument_client(application.state.client, meter_provider=meter_provider)
+    if application.state.insecure_client is not None:
+        HTTPXClientInstrumentor.instrument_client(application.state.insecure_client, meter_provider=meter_provider)
+
+
+def _uninstrument_http_clients(application: FastAPI) -> None:
+    if application.state.client is not None:
+        HTTPXClientInstrumentor.uninstrument_client(application.state.client)
+    if application.state.insecure_client is not None:
+        HTTPXClientInstrumentor.uninstrument_client(application.state.insecure_client)
+
+
 def _load_startup_config(settings: Settings) -> RelayConfig | None:
     """Load config on startup.
 
@@ -197,37 +247,12 @@ def create_app(
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
         # Basic auth: enabled without credentials → abort (fail closed, §9.2).
         validate_auth_config(settings)
-        # Load config once on startup unless one was injected (invalid → abort).
-        if application.state.config is None:
-            application.state.config = _load_startup_config(settings)
-        if application.state.config is not None:
-            metrics.set_channels_configured(len(application.state.config.channels))
-            # Credential swap enabled without configured auth → abort (fail closed at load).
-            validate_credential_config(application.state.config)
-        # Accepted-but-unenforced config (e.g. authorization.external) → loud warning.
-        warn_unenforced_config(application.state.config)
-        # Explicit TLS verification opt-out (e.g. self-signed staging upstream) → loud warning.
-        warn_insecure_tls_config(application.state.config)
+        _load_and_validate_startup_config(settings, application, metrics)
         # PII keyring: invalid → abort; missing while PII enabled → abort (§8.3).
         application.state.keyring = build_keyring(settings, application.state.config)
-        owns_client = application.state.client is None
-        if owns_client:
-            application.state.client = build_http_client(settings)
-        owns_insecure_client = application.state.insecure_client is None
-        insecure_tls_required = application.state.config is not None and any(
-            channel.tls.insecure_skip_verify for channel in application.state.config.channels
-        )
-        if owns_insecure_client and insecure_tls_required:
-            application.state.insecure_client = build_http_client(settings, verify=False)
-        # RED metrics via OTel auto-instrumentation, bound to this app's per-app meter provider
-        # (never the global one, §11) so parallel app instances in tests don't cross-contaminate.
-        # Per-client, not global, for the same isolation reason; uninstrumented on teardown.
+        owns_client, owns_insecure_client = _build_upstream_clients(settings, application)
         if metrics_instrumentation:
-            HTTPXClientInstrumentor.instrument_client(application.state.client, meter_provider=meter_provider)
-            if application.state.insecure_client is not None:
-                HTTPXClientInstrumentor.instrument_client(
-                    application.state.insecure_client, meter_provider=meter_provider
-                )
+            _instrument_http_clients(application, meter_provider)
         # Rules: one startup fetch with baked fallback; no polling (§8.8, D7).
         pii_required = application.state.config is not None and any(
             channel.pii.enabled for channel in application.state.config.channels
@@ -242,10 +267,8 @@ def create_app(
         try:
             yield
         finally:
-            if metrics_instrumentation and application.state.client is not None:
-                HTTPXClientInstrumentor.uninstrument_client(application.state.client)
-            if metrics_instrumentation and application.state.insecure_client is not None:
-                HTTPXClientInstrumentor.uninstrument_client(application.state.insecure_client)
+            if metrics_instrumentation:
+                _uninstrument_http_clients(application)
             if owns_client:
                 await application.state.client.aclose()
             if owns_insecure_client and application.state.insecure_client is not None:
