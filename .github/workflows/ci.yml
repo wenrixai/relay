@@ -16,11 +16,14 @@ jobs:
   changes:
     name: detect changes
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       test: ${{ steps.filter.outputs.test }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Filter
         uses: dorny/paths-filter@v3
