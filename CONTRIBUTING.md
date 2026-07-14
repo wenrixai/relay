@@ -100,7 +100,6 @@ checks must pass.
 - **Commits**: follow [Conventional Commits](https://www.conventionalcommits.org/).
   Semantic versioning is derived from commit history.
 - **Branches**: keep branches short-lived.
-- **No direct pushes to `main`.** `main` is protected; all changes land via pull request.
 - **Pull requests** must pass all required checks before merge.
 
 ## Code Review
