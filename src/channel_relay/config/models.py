@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class ChannelType(StrEnum):
@@ -135,6 +135,28 @@ class ChannelConfig(BaseModel):
         default_factory=Authorization, description="Allowed operations and external auth checks."
     )
 
+    @field_validator("host")
+    @classmethod
+    def _validate_host(cls, value: str | None) -> str | None:
+        """Fail at load, not at request time: host is a bare hostname (sets Host + SNI)."""
+        if value is None:
+            return value
+        if not value or "://" in value or "/" in value:
+            msg = "host must be a bare hostname (no scheme, no path)"
+            raise ValueError(msg)
+        return value
+
+    @field_validator("proxy_pass")
+    @classmethod
+    def _validate_proxy_pass(cls, value: str | None) -> str | None:
+        """Fail at load, not at request time: proxy_pass is the full upstream base URL."""
+        if value is None:
+            return value
+        if not value.startswith(("http://", "https://")):
+            msg = "proxy_pass must be an http:// or https:// URL"
+            raise ValueError(msg)
+        return value
+
     @model_validator(mode="after")
     def _apply_host_defaults(self) -> ChannelConfig:
         """Fill ``host`` from the per-type default and derive ``proxy_pass``."""
@@ -170,3 +192,17 @@ class RelayConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     channels: list[ChannelConfig] = Field(default_factory=list, description="All configured upstream channels.")
+
+    @model_validator(mode="after")
+    def _validate_unique_names(self) -> RelayConfig:
+        """Duplicate names would silently shadow a channel's routing and credentials."""
+        seen: set[str] = set()
+        duplicates: set[str] = set()
+        for channel in self.channels:
+            if channel.name in seen:
+                duplicates.add(channel.name)
+            seen.add(channel.name)
+        if duplicates:
+            msg = f"duplicate channel name(s): {', '.join(sorted(duplicates))}"
+            raise ValueError(msg)
+        return self

@@ -89,6 +89,23 @@ def validate_credential_config(config: RelayConfig | None) -> None:
         get_handler(channel.type).validate_credentials(channel)
 
 
+def warn_unenforced_config(config: RelayConfig | None) -> None:
+    """Warn loudly about accepted-but-unenforced config so operators are not silently unprotected.
+
+    ``authorization.external`` is parsed and surfaced in diagnostics but the request
+    pipeline does not call the external service in this version (§12.1, later phase).
+    """
+    if config is None:
+        return
+    for channel in config.channels:
+        if channel.authorization.external is not None:
+            logger.warning(
+                "channel {channel!r}: authorization.external is configured but NOT enforced "
+                "in this version; requests are not checked against the external service",
+                channel=channel.name,
+            )
+
+
 def _load_startup_config(settings: Settings) -> RelayConfig | None:
     """Load config on startup.
 
@@ -134,6 +151,8 @@ def create_app(
             metrics.set_channels_configured(len(application.state.config.channels))
             # Credential swap enabled without configured auth → abort (fail closed at load).
             validate_credential_config(application.state.config)
+        # Accepted-but-unenforced config (e.g. authorization.external) → loud warning.
+        warn_unenforced_config(application.state.config)
         # PII keyring: invalid → abort; missing while PII enabled → abort (§8.3).
         application.state.keyring = build_keyring(settings, application.state.config)
         owns_client = application.state.client is None
@@ -239,10 +258,19 @@ app = create_app()
 
 
 def cli() -> None:
-    """Console entrypoint: run the relay with uvicorn (``server_header=False``)."""
+    """Console entrypoint: run the relay with uvicorn (``server_header=False``).
+
+    ``timeout_keep_alive`` must exceed the load balancer's idle timeout (AWS ALB defaults
+    to 60s; the IaC pins 130s) or the LB reuses connections uvicorn has already closed →
+    intermittent 502s. ``forwarded_allow_ips="*"`` is safe because deployment security
+    groups/NetworkPolicies restrict ingress to the load balancer.
+    """
     uvicorn.run(
         "channel_relay.main:app",
         host="0.0.0.0",  # relay binds all interfaces inside its container
         port=Settings().port,
         server_header=False,
+        timeout_keep_alive=75,
+        proxy_headers=True,
+        forwarded_allow_ips="*",
     )

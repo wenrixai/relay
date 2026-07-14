@@ -7,6 +7,7 @@ process-level scalars. Secrets are read from mounted files/env, never from the J
 
 from __future__ import annotations
 
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,9 +17,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="RELAY_", extra="ignore")
 
     config_file: str = "/etc/wenrix/relay.json"
-    port: int = 8080
+    port: int = Field(default=8080, ge=1, le=65535)
     tls_enabled: bool = False
-    tls_port: int = 18443
+    tls_port: int = Field(default=18443, ge=1, le=65535)
     mtls_enabled: bool = False
     basic_auth_enabled: bool = True
     basic_auth_user: str | None = None
@@ -35,3 +36,13 @@ class Settings(BaseSettings):
     pii_keyring_file: str | None = None
     pii_key_epoch_active: int | None = None
     debug: bool = False
+
+    @field_validator("rules_api_url")
+    @classmethod
+    def _validate_rules_api_url(cls, value: str | None) -> str | None:
+        """Fail at startup, not at the one-shot rules fetch. ``otlp_endpoint`` stays
+        permissive: bare ``host:port`` is a valid gRPC exporter form."""
+        if value is not None and not value.startswith(("http://", "https://")):
+            msg = "rules_api_url must be an http:// or https:// URL"
+            raise ValueError(msg)
+        return value

@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from channel_relay.config.json_schema import generate_json_schema
-from channel_relay.config.loader import load_config
+from channel_relay.config.loader import ConfigValidationError, load_config
 from channel_relay.config.models import AllowedOperation, Authorization, ChannelConfig, ChannelType, RelayConfig
 
 
@@ -141,8 +141,39 @@ def test_loader_reads_valid_config(tmp_path: Path) -> None:
 def test_loader_aborts_on_invalid_config(tmp_path: Path) -> None:
     path = tmp_path / "relay.json"
     path.write_text(json.dumps({"channels": [{"name": "x", "type": "bogus"}]}))
-    with pytest.raises(ValidationError):
+    with pytest.raises(ConfigValidationError):
         load_config(path)
+
+
+def test_loader_error_never_contains_credential_values(tmp_path: Path) -> None:
+    """A failing credentials block must never leak its values into the raised error."""
+    cfg = {
+        "channels": [
+            {
+                "name": "tp",
+                "type": "travelport",
+                "credentials": {"enabled": True, "password": "SUPERSECRET", "login_id": 12345},
+            }
+        ]
+    }
+    path = tmp_path / "relay.json"
+    path.write_text(json.dumps(cfg))
+    with pytest.raises(ConfigValidationError) as excinfo:
+        load_config(path)
+    rendered = f"{excinfo.value!s} {excinfo.value!r}"
+    assert "SUPERSECRET" not in rendered
+    assert "12345" not in rendered
+    assert "channels.0.credentials" in str(excinfo.value)
+
+
+def test_loader_error_has_no_cause_chain(tmp_path: Path) -> None:
+    """The original ValidationError (which embeds input values) must not chain through."""
+    path = tmp_path / "relay.json"
+    path.write_text(json.dumps({"channels": [{"name": "x", "type": "bogus"}]}))
+    with pytest.raises(ConfigValidationError) as excinfo:
+        load_config(path)
+    assert excinfo.value.__cause__ is None
+    assert excinfo.value.__suppress_context__
 
 
 def test_loader_aborts_on_missing_file(tmp_path: Path) -> None:
@@ -152,3 +183,47 @@ def test_loader_aborts_on_missing_file(tmp_path: Path) -> None:
 
 def test_empty_channels_is_valid() -> None:
     assert RelayConfig().channels == []
+
+
+def test_duplicate_channel_names_rejected() -> None:
+    with pytest.raises(ValidationError, match="tf"):
+        RelayConfig.model_validate(
+            {
+                "channels": [
+                    {"name": "tf", "type": "travelfusion"},
+                    {"name": "tf", "type": "sabre"},
+                ]
+            }
+        )
+
+
+def test_distinct_channel_names_accepted() -> None:
+    config = RelayConfig.model_validate(
+        {
+            "channels": [
+                {"name": "tf", "type": "travelfusion"},
+                {"name": "sabre", "type": "sabre"},
+            ]
+        }
+    )
+    assert len(config.channels) == 2
+
+
+def test_proxy_pass_requires_http_scheme() -> None:
+    with pytest.raises(ValidationError):
+        ChannelConfig(name="x", type=ChannelType.TRAVELPORT, proxy_pass="webservices.example.com")
+    with pytest.raises(ValidationError):
+        ChannelConfig(name="x", type=ChannelType.TRAVELPORT, proxy_pass="ftp://example.com")
+    channel = ChannelConfig(name="x", type=ChannelType.TRAVELPORT, proxy_pass="http://mock-channel:9000")
+    assert channel.proxy_pass == "http://mock-channel:9000"
+
+
+def test_host_rejects_scheme_path_and_empty() -> None:
+    with pytest.raises(ValidationError):
+        ChannelConfig(name="x", type=ChannelType.TRAVELPORT, host="https://example.com")
+    with pytest.raises(ValidationError):
+        ChannelConfig(name="x", type=ChannelType.TRAVELPORT, host="example.com/base")
+    with pytest.raises(ValidationError):
+        ChannelConfig(name="x", type=ChannelType.TRAVELPORT, host="")
+    channel = ChannelConfig(name="x", type=ChannelType.TRAVELPORT, host="example.com")
+    assert channel.host == "example.com"
