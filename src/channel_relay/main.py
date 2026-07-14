@@ -16,6 +16,8 @@ import uvicorn
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from loguru import logger
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.sdk.metrics.export import MetricReader
 from starlette.responses import Response
 
@@ -155,6 +157,9 @@ def create_app(
 
     meter_provider = build_meter_provider(settings, reader=metric_reader)
     metrics = RelayMetrics(meter_provider.get_meter(METER_NAME))
+    # Auto-instrumentation runs whenever metrics are collected — i.e. also when a test injects a
+    # ``metric_reader`` without an OTLP endpoint. Gate purely on the enable toggle.
+    metrics_instrumentation = settings.telemetry_metrics_enabled or metric_reader is not None
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
@@ -174,6 +179,11 @@ def create_app(
         owns_client = application.state.client is None
         if owns_client:
             application.state.client = build_http_client(settings)
+        # RED metrics via OTel auto-instrumentation, bound to this app's per-app meter provider
+        # (never the global one, §11) so parallel app instances in tests don't cross-contaminate.
+        # Per-client, not global, for the same isolation reason; uninstrumented on teardown.
+        if metrics_instrumentation:
+            HTTPXClientInstrumentor.instrument_client(application.state.client, meter_provider=meter_provider)
         # Rules: one startup fetch with baked fallback; no polling (§8.8, D7).
         pii_required = application.state.config is not None and any(
             channel.pii.enabled for channel in application.state.config.channels
@@ -188,8 +198,12 @@ def create_app(
         try:
             yield
         finally:
+            if metrics_instrumentation and application.state.client is not None:
+                HTTPXClientInstrumentor.uninstrument_client(application.state.client)
             if owns_client:
                 await application.state.client.aclose()
+            if metrics_instrumentation:
+                FastAPIInstrumentor.uninstrument_app(application)
             meter_provider.shutdown()
 
     application = FastAPI(
@@ -207,6 +221,15 @@ def create_app(
     application.state.metrics = metrics
     application.state.meter_provider = meter_provider
     application.state.started_at = time.time()
+    # Server-side RED (http.server.request.duration). Health probes are excluded so k8s
+    # liveness/readiness traffic doesn't drown the request histogram. Bound to the per-app
+    # meter provider; uninstrumented on shutdown (see lifespan finally).
+    if metrics_instrumentation:
+        FastAPIInstrumentor.instrument_app(
+            application,
+            meter_provider=meter_provider,
+            excluded_urls="liveness,readiness",
+        )
 
     @application.get("/liveness")
     async def liveness() -> dict[str, str]:

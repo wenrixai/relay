@@ -30,6 +30,11 @@ def _metric_points(reader: InMemoryMetricReader, name: str) -> list[Any]:
     return points
 
 
+def _metric_names(reader: InMemoryMetricReader) -> set[str]:
+    data = reader.get_metrics_data()
+    return {metric.name for rm in data.resource_metrics for sm in rm.scope_metrics for metric in sm.metrics}
+
+
 def test_relay_metrics_counter_and_gauge() -> None:
     reader = InMemoryMetricReader()
     provider = MeterProvider(metric_readers=[reader])
@@ -101,6 +106,87 @@ def test_upstream_timeout_increments_metric() -> None:
     points = _metric_points(reader, "channel_relay_upstream_timeouts_total")
     assert points and points[0].value == 1
     assert points[0].attributes["channel"] == "tf"
+
+
+def test_record_request_buckets_by_status_class() -> None:
+    reader = InMemoryMetricReader()
+    provider = MeterProvider(metric_readers=[reader])
+    metrics = RelayMetrics(provider.get_meter(METER_NAME))
+    metrics.record_request("sabre", 200)
+    metrics.record_request("sabre", 204)
+    metrics.record_request("sabre", 404)
+    metrics.record_request("sabre", 502)
+
+    points = _metric_points(reader, "channel_relay_requests_total")
+    by_class = {p.attributes["status_class"]: p.value for p in points}
+    assert {p.attributes["channel"] for p in points} == {"sabre"}
+    assert by_class == {"2xx": 2, "4xx": 1, "5xx": 1}
+
+
+def test_record_upstream_error() -> None:
+    reader = InMemoryMetricReader()
+    provider = MeterProvider(metric_readers=[reader])
+    metrics = RelayMetrics(provider.get_meter(METER_NAME))
+    metrics.record_upstream_error("tf")
+    metrics.record_upstream_error("tf")
+
+    points = _metric_points(reader, "channel_relay_upstream_errors_total")
+    assert points and points[0].value == 2
+    assert points[0].attributes["channel"] == "tf"
+
+
+def test_requests_total_and_http_duration_recorded_through_relay() -> None:
+    reader = InMemoryMetricReader()
+    config = RelayConfig(channels=[ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION)])
+    app = create_app(
+        config=config,
+        http_client=httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(200))),
+        metric_reader=reader,
+    )
+    with TestClient(app) as client:
+        assert client.get("/liveness").status_code == 200  # excluded from server metrics
+        assert client.get("/channel/tf/op").status_code == 200
+
+    # Custom per-channel counter fires with the friendly channel name and a 2xx class.
+    points = _metric_points(reader, "channel_relay_requests_total")
+    assert points and points[0].value == 1
+    assert points[0].attributes == {"channel": "tf", "status_class": "2xx"}
+
+    # Auto-instrumentation RED: a server-side and a client-side HTTP duration metric exist
+    # (semconv metric names differ by opt-in, so match structurally).
+    names = _metric_names(reader)
+    server = [n for n in names if n.startswith("http.server") and "duration" in n]
+    client_side = [n for n in names if n.startswith("http.client") and "duration" in n]
+    assert server, f"no server duration metric in {names}"
+    assert client_side, f"no client duration metric in {names}"
+
+    # excluded_urls kept /liveness out of the server histogram.
+    server_points = _metric_points(reader, server[0])
+    routes = {p.attributes.get("http.route") for p in server_points}
+    assert "/liveness" not in routes
+
+
+def test_upstream_error_increments_metric_through_relay() -> None:
+    reader = InMemoryMetricReader()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("refused", request=request)
+
+    config = RelayConfig(channels=[ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION)])
+    app = create_app(
+        config=config,
+        http_client=httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+        metric_reader=reader,
+    )
+    with TestClient(app) as client:
+        assert client.get("/channel/tf/op").status_code == 502
+
+    errors = _metric_points(reader, "channel_relay_upstream_errors_total")
+    assert errors and errors[0].value == 1
+    assert errors[0].attributes["channel"] == "tf"
+
+    requests = _metric_points(reader, "channel_relay_requests_total")
+    assert requests and requests[0].attributes == {"channel": "tf", "status_class": "5xx"}
 
 
 def test_access_log_fields() -> None:
