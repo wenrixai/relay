@@ -1,6 +1,6 @@
 # Agent Operating Rules — Wenrix Channel Relay (v2)
 
-Agent/developer operating rules for this repository. This file is about **how to work**, not what to
+Agent/developer operating rules for this repository. This file is about how to work, not what to
 build. Canonical requirements live elsewhere; read them first:
 
 - **`openspec/specs/`** — product, security, architecture, and configuration requirements
@@ -39,6 +39,7 @@ pre-commit run --all-files
   bodies. Credential swaps and redaction are structural.
 - Logging: Loguru JSON. Log `x-wenrix-trace-id`; never log bodies, PII, keys, or credentials.
 - Keep middleware stages small and independently testable.
+- Use OpenSpec only for meaningful spec changing changes; not chores or very small bugfixes
 
 ## Security (hard constraints)
 - Field crypto: AES-256-CTR, HKDF `K_enc`, keyring by 1-byte epoch; smaz-compress before encrypt
@@ -72,4 +73,3 @@ Use `skill-creator` for: `channel-implementation` (route, parser, structural swa
 - Use `xmltodict`, unhardened XML parsing, regex find-and-replace on bodies, or text credential swap.
 - Add retries, periodic rule polling, or regenerate the PII master key on `helm upgrade`.
 - Introduce slow tests or real network calls in the suite.
-- Break `WP_*` backward compatibility without an OpenSpec change and a migration note.
