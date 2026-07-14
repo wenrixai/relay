@@ -1,13 +1,16 @@
 # transparent-relay Specification
 
 ## Purpose
-Define channel routing, transparent forwarding, content handling, and no-retry behavior.
+Define channel routing, transparent forwarding, content handling, and retry behavior.
 ## Requirements
 ### Requirement: Channel routing and forwarding
 
 The relay SHALL route both `/channel/{name}` and `/channel/{name}/{path}` to the resolved channel
-config and forward via httpx using per-channel connect/read timeouts, with **no retries**. The bare
-route is the empty-path compatibility form and follows the same processing and security pipeline.
+config and forward via httpx using per-channel connect/read timeouts, with **no request-level
+retries**: a request that has reached the upstream (i.e. any bytes sent) is never resent. The relay
+MAY retry a failed connection *attempt* (TCP/TLS connect, before any request bytes are sent) up to a
+configured bound, since no upstream side effect can have occurred yet. The bare route is the
+empty-path compatibility form and follows the same processing and security pipeline.
 
 #### Scenario: Request forwarded to channel
 - **WHEN** a request hits `/channel/<name>/<path>` for a configured channel
@@ -21,9 +24,16 @@ route is the empty-path compatibility form and follows the same processing and s
 - **WHEN** the `<name>` does not match a configured channel
 - **THEN** the relay returns 404
 
-#### Scenario: No retries on upstream call
-- **WHEN** an upstream call fails
-- **THEN** the relay does not retry the upstream request
+#### Scenario: No retry once a request reached the upstream
+- **WHEN** an upstream call fails after the request was sent (timeout, reset, non-2xx, or any
+  failure past connection establishment)
+- **THEN** the relay does not retry the request
+
+#### Scenario: Connection-attempt retry is safe
+- **WHEN** the relay cannot establish a connection to the channel's upstream (connect refused or
+  connect timeout, before any request bytes are sent)
+- **THEN** the shared client may retry the connection attempt up to the configured bound, and only
+  one HTTP request is ever sent to the channel for that call
 
 ### Requirement: Content handling and pass-through
 

@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     max_connections: int = Field(default=200, ge=1)
     max_keepalive_connections: int = Field(default=50, ge=0)
     keepalive_expiry: float = Field(default=30.0, ge=0.0)
+    # Connection-establishment retries only (httpcore retries a failed TCP/TLS connect before
+    # any request bytes are sent, so a retry here can never duplicate an upstream side effect).
+    # No retry ever happens once bytes have been written to the socket (§10.5, D12).
+    upstream_connect_retries: int = Field(default=2, ge=0)
     telemetry_logs_enabled: bool = True
     telemetry_metrics_enabled: bool = True
     otlp_endpoint: str | None = None

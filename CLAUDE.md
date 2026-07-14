@@ -27,8 +27,11 @@ channel; a zero-config channel is a straight pass-through.
    chores or tiny bugfixes.
 2. **No slow tests.** Every test finishes under the `pytest-timeout` (60s) and the `--fail-slow=500ms`
    gate. Mock the network.
-3. **No retries.** Upstream calls fail fast; never add retry loops (the client owns retries). No
-   periodic rule polling either — rules load once at startup.
+3. **No request-level retries.** Once a request reached the upstream, it fails fast — never add a
+   retry loop that could resend a request the channel may have processed (the client owns
+   request-level retries). A pre-send connection-attempt retry (`RELAY_UPSTREAM_CONNECT_RETRIES`,
+   §10.5) is the only exception — safe because no bytes were sent. No periodic rule polling either —
+   rules load once at startup.
 4. **Never weaken crypto or leak secrets** (see Security below).
 5. **Stay transparent.** The channel must never see Wenrix/forwarding/hop-by-hop headers or a
    `Server` header, and must receive de-anonymized (plaintext) requests.
