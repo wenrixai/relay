@@ -82,6 +82,9 @@ def test_admin_flare_returns_redacted_diagnostics_snapshot() -> None:
     assert body["runtime"]["hostname"]
     assert body["readiness"] == {"status": "ready", "reasons": []}
     assert body["settings"]["basic_auth"] == {"enabled": True, "configured": True}
+    # mtls_enforced reflects real enforcement (material present), not the bare flag.
+    assert body["settings"]["mtls_enabled"] is False
+    assert body["settings"]["mtls_enforced"] is False
     assert body["settings"]["otlp_endpoint_configured"] is True
     assert body["settings"]["rules_api_url_configured"] is True
     assert body["settings"]["pii_keyring_configured"] is True

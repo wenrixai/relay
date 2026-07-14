@@ -39,6 +39,57 @@ def test_startup_tolerates_auth_enabled_with_credentials() -> None:
     validate_auth_config(settings)  # no raise
 
 
+def test_startup_aborts_when_mtls_enabled_without_material() -> None:
+    # Enabling mTLS without the cert/key/CA material must fail closed, not boot with the
+    # data plane unauthenticated (the documented basic-off + mtls-on switch).
+    settings = Settings(basic_auth_enabled=False, mtls_enabled=True)
+    with pytest.raises(RuntimeError, match="mtls|mTLS|material|certificate"):
+        validate_auth_config(settings)
+
+
+def test_startup_ok_when_mtls_enabled_with_material(tmp_path: Any) -> None:
+    ca = tmp_path / "ca.pem"
+    cert = tmp_path / "cert.pem"
+    key = tmp_path / "key.pem"
+    for f in (ca, cert, key):
+        f.write_text("x", encoding="utf-8")
+    settings = Settings(
+        basic_auth_enabled=False,
+        mtls_enabled=True,
+        mtls_ca_file=str(ca),
+        tls_cert_file=str(cert),
+        tls_key_file=str(key),
+    )
+    validate_auth_config(settings)  # no raise: mTLS is enforceable
+
+
+def test_cli_wires_mtls_ssl_kwargs(monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> None:
+    import ssl
+
+    ca = tmp_path / "ca.pem"
+    cert = tmp_path / "cert.pem"
+    key = tmp_path / "key.pem"
+    for f in (ca, cert, key):
+        f.write_text("x", encoding="utf-8")
+    monkeypatch.setenv("RELAY_BASIC_AUTH_ENABLED", "false")
+    monkeypatch.setenv("RELAY_MTLS_ENABLED", "true")
+    monkeypatch.setenv("RELAY_MTLS_CA_FILE", str(ca))
+    monkeypatch.setenv("RELAY_TLS_CERT_FILE", str(cert))
+    monkeypatch.setenv("RELAY_TLS_KEY_FILE", str(key))
+    captured: dict[str, Any] = {}
+
+    def fake_run(app: str, **kwargs: Any) -> None:
+        captured.update(kwargs)
+
+    monkeypatch.setattr("uvicorn.run", fake_run)
+    cli()
+    assert captured["ssl_certfile"] == str(cert)
+    assert captured["ssl_keyfile"] == str(key)
+    assert captured["ssl_ca_certs"] == str(ca)
+    assert captured["ssl_cert_reqs"] == ssl.CERT_REQUIRED
+    assert captured["port"] == Settings().tls_port
+
+
 def _capture_warnings(config: RelayConfig | None) -> str:
     sink = io.StringIO()
     sink_id = logger.add(sink, level="WARNING")

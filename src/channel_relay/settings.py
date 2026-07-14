@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     tls_enabled: bool = False
     tls_port: int = Field(default=18443, ge=1, le=65535)
     mtls_enabled: bool = False
+    # mTLS material: server cert/key for the TLS listener and the CA bundle used to verify
+    # client certificates. All three are required when mtls_enabled (validated at startup).
+    tls_cert_file: str | None = None
+    tls_key_file: str | None = None
+    mtls_ca_file: str | None = None
     basic_auth_enabled: bool = True
     basic_auth_user: str | None = None
     basic_auth_pass: str | None = None

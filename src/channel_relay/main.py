@@ -6,10 +6,12 @@ the app with health routes; feature stages are added per slice under TDD.
 
 from __future__ import annotations
 
+import ssl
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 
 import httpx
 import uvicorn
@@ -27,7 +29,12 @@ from channel_relay.config.loader import load_config
 from channel_relay.config.models import RelayConfig
 from channel_relay.health import readiness_reasons
 from channel_relay.middleware.access_log import log_access
-from channel_relay.middleware.auth import auth_active, verify_admin_basic_auth, verify_basic_auth
+from channel_relay.middleware.auth import (
+    auth_active,
+    mtls_material_complete,
+    verify_admin_basic_auth,
+    verify_basic_auth,
+)
 from channel_relay.observability.logging import configure_logging
 from channel_relay.observability.metrics import METER_NAME, RelayMetrics, build_meter_provider
 from channel_relay.pii.crypto import Keyring, load_keyring
@@ -62,17 +69,25 @@ def build_keyring(settings: Settings, config: RelayConfig | None) -> Keyring | N
 
 
 def validate_auth_config(settings: Settings) -> None:
-    """Abort startup when basic auth is enabled but no credentials are configured (§9.2).
+    """Abort startup when a client-auth mechanism is enabled but not actually enforceable (§9.2).
 
-    Fail closed: an enabled-but-unconfigured relay must refuse to boot rather than serve
-    the data-plane routes open. Serving open is permitted only when basic auth is
-    explicitly disabled (``basic_auth_enabled=False``).
+    Fail closed: an enabled-but-unconfigured mechanism must refuse to boot rather than serve the
+    data-plane routes open. Basic auth enabled without credentials aborts; mTLS enabled without
+    its cert/key/CA material aborts. Serving open is permitted only when every mechanism is
+    explicitly disabled (``basic_auth_enabled=false`` and ``mtls_enabled=false``).
     """
     if settings.basic_auth_enabled and not auth_active(settings):
         msg = (
             "basic auth is enabled but no credentials are configured "
             "(set RELAY_BASIC_AUTH_USER and RELAY_BASIC_AUTH_PASS, "
             "or disable auth with RELAY_BASIC_AUTH_ENABLED=false)"
+        )
+        raise RuntimeError(msg)
+    if settings.mtls_enabled and not mtls_material_complete(settings):
+        msg = (
+            "mTLS is enabled but its certificate material is incomplete or missing "
+            "(set RELAY_TLS_CERT_FILE, RELAY_TLS_KEY_FILE, and RELAY_MTLS_CA_FILE to existing "
+            "files, or disable mTLS with RELAY_MTLS_ENABLED=false)"
         )
         raise RuntimeError(msg)
 
@@ -264,13 +279,29 @@ def cli() -> None:
     to 60s; the IaC pins 130s) or the LB reuses connections uvicorn has already closed →
     intermittent 502s. ``forwarded_allow_ips="*"`` is safe because deployment security
     groups/NetworkPolicies restrict ingress to the load balancer.
+
+    When mTLS is enabled the listener terminates TLS and requires a verified client
+    certificate (``ssl_cert_reqs=CERT_REQUIRED`` against the configured CA), so unverified
+    clients are rejected at the handshake before any route runs; it binds ``tls_port``.
     """
-    uvicorn.run(
-        "channel_relay.main:app",
-        host="0.0.0.0",  # relay binds all interfaces inside its container
-        port=Settings().port,
-        server_header=False,
-        timeout_keep_alive=75,
-        proxy_headers=True,
-        forwarded_allow_ips="*",
-    )
+    settings = Settings()
+    kwargs: dict[str, Any] = {
+        "host": "0.0.0.0",  # relay binds all interfaces inside its container
+        "port": settings.port,
+        "server_header": False,
+        "timeout_keep_alive": 75,
+        "proxy_headers": True,
+        "forwarded_allow_ips": "*",
+    }
+    if settings.mtls_enabled:
+        # Fail closed before binding: startup validation also enforces this, but ssl kwargs are
+        # built here, ahead of the lifespan, so refuse rather than start an unenforced listener.
+        validate_auth_config(settings)
+        kwargs.update(
+            port=settings.tls_port,
+            ssl_certfile=settings.tls_cert_file,
+            ssl_keyfile=settings.tls_key_file,
+            ssl_ca_certs=settings.mtls_ca_file,
+            ssl_cert_reqs=ssl.CERT_REQUIRED,
+        )
+    uvicorn.run("channel_relay.main:app", **kwargs)

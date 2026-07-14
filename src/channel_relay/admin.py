@@ -14,7 +14,7 @@ from fastapi import Request
 from channel_relay import __version__
 from channel_relay.config.models import ChannelConfig, RelayConfig
 from channel_relay.health import readiness_reasons
-from channel_relay.middleware.auth import auth_active
+from channel_relay.middleware.auth import auth_active, mtls_material_complete
 from channel_relay.observability.metrics import RelayMetrics
 from channel_relay.pii.crypto import Keyring
 from channel_relay.settings import Settings
@@ -84,6 +84,9 @@ def diagnostics_snapshot(request: Request) -> dict[str, Any]:
             "tls_enabled": settings.tls_enabled,
             "tls_port": settings.tls_port,
             "mtls_enabled": settings.mtls_enabled,
+            # Enforcement, not intent: true only when the cert/key/CA material is actually present
+            # so the flag alone never over-reports protection.
+            "mtls_enforced": mtls_material_complete(settings),
             "basic_auth": {
                 "enabled": settings.basic_auth_enabled,
                 "configured": auth_active(settings),
