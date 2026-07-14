@@ -40,6 +40,7 @@ class _MetricTotals:
     xml_parse_errors: dict[str, dict[str, int]] = field(default_factory=dict)
     operations_denied: dict[str, int] = field(default_factory=dict)
     uncovered_operations: dict[str, dict[str, int]] = field(default_factory=dict)
+    rule_namespace_misses: dict[str, int] = field(default_factory=dict)
 
     @staticmethod
     def increment(values: dict[str, int], key: str, count: int = 1) -> None:
@@ -69,6 +70,7 @@ class _MetricTotals:
             "pii_uncovered_operation_total": {
                 channel: dict(sorted(counts.items())) for channel, counts in sorted(self.uncovered_operations.items())
             },
+            "rule_namespace_miss_total": dict(sorted(self.rule_namespace_misses.items())),
         }
 
 
@@ -146,6 +148,11 @@ class RelayMetrics:  # pylint: disable=too-many-instance-attributes
             unit="1",
             description="PII-enabled responses whose operation matched no redaction rules (forwarded).",
         )
+        self._rule_namespace_misses: OtelCounter = meter.create_counter(
+            _metric_name("rule_namespace_miss_total"),
+            unit="1",
+            description="Rule paths that resolved to a no-match because a namespace prefix was undeclared.",
+        )
 
     def _observe_channels(
         self,
@@ -203,6 +210,11 @@ class RelayMetrics:  # pylint: disable=too-many-instance-attributes
         """Record a PII-enabled response forwarded with no matching redaction rules."""
         self._totals.increment_nested(self._totals.uncovered_operations, channel, operation, 1)
         self._uncovered_operations.add(1, {"channel": channel, "operation": operation})
+
+    def record_rule_namespace_miss(self, channel: str) -> None:
+        """Record a rule path that matched nothing due to an undeclared namespace prefix."""
+        self._totals.increment(self._totals.rule_namespace_misses, channel)
+        self._rule_namespace_misses.add(1, {"channel": channel})
 
     def snapshot(self) -> dict[str, object]:
         """Return safe in-process metric totals for admin diagnostics."""

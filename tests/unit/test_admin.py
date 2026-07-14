@@ -125,6 +125,7 @@ def test_admin_flare_includes_in_process_statistics() -> None:
     app.state.metrics.record_xml_parse_error("sabre-prod", "invalid_xml")
     app.state.metrics.record_operation_denied("sabre-prod")
     app.state.metrics.record_uncovered_operation("sabre-prod", "PassengerDetailsRS")
+    app.state.metrics.record_rule_namespace_miss("sabre-prod")
 
     with client:
         resp = client.get("/admin/flare", headers={"authorization": _basic("admin", "secret-pass")})
@@ -140,4 +141,5 @@ def test_admin_flare_includes_in_process_statistics() -> None:
         "xml_parse_errors_total": {"sabre-prod": {"invalid_xml": 1}},
         "operations_denied_total": {"sabre-prod": 1},
         "pii_uncovered_operation_total": {"sabre-prod": {"PassengerDetailsRS": 1}},
+        "rule_namespace_miss_total": {"sabre-prod": 1},
     }

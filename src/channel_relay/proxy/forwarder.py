@@ -408,6 +408,12 @@ def _response_pii_stage(
     the coverage-gap metric is emitted so the gap is discoverable (§pii-coverage-policy, D1).
     """
     channel = ctx.channel
+    metrics = ctx.metrics
+
+    def _namespace_miss() -> None:
+        if metrics is not None:
+            metrics.record_rule_namespace_miss(channel.name)
+
     try:
         # httpx already decoded any content-encoding, so `content` is plain XML.
         outcome = redact_response(
@@ -418,6 +424,7 @@ def _response_pii_stage(
             force_redact=channel.pii.force_redact,
             max_bytes=ctx.max_inspect_bytes,
             operation_parser=get_handler(channel.type).parse_operation,
+            namespace_miss_hook=_namespace_miss,
         )
     except XmlOversizeError as exc:
         _record_xml_error(ctx.metrics, channel.name, exc.kind)

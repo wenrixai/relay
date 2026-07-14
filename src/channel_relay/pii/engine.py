@@ -59,6 +59,7 @@ class _RedactionCtx:
     collector: _Collector
     token_cache: _TokenCache
     force_redact: bool
+    on_namespace_miss: Callable[[], None] | None = None
 
 
 @dataclass(frozen=True)
@@ -136,11 +137,17 @@ def _apply_action(rule: FieldRule, value: str, ctx: _RedactionCtx) -> str | None
             assert_never(action)
 
 
-def _locate(root: etree._Element, rule: FieldRule | ReferenceRule) -> list[object]:
-    """Evaluate the rule's XPath; unknown prefixes/invalid paths are a no-match (§9.4)."""
+def _locate(root: etree._Element, rule: FieldRule | ReferenceRule, ctx: _RedactionCtx) -> list[object]:
+    """Evaluate the rule's XPath; unknown prefixes/invalid paths are a no-match (§9.4).
+
+    A namespace/XPath failure is observable, not silent: it emits the namespace-miss metric so a
+    rule-authoring typo (which yields zero redaction) is discoverable (redaction-engine spec).
+    """
     try:
         result = root.xpath(rule.path, namespaces=rule.namespaces or None)
     except etree.XPathError:
+        if ctx.on_namespace_miss is not None:
+            ctx.on_namespace_miss()
         return []
     return list(result) if isinstance(result, list) else []
 
@@ -300,7 +307,7 @@ def _redact_reference_rule(
         assert ctx.keyring is not None
     keyring = ctx.keyring
     deterministic = rule.action.deterministic
-    for node in _locate(root, rule):
+    for node in _locate(root, rule, ctx):
         if not isinstance(node, etree._Element):  # pylint: disable=protected-access  # lxml public-in-practice
             continue
         text = node.text
@@ -322,7 +329,7 @@ def _redact_reference_rule(
 
 def _redact_field_rule(root: etree._Element, rule: FieldRule, ctx: _RedactionCtx) -> int:
     """Apply one field rule and return the number of rewritten fields/spans."""
-    located = _locate(root, rule)
+    located = _locate(root, rule, ctx)
     if rule.required and not located:
         msg = f"required rule {rule.id!r} matched no nodes"
         raise RedactionError(msg)
@@ -342,6 +349,7 @@ def redact_response(  # pylint: disable=too-many-arguments,too-many-locals
     force_redact: bool = False,
     max_bytes: int | None = None,
     operation_parser: Callable[[etree._Element], str] = parse_operation,
+    namespace_miss_hook: Callable[[], None] | None = None,
 ) -> RedactionOutcome:
     """Redact a channel response per the matching rules (§8.5).
 
@@ -360,7 +368,13 @@ def redact_response(  # pylint: disable=too-many-arguments,too-many-locals
     kwargs = {"max_bytes": max_bytes} if max_bytes is not None else {}
     root = parse_bytes(body, **kwargs)
     counts: dict[str, int] = {}
-    ctx = _RedactionCtx(keyring=keyring, collector={}, token_cache={}, force_redact=force_redact)
+    ctx = _RedactionCtx(
+        keyring=keyring,
+        collector={},
+        token_cache={},
+        force_redact=force_redact,
+        on_namespace_miss=namespace_miss_hook,
+    )
     try:
         operation = operation_parser(root)
         selected = _select_rules_for_channels(ruleset, channel, operation)

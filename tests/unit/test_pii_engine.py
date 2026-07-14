@@ -106,6 +106,25 @@ class TestRedaction:
         # name + email + card + address + passport + loyalty attr; FrequentFlyer skipped.
         assert sum(counts.values()) == 6
 
+    def test_unknown_namespace_prefix_emits_miss_metric(
+        self, response_body: bytes, ruleset: RuleSet, keyring: Keyring
+    ) -> None:
+        # The undeclared-prefix no-match must be observable, not silent (redaction-engine spec).
+        misses = 0
+
+        def _hook() -> None:
+            nonlocal misses
+            misses += 1
+
+        redact_response(
+            response_body,
+            channel="mock",
+            ruleset=ruleset,
+            keyring=keyring,
+            namespace_miss_hook=_hook,
+        )
+        assert misses >= 1
+
     def test_structure_and_namespaces_preserved(self, response_body: bytes, ruleset: RuleSet, keyring: Keyring) -> None:
         redacted, _ = redact_response_body(response_body, channel="mock", ruleset=ruleset, keyring=keyring)
         root = parse_bytes(redacted)
