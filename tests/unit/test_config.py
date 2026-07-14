@@ -110,6 +110,25 @@ def test_operation_authorization_must_be_explicitly_enabled() -> None:
     assert channel.operation_authorization_enabled is True
 
 
+def test_tls_verification_on_by_default() -> None:
+    channel = ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION)
+    assert channel.tls.insecure_skip_verify is False
+
+
+def test_tls_insecure_skip_verify_can_be_enabled() -> None:
+    channel = ChannelConfig(
+        name="tf",
+        type=ChannelType.TRAVELFUSION,
+        tls={"insecure_skip_verify": True},
+    )
+    assert channel.tls.insecure_skip_verify is True
+
+
+def test_tls_unknown_field_rejected() -> None:
+    with pytest.raises(ValidationError):
+        ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION, tls={"bogus": True})
+
+
 def test_unknown_channel_type_rejected() -> None:
     with pytest.raises(ValidationError):
         ChannelConfig(name="x", type="not-a-channel")  # type: ignore[arg-type]
@@ -126,6 +145,12 @@ def test_generated_schema_marks_name_and_type_required() -> None:
     defs = schema["$defs"]
     channel_schema = defs["ChannelConfig"]
     assert set(channel_schema["required"]) >= {"name", "type"}
+
+
+def test_generated_schema_includes_tls_insecure_skip_verify() -> None:
+    schema = generate_json_schema()
+    defs = schema["$defs"]
+    assert "insecure_skip_verify" in defs["ChannelTLS"]["properties"]
 
 
 def test_loader_reads_valid_config(tmp_path: Path) -> None:

@@ -18,6 +18,7 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import MetricReader
 from starlette.responses import Response
 
@@ -49,16 +50,21 @@ def client_limits(settings: Settings) -> httpx.Limits:
     )
 
 
-def build_http_client(settings: Settings) -> httpx.AsyncClient:
-    """The one shared upstream client: tuned pool, HTTP/1.1, connect-only retries (§10.5, D12).
+def build_http_client(settings: Settings, *, verify: bool = True) -> httpx.AsyncClient:
+    """The shared upstream client: tuned pool, HTTP/1.1, connect-only retries (§10.5, D12).
 
     ``retries`` here retries a failed TCP/TLS *connection attempt* only (httpcore semantics);
     it never re-sends a request once bytes have gone out, so it cannot double-process an
     upstream operation. The relay still does not retry at the request level — that policy
     stays with the calling client.
+
+    ``verify=False`` builds the second, insecure-TLS pool used only by channels that
+    opt out of upstream certificate verification (`tls.insecure_skip_verify`).
     """
-    transport = httpx.AsyncHTTPTransport(retries=settings.upstream_connect_retries, limits=client_limits(settings))
-    return httpx.AsyncClient(transport=transport)
+    transport = httpx.AsyncHTTPTransport(
+        retries=settings.upstream_connect_retries, limits=client_limits(settings), verify=verify
+    )
+    return httpx.AsyncClient(transport=transport, verify=verify)
 
 
 def build_keyring(settings: Settings, config: RelayConfig | None) -> Keyring | None:
@@ -129,6 +135,73 @@ def warn_unenforced_config(config: RelayConfig | None) -> None:
             )
 
 
+def warn_insecure_tls_config(config: RelayConfig | None) -> None:
+    """Warn loudly for every channel that disables upstream TLS certificate verification.
+
+    `tls.insecure_skip_verify` is an explicit opt-out (default false); startup does not
+    abort because of it, but every boot must surface which channels weakened transport
+    security, matching `warn_unenforced_config`'s shape for `authorization.external`.
+    """
+    if config is None:
+        return
+    for channel in config.channels:
+        if channel.tls.insecure_skip_verify:
+            logger.warning(
+                "channel {channel!r}: tls.insecure_skip_verify is enabled; upstream TLS "
+                "server certificate verification is DISABLED for this channel",
+                channel=channel.name,
+            )
+
+
+def _load_and_validate_startup_config(settings: Settings, application: FastAPI, metrics: RelayMetrics) -> None:
+    """Load config once, then run its fail-closed checks and accepted-but-notable warnings.
+
+    Missing file leaves ``application.state.config`` ``None`` (not-ready, §13.5); invalid
+    config or a swap-enabled channel missing credentials raises to abort startup.
+    """
+    if application.state.config is None:
+        application.state.config = _load_startup_config(settings)
+    if application.state.config is not None:
+        metrics.set_channels_configured(len(application.state.config.channels))
+        validate_credential_config(application.state.config)
+    warn_unenforced_config(application.state.config)
+    warn_insecure_tls_config(application.state.config)
+
+
+def _build_upstream_clients(settings: Settings, application: FastAPI) -> tuple[bool, bool]:
+    """Build the shared client and, if some channel needs it, the insecure-TLS client.
+
+    Returns ``(owns_client, owns_insecure_client)`` so the lifespan only closes what it
+    created (an injected test client is never closed here).
+    """
+    owns_client = application.state.client is None
+    if owns_client:
+        application.state.client = build_http_client(settings)
+    owns_insecure_client = application.state.insecure_client is None
+    insecure_tls_required = application.state.config is not None and any(
+        channel.tls.insecure_skip_verify for channel in application.state.config.channels
+    )
+    if owns_insecure_client and insecure_tls_required:
+        application.state.insecure_client = build_http_client(settings, verify=False)
+    return owns_client, owns_insecure_client
+
+
+def _instrument_http_clients(application: FastAPI, meter_provider: MeterProvider) -> None:
+    """RED metrics via OTel auto-instrumentation, bound to this app's per-app meter provider
+    (never the global one, §11) so parallel app instances in tests don't cross-contaminate.
+    Per-client, not global, for the same isolation reason; uninstrumented on teardown."""
+    HTTPXClientInstrumentor.instrument_client(application.state.client, meter_provider=meter_provider)
+    if application.state.insecure_client is not None:
+        HTTPXClientInstrumentor.instrument_client(application.state.insecure_client, meter_provider=meter_provider)
+
+
+def _uninstrument_http_clients(application: FastAPI) -> None:
+    if application.state.client is not None:
+        HTTPXClientInstrumentor.uninstrument_client(application.state.client)
+    if application.state.insecure_client is not None:
+        HTTPXClientInstrumentor.uninstrument_client(application.state.insecure_client)
+
+
 def _load_startup_config(settings: Settings) -> RelayConfig | None:
     """Load config on startup.
 
@@ -143,6 +216,7 @@ def _load_startup_config(settings: Settings) -> RelayConfig | None:
 def create_app(
     config: RelayConfig | None = None,
     http_client: httpx.AsyncClient | None = None,
+    insecure_http_client: httpx.AsyncClient | None = None,
     metric_reader: MetricReader | None = None,
 ) -> FastAPI:
     """Build the FastAPI application.
@@ -152,6 +226,9 @@ def create_app(
             from ``Settings.config_file``.
         http_client: an explicit httpx client (used in tests). When omitted, the lifespan
             creates and owns one.
+        insecure_http_client: an explicit ``verify=False`` httpx client (used in tests) for
+            channels with ``tls.insecure_skip_verify``. When omitted, the lifespan creates
+            and owns one only if some configured channel needs it.
         metric_reader: an explicit metric reader (used in tests) to collect metrics in
             memory; production uses the OTLP periodic exporter.
 
@@ -170,25 +247,12 @@ def create_app(
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
         # Basic auth: enabled without credentials → abort (fail closed, §9.2).
         validate_auth_config(settings)
-        # Load config once on startup unless one was injected (invalid → abort).
-        if application.state.config is None:
-            application.state.config = _load_startup_config(settings)
-        if application.state.config is not None:
-            metrics.set_channels_configured(len(application.state.config.channels))
-            # Credential swap enabled without configured auth → abort (fail closed at load).
-            validate_credential_config(application.state.config)
-        # Accepted-but-unenforced config (e.g. authorization.external) → loud warning.
-        warn_unenforced_config(application.state.config)
+        _load_and_validate_startup_config(settings, application, metrics)
         # PII keyring: invalid → abort; missing while PII enabled → abort (§8.3).
         application.state.keyring = build_keyring(settings, application.state.config)
-        owns_client = application.state.client is None
-        if owns_client:
-            application.state.client = build_http_client(settings)
-        # RED metrics via OTel auto-instrumentation, bound to this app's per-app meter provider
-        # (never the global one, §11) so parallel app instances in tests don't cross-contaminate.
-        # Per-client, not global, for the same isolation reason; uninstrumented on teardown.
+        owns_client, owns_insecure_client = _build_upstream_clients(settings, application)
         if metrics_instrumentation:
-            HTTPXClientInstrumentor.instrument_client(application.state.client, meter_provider=meter_provider)
+            _instrument_http_clients(application, meter_provider)
         # Rules: one startup fetch with baked fallback; no polling (§8.8, D7).
         pii_required = application.state.config is not None and any(
             channel.pii.enabled for channel in application.state.config.channels
@@ -203,10 +267,12 @@ def create_app(
         try:
             yield
         finally:
-            if metrics_instrumentation and application.state.client is not None:
-                HTTPXClientInstrumentor.uninstrument_client(application.state.client)
+            if metrics_instrumentation:
+                _uninstrument_http_clients(application)
             if owns_client:
                 await application.state.client.aclose()
+            if owns_insecure_client and application.state.insecure_client is not None:
+                await application.state.insecure_client.aclose()
             if metrics_instrumentation:
                 FastAPIInstrumentor.uninstrument_app(application)
             meter_provider.shutdown()
@@ -222,6 +288,7 @@ def create_app(
     application.state.settings = settings
     application.state.config = config
     application.state.client = http_client
+    application.state.insecure_client = insecure_http_client
     application.state.rules = None
     application.state.metrics = metrics
     application.state.meter_provider = meter_provider
@@ -276,9 +343,12 @@ def create_app(
         channel = find_channel(request.app.state.config, name)
         if channel is None:
             return JSONResponse(status_code=404, content={"error": "unknown_channel"})
+        upstream_client = (
+            request.app.state.insecure_client if channel.tls.insecure_skip_verify else request.app.state.client
+        )
         start = time.perf_counter()
         response = await forward(
-            request.app.state.client,
+            upstream_client,
             channel,
             path,
             request,

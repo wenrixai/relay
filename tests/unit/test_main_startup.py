@@ -14,7 +14,14 @@ import pytest
 from loguru import logger
 
 from channel_relay.config.models import RelayConfig
-from channel_relay.main import build_http_client, client_limits, cli, validate_auth_config, warn_unenforced_config
+from channel_relay.main import (
+    build_http_client,
+    client_limits,
+    cli,
+    validate_auth_config,
+    warn_insecure_tls_config,
+    warn_unenforced_config,
+)
 from channel_relay.settings import Settings
 
 
@@ -72,6 +79,37 @@ def test_no_warning_without_external_authorization() -> None:
     config = RelayConfig.model_validate({"channels": [{"name": "tf", "type": "travelfusion"}]})
     assert _capture_warnings(config) == ""
     assert _capture_warnings(None) == ""
+
+
+def test_insecure_tls_channel_warns_at_startup() -> None:
+    config = RelayConfig.model_validate(
+        {
+            "channels": [
+                {"name": "tp", "type": "travelport", "tls": {"insecure_skip_verify": True}},
+            ]
+        }
+    )
+    sink = io.StringIO()
+    sink_id = logger.add(sink, level="WARNING")
+    try:
+        warn_insecure_tls_config(config)
+    finally:
+        logger.remove(sink_id)
+    output = sink.getvalue()
+    assert "tp" in output
+    assert "TLS" in output
+
+
+def test_no_warning_without_insecure_tls_channel() -> None:
+    config = RelayConfig.model_validate({"channels": [{"name": "tf", "type": "travelfusion"}]})
+    sink = io.StringIO()
+    sink_id = logger.add(sink, level="WARNING")
+    try:
+        warn_insecure_tls_config(config)
+        warn_insecure_tls_config(None)
+    finally:
+        logger.remove(sink_id)
+    assert sink.getvalue() == ""
 
 
 def test_cli_uvicorn_hardening_kwargs(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -147,5 +185,27 @@ async def test_build_http_client_connect_retries_configurable(monkeypatch: pytes
     client = build_http_client(Settings(upstream_connect_retries=0))
     try:
         assert captured["retries"] == 0
+    finally:
+        await client.aclose()
+
+
+async def test_build_http_client_defaults_to_verifying_tls() -> None:
+    client = build_http_client(Settings())
+    try:
+        assert (
+            client._transport_for_url(httpx.URL("https://example.test"))._pool._ssl_context.verify_mode.name
+            != "CERT_NONE"
+        )  # noqa: SLF001
+    finally:
+        await client.aclose()
+
+
+async def test_build_http_client_verify_false_disables_tls_verification() -> None:
+    client = build_http_client(Settings(), verify=False)
+    try:
+        assert (
+            client._transport_for_url(httpx.URL("https://example.test"))._pool._ssl_context.verify_mode.name
+            == "CERT_NONE"
+        )  # noqa: SLF001
     finally:
         await client.aclose()
