@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion-baseline-2026-07-14",
+  "rules_version": "amadeus+sabre+travelfusion-baseline-2026-07-15",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -123,6 +123,22 @@
       },
       "pii_type": "person",
       "method": "mask"
+    },
+    {
+      "id": "amadeus.pnr.remark_ssn",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='RM']/a:otherDataFreetext/a:longFreetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "ssn",
+      "method": "mask",
+      "extract_patterns": [
+        {
+          "pattern": "(\\d{3}-\\d{2}-\\d{4})"
+        }
+      ]
     },
     {
       "id": "sabre.res.passenger_name",
@@ -298,6 +314,23 @@
       },
       "pii_type": "payment",
       "method": "mask"
+    },
+    {
+      "id": "sabre.res.remarks_ssn",
+      "channel": "sabre",
+      "operation": "^GetReservationRS$",
+      "path": "//s19:RemarkLine/s19:Text | //s19:GenericSpecialRequest/s19:FreeText | //s19:GenericSpecialRequest/s19:FullText | //s19:GenericSpecialRequests/s19:FreeText | //s19:GenericSpecialRequests/s19:FullText | //o14:ServiceRequest/o14:FreeText | //o14:ServiceRequest/o14:FullText",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
+        "o14": "http://services.sabre.com/res/or/v1_14"
+      },
+      "pii_type": "ssn",
+      "method": "mask",
+      "extract_patterns": [
+        {
+          "pattern": "(\\d{3}-\\d{2}-\\d{4})"
+        }
+      ]
     },
     {
       "id": "sabre.res.remarks_reference",
@@ -1006,6 +1039,22 @@
       },
       "pii_type": "visa",
       "method": "mask"
+    },
+    {
+      "id": "sabre.trip.remarks_ssn",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:RemarkLine/stl19:Text | //stl19:RemarkText | //stl19:GenericSpecialRequest/stl19:FreeText | //stl19:GenericSpecialRequest/stl19:FullText | //stl19:GenericSpecialRequests/stl19:FreeText | //stl19:GenericSpecialRequests/stl19:FullText | //stl19:FactHistory/stl19:FreeText | //stl19:FactHistory/stl19:FullText",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "ssn",
+      "method": "mask",
+      "extract_patterns": [
+        {
+          "pattern": "(\\d{3}-\\d{2}-\\d{4})"
+        }
+      ]
     },
     {
       "id": "sabre.trip.remarks_reference",

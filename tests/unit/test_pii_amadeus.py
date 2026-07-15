@@ -37,7 +37,7 @@ def test_operation_is_pnr_reply(response_body: bytes) -> None:
 
 def test_counts_match_baseline(response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
     _, counts = redact_response_body(response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring)
-    assert counts == {"person": 5, "frequent_flyer": 3, "phone": 2, "email": 2, "passport_id": 1}
+    assert counts == {"person": 5, "frequent_flyer": 3, "phone": 2, "email": 2, "passport_id": 1, "ssn": 1}
 
 
 def test_names_and_ff_number_encrypt_and_round_trip(
@@ -80,6 +80,17 @@ def test_contact_passport_masked_one_way(
         assert not node.startswith("ENC_")
     ssr_texts = [t for t in xml_texts(redacted, "freeText") if _MASKED_RE.fullmatch(t)]
     assert len(ssr_texts) == 6  # 2 CTCE + CTCM + DOCS + FQTS + RESTRICTED
+
+
+def test_ssn_in_general_remark_masked_one_way(
+    response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring
+) -> None:
+    redacted, counts = redact_response_body(
+        response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+    )
+    assert b"123-45-6789" not in redacted
+    assert counts["ssn"] == 1
+    assert b"PSGR SSN" in redacted and b"ON FILE" in redacted  # surrounding remark text preserved
 
 
 def test_non_pii_preserved(response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:

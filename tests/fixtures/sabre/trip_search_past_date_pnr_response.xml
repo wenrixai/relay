@@ -86,6 +86,14 @@
                                                 <stl19:AirlineCode>LA</stl19:AirlineCode>
                                                 <stl19:FullText>CTCM LA HK1/12065550102</stl19:FullText>
                                             </stl19:GenericSpecialRequest>
+                                            <stl19:GenericSpecialRequest id="25" msgType="S" type="G">
+                                                <stl19:Code>OTHS</stl19:Code>
+                                                <stl19:FreeText>PSGR SSN 123-45-6789 ON FILE</stl19:FreeText>
+                                                <stl19:ActionCode>HK</stl19:ActionCode>
+                                                <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                <stl19:AirlineCode>AS</stl19:AirlineCode>
+                                                <stl19:FullText>OTHS AS PSGR SSN 123-45-6789 ON FILE</stl19:FullText>
+                                            </stl19:GenericSpecialRequest>
                                             <stl19:GenericSpecialRequest id="163" msgType="S" type="G">
                                                 <stl19:Code>AUTO</stl19:Code>
                                                 <stl19:FreeText>.ASU SGL NON ELITE NON SAVER</stl19:FreeText>

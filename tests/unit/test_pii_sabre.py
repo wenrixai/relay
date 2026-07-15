@@ -157,6 +157,12 @@ class TestGetReservation:
         numbers = [t for t in xml_texts(redacted, "Number") if _MASKED_RE.fullmatch(t)]
         assert len(numbers) == 1
 
+    def test_ssn_in_remark_masked_one_way(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, counts = _redact(_fixture("get_reservation_response.xml"), baked_ruleset, pii_keyring)
+        assert b"123-45-6789" not in redacted
+        assert counts["ssn"] >= 1
+        assert b"PSGR SSN" in redacted and b"ON FILE" in redacted  # surrounding text preserved
+
     def test_history_fixture_full_coverage(
         self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
     ) -> None:
@@ -405,6 +411,11 @@ class TestTripSearchPastDatePnr:
     def test_non_pii_preserved(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
         redacted, _ = _redact(_fixture("trip_search_past_date_pnr_response.xml"), baked_ruleset, pii_keyring)
         assert b"EKQYAD" in redacted and b"0457976982139" in redacted
+
+    def test_ssn_in_remark_masked_one_way(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, counts = _redact(_fixture("trip_search_past_date_pnr_response.xml"), baked_ruleset, pii_keyring)
+        assert b"123-45-6789" not in redacted
+        assert counts["ssn"] >= 1
 
 
 class TestQueueAccessUncovered:

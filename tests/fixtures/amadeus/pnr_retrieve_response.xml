@@ -483,6 +483,23 @@
                     <elementManagementData>
                         <reference>
                             <qualifier>OT</qualifier>
+                            <number>37</number>
+                        </reference>
+                        <segmentName>RM</segmentName>
+                        <lineNumber>7</lineNumber>
+                    </elementManagementData>
+                    <otherDataFreetext>
+                        <freetextDetail>
+                            <subjectQualifier>3</subjectQualifier>
+                            <type>2</type>
+                        </freetextDetail>
+                        <longFreetext>PSGR SSN 123-45-6789 ON FILE</longFreetext>
+                    </otherDataFreetext>
+                </dataElementsIndiv>
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
                             <number>36</number>
                         </reference>
                         <segmentName>TK</segmentName>

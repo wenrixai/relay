@@ -410,6 +410,12 @@
                     <stl19:FullText>OTHS 1S PLS ADV TKT NBR BY 12JUN19/2359Z OR OS OPTG/MKTG FLTS WILL BE CANX / APPLIC
                         FARE RULE APPLIES IF IT DEMANDS EARLIER TKTG</stl19:FullText>
                 </stl19:GenericSpecialRequests>
+                <stl19:GenericSpecialRequests id="17" type="A" msgType="S" RPH="1">
+                    <stl19:Code>OTHS</stl19:Code>
+                    <stl19:FreeText>PSGR SSN 123-45-6789 ON FILE</stl19:FreeText>
+                    <stl19:AirlineCode>1S</stl19:AirlineCode>
+                    <stl19:FullText>OTHS 1S PSGR SSN 123-45-6789 ON FILE</stl19:FullText>
+                </stl19:GenericSpecialRequests>
                 <stl19:OpenReservationElements>
                     <or114:OpenReservationElement id="16" type="SRVC" elementId="pnr-16">
                         <or114:ServiceRequest airlineCode="1S" code="OTHS" serviceType="SSR" ssrType="AFX">
