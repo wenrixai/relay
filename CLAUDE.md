@@ -107,6 +107,8 @@ Two config layers, an app factory, a handler registry, and a linear forward pipe
 - XML only via the hardened lxml parser factory in `xml_ops.py` (no entities/DTD/network, size/depth
   limits). Never call `etree.fromstring` directly; never use `xmltodict` or text find-and-replace on
   bodies. Credential swaps and redaction are **structural** (parse → locate node → edit → re-serialize).
+  `extract_patterns` regex on a value already reached by XPath (e.g. an SSN inside a remark/free-text
+  node) is fine — the node is still located structurally; the regex only narrows the rewritten span.
 - Logging: Loguru JSON. Log `x-wenrix-trace-id`; never log bodies, PII, keys, or credentials.
 - Keep pipeline stages small and independently testable.
 
