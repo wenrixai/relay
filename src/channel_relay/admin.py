@@ -95,7 +95,6 @@ def diagnostics_snapshot(request: Request) -> dict[str, Any]:
             "telemetry_logs_enabled": settings.telemetry_logs_enabled,
             "telemetry_metrics_enabled": settings.telemetry_metrics_enabled,
             "otlp_endpoint_configured": settings.otlp_endpoint is not None,
-            "rules_api_url_configured": settings.rules_api_url is not None,
             "pii_keyring_configured": settings.pii_keyring is not None or settings.pii_keyring_file is not None,
             "pii_keyring_file_configured": settings.pii_keyring_file is not None,
             "pii_key_epoch_active_configured": settings.pii_key_epoch_active is not None,

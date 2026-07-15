@@ -1,9 +1,9 @@
 """End-to-end Amadeus PII baseline over the relay, driven by the baked fallback rules.
 
-No rules API is configured (``RELAY_RULES_API_URL`` unset), so the relay loads the shipped
-``rules_fallback.json`` Amadeus baseline. A PNR_Reply response has its names/FF encrypted and
-its contact/passport fields masked before reaching the client; encrypted tokens sent back on a
-later request are de-anonymized to plaintext before the relay forwards them upstream.
+The relay always loads the shipped ``rules_fallback.json`` Amadeus baseline. A PNR_Reply response
+has its names/FF encrypted and its contact/passport fields masked before reaching the client;
+encrypted tokens sent back on a later request are de-anonymized to plaintext before the relay
+forwards them upstream.
 """
 
 from __future__ import annotations
@@ -48,7 +48,6 @@ def mock_channel_fixture() -> MockChannel:
 @pytest.fixture(name="client")
 def client_fixture(mock_channel: MockChannel, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setenv("RELAY_PII_KEYRING", KEYRING_JSON)
-    monkeypatch.delenv("RELAY_RULES_API_URL", raising=False)
     config = RelayConfig(
         channels=[
             ChannelConfig(

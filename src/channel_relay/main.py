@@ -253,15 +253,11 @@ def create_app(
         owns_client, owns_insecure_client = _build_upstream_clients(settings, application)
         if metrics_instrumentation:
             _instrument_http_clients(application, meter_provider)
-        # Rules: one startup fetch with baked fallback; no polling (§8.8, D7).
+        # Rules: loaded once at startup from the baked bundle; no polling (§8.8, D7).
         pii_required = application.state.config is not None and any(
             channel.pii.enabled for channel in application.state.config.channels
         )
-        application.state.rules = await load_rules(
-            application.state.client,
-            settings.rules_api_url,
-            pii_required=pii_required,
-        )
+        application.state.rules = await load_rules(pii_required=pii_required)
         if application.state.rules is not None:
             metrics.set_rule_version(application.state.rules.rules_version)
         try:

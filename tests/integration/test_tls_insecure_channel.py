@@ -16,7 +16,6 @@ from channel_relay.main import create_app
 
 
 def test_no_insecure_client_when_no_channel_opts_out(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("RELAY_RULES_API_URL", raising=False)
     config = RelayConfig(channels=[ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION, host="tf.test")])
     app = create_app(
         config=config, http_client=httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(200)))
@@ -27,7 +26,6 @@ def test_no_insecure_client_when_no_channel_opts_out(monkeypatch: pytest.MonkeyP
 
 
 def test_insecure_client_built_when_a_channel_opts_out(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("RELAY_RULES_API_URL", raising=False)
     config = RelayConfig(
         channels=[
             ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION, host="tf.test"),
@@ -49,7 +47,6 @@ def test_insecure_client_built_when_a_channel_opts_out(monkeypatch: pytest.Monke
 
 
 def test_insecure_tls_channel_forwards_via_insecure_client(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("RELAY_RULES_API_URL", raising=False)
     verifying_calls: list[str] = []
     insecure_calls: list[str] = []
 

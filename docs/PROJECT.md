@@ -284,8 +284,9 @@ behind a feature flag for PII the channel *originates* that no structured rule e
 spans encrypted with the same codec.
 
 ### 8.8 Rule delivery
-Fetch latest versioned rules from the Wenrix rules API on startup; if unreachable, use the **baked
-fallback bundle** in the image. **No periodic polling.** Reject incompatible `schema_version`.
+Load versioned rules from the **baked bundle** in the image at startup. No remote fetch, no
+periodic polling. Reject incompatible `schema_version`. Rule updates ship by rebuilding the image
+with an updated bundle and redeploying.
 
 ### 8.9 Optional correlation (`pii_ref`) — later phase
 Opt-in `pii_ref = HMAC(K_ref, customer_id ‖ channel ‖ pnr_id ‖ passenger_id)[:12]`. Off by default.
@@ -520,7 +521,7 @@ required checks. Primary review skill: `thermo-nuclear-code-quality-review`.
 | D4 | Key rotation via 1-byte epoch keyring; master key from Helm create-if-absent Secret. |
 | D5 | lxml only, **hardened** (§9.4); `xmltodict` not used. |
 | D6 | Operation always parsed from the body (unspoofable). |
-| D7 | Rules: startup fetch + baked fallback; no periodic poll. |
+| D7 | Rules: baked bundle only, loaded at startup; no remote fetch, no periodic poll. |
 | D8 | Client auth: basic-auth default, mTLS opt-in. |
 | D9 | Telemetry: MVP in-process OTLP; bundled otelcol a later phase. |
 | D10 | Zero-config channels: only `name`+`type` required; swap & PII opt-in. |
@@ -536,7 +537,6 @@ required checks. Primary review skill: `thermo-nuclear-code-quality-review`.
 - O1: The single Wenrix-facing timeout/error diagnostic header (§9.1, §10) vs the "no extra headers"
   goal (spec requires it).
 - O2: Coverage gate % and per-test timeout threshold.
-- O3: Wenrix rules-API contract (URL, auth, response shape) for §8.8.
 - O4: Whether Farelogix `#FLX_*#` placeholders are guaranteed XML-embedded (structural) or may be
   raw-string (would need scoped, contextual substitution).
 - O5: Confirm the v1 upstream-session model is client-managed pass-through (§12.6), i.e. no relay-held

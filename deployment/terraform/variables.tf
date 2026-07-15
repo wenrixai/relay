@@ -148,12 +148,6 @@ variable "log_retention_days" {
   default     = 30
 }
 
-variable "rules_api_url" {
-  description = "Optional PII rules API URL. When empty, RELAY_RULES_API_URL is omitted from the container environment (relay falls back to its bundled/local rules)."
-  type        = string
-  default     = ""
-}
-
 variable "ghcr_credentials_secret_arn" {
   description = "Optional Secrets Manager ARN of a secret holding {\"username\":...,\"password\":...} for pulling the relay image from a private registry (e.g. GHCR). When empty, no repositoryCredentials are set and the execution role is not granted read access to it."
   type        = string

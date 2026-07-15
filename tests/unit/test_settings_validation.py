@@ -25,13 +25,6 @@ def test_tls_port_out_of_range_rejected(port: int) -> None:
         Settings(tls_port=port)
 
 
-def test_rules_api_url_requires_http_scheme() -> None:
-    with pytest.raises(ValidationError):
-        Settings(rules_api_url="rules.example.test/api")
-    assert Settings(rules_api_url="https://rules.example.test/api").rules_api_url is not None
-    assert Settings(rules_api_url=None).rules_api_url is None
-
-
 def test_otlp_endpoint_stays_permissive() -> None:
     # Bare host:port is a valid gRPC exporter form; must not be rejected.
     assert Settings(otlp_endpoint="collector:4317").otlp_endpoint == "collector:4317"

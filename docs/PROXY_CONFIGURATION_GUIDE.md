@@ -224,7 +224,6 @@ The most common `RELAY_*` settings are:
 | `RELAY_DEFAULT_READ_TIMEOUT` | `120` | Default upstream read timeout in seconds. |
 | `RELAY_MAX_INSPECT_BYTES` | `8388608` | Maximum body size inspected for XML/PII/authorization processing. |
 | `RELAY_OTLP_ENDPOINT` | unset | Optional OTLP/gRPC endpoint. URL form (`http://host:4317`) is recommended; a bare `host:port` is also accepted. |
-| `RELAY_RULES_API_URL` | unset | Optional rules API. If unset, bundled fallback rules are used. |
 | `RELAY_PII_KEYRING` | unset | Inline keyring JSON. Prefer mounted files or managed secrets where available. |
 | `RELAY_PII_KEYRING_FILE` | unset | Mounted keyring file path. Takes precedence over inline keyring. |
 | `RELAY_PII_KEY_EPOCH_ACTIVE` | highest epoch | Active key epoch for new encrypted tokens. |

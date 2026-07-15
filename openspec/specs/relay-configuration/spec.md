@@ -32,16 +32,17 @@ chain to the original validation error.
 
 ### Requirement: PII configuration settings
 The relay SHALL support `RELAY_PII_KEYRING` (inline JSON keyring or path handled by the keyring
-capability), `RELAY_PII_KEY_EPOCH_ACTIVE` (int, default highest epoch), and `RELAY_RULES_API_URL`
-(rules endpoint, Wenrix default) as pydantic settings, reflected in the generated JSON Schema.
-Per-channel `pii.enabled` (default false) SHALL gate all redaction/de-anonymization behavior.
-Per-channel `pii.force_redact` (default false) SHALL, when true, override every `encrypt` action
-outcome for that channel to the fixed literal `"REDACTED"` instead of calling the crypto codec, for
-both `field` and `reference` rules; `force_redact` has no effect when `pii.enabled` is false.
-Keyring values SHALL never appear in logs, error messages, or `/admin/status`-style output.
+capability) and `RELAY_PII_KEY_EPOCH_ACTIVE` (int, default highest epoch) as pydantic settings,
+reflected in the generated JSON Schema. There SHALL be no rules-API URL setting; rules always load
+from the local baked bundle. Per-channel `pii.enabled` (default false) SHALL gate all
+redaction/de-anonymization behavior. Per-channel `pii.force_redact` (default false) SHALL, when
+true, override every `encrypt` action outcome for that channel to the fixed literal `"REDACTED"`
+instead of calling the crypto codec, for both `field` and `reference` rules; `force_redact` has no
+effect when `pii.enabled` is false. Keyring values SHALL never appear in logs, error messages, or
+`/admin/status`-style output.
 
 #### Scenario: PII settings validate
-- **WHEN** the settings provide a keyring, active epoch, and rules URL
+- **WHEN** the settings provide a keyring and active epoch
 - **THEN** the config model validates and the values are available to the PII subsystem
 
 #### Scenario: pii.enabled defaults off
@@ -70,10 +71,9 @@ duplicate in the validation error.
 - **THEN** validation fails and the error names `"tf"`
 
 ### Requirement: Port and URL field validation
-`RELAY_PORT` and `RELAY_TLS_PORT` SHALL be constrained to 1–65535. `proxy_pass` and
-`RELAY_RULES_API_URL` SHALL require an `http://` or `https://` scheme when set. `host` SHALL be a
-bare hostname (no scheme, no path). `RELAY_OTLP_ENDPOINT` remains permissive (bare `host:port` is a
-valid gRPC exporter form).
+`RELAY_PORT` and `RELAY_TLS_PORT` SHALL be constrained to 1–65535. `proxy_pass` SHALL require an
+`http://` or `https://` scheme when set. `host` SHALL be a bare hostname (no scheme, no path).
+`RELAY_OTLP_ENDPOINT` remains permissive (bare `host:port` is a valid gRPC exporter form).
 
 #### Scenario: Out-of-range port rejected
 - **WHEN** `RELAY_PORT` is `0` or `65536`

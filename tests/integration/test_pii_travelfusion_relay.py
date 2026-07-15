@@ -31,7 +31,6 @@ class MockTravelfusion:
 
 def _client(mock: MockTravelfusion, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setenv("RELAY_PII_KEYRING", KEYRING_JSON)
-    monkeypatch.delenv("RELAY_RULES_API_URL", raising=False)
     channel = ChannelConfig(
         name="tf",
         type=ChannelType.TRAVELFUSION,

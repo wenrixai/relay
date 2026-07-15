@@ -45,7 +45,6 @@ class MockAmadeus:
 
 def _client(mock: MockAmadeus, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setenv("RELAY_PII_KEYRING", KEYRING_JSON)
-    monkeypatch.delenv("RELAY_RULES_API_URL", raising=False)
     channel = ChannelConfig(
         name="amadeus",
         type=ChannelType.AMADEUS,

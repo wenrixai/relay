@@ -1,7 +1,7 @@
 """End-to-end PII round-trip through the app: redact response → de-anonymize request (T2.6).
 
-The mock channel is an httpx.MockTransport; the rules API is served by the same transport,
-exercising the real startup fetch path. No real network anywhere.
+The mock channel is an httpx.MockTransport; the relay's baked rules bundle is swapped for this
+test's fixture ruleset via the loader's read seam. No real network anywhere.
 """
 
 from __future__ import annotations
@@ -21,7 +21,6 @@ from channel_relay.pii.codec import TOKEN_RE
 from channel_relay.pii.xml_ops import parse_bytes
 
 FIXTURES = Path(__file__).parent.parent / "fixtures" / "mock"
-RULES_URL = "https://rules.wenrix.test/v1"
 KEYRING_JSON = json.dumps({"0": pybase64.b64encode(bytes([9]) * 32).decode()})
 
 REQUEST_TEMPLATE = (
@@ -34,14 +33,12 @@ REQUEST_TEMPLATE = (
 
 
 class MockChannel:
-    """Serves the rules API and the mock channel; records forwarded request bodies."""
+    """Serves the mock channel; records forwarded request bodies."""
 
     def __init__(self) -> None:
         self.channel_bodies: list[bytes] = []
 
     def handler(self, request: httpx.Request) -> httpx.Response:
-        if request.url.host == "rules.wenrix.test":
-            return httpx.Response(200, text=(FIXTURES / "rules.json").read_text())
         self.channel_bodies.append(request.read())
         return httpx.Response(
             200,
@@ -58,7 +55,10 @@ def mock_channel_fixture() -> MockChannel:
 @pytest.fixture(name="client")
 def client_fixture(mock_channel: MockChannel, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setenv("RELAY_PII_KEYRING", KEYRING_JSON)
-    monkeypatch.setenv("RELAY_RULES_API_URL", RULES_URL)
+    monkeypatch.setattr(
+        "channel_relay.pii.rules_loader._read_baked_text",
+        lambda: (FIXTURES / "rules.json").read_text(),
+    )
     config = RelayConfig(
         channels=[
             ChannelConfig(
@@ -182,7 +182,10 @@ def test_pii_disabled_channel_passes_through(mock_channel: MockChannel) -> None:
 
 def test_force_redact_channel_needs_no_keyring(mock_channel: MockChannel, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("RELAY_PII_KEYRING", raising=False)
-    monkeypatch.setenv("RELAY_RULES_API_URL", RULES_URL)
+    monkeypatch.setattr(
+        "channel_relay.pii.rules_loader._read_baked_text",
+        lambda: (FIXTURES / "rules.json").read_text(),
+    )
     config = RelayConfig(
         channels=[
             ChannelConfig(
