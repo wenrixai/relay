@@ -81,3 +81,21 @@ jobs:
           severity: "CRITICAL,HIGH"
           ignore-unfixed: "true"
           exit-code: "1"
+
+  claude-security-review:
+    name: Claude security review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+      - name: Run Claude Code Security Review
+        uses: anthropics/claude-code-security-review@0c6a49f1fa56a1d472575da86a94dbc1edb78eda
+        with:
+          comment-pr: true
+          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
