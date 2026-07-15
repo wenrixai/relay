@@ -124,7 +124,7 @@ def test_cli_uvicorn_hardening_kwargs(monkeypatch: pytest.MonkeyPatch) -> None:
     cli()
     assert captured["app"] == "channel_relay.main:app"
     assert captured["server_header"] is False
-    assert captured["timeout_keep_alive"] == 75
+    assert captured["timeout_keep_alive"] == 135
     assert captured["proxy_headers"] is True
     assert captured["forwarded_allow_ips"] == "*"
     # Fast event loop / HTTP parser pinned explicitly (fail loud, not silent asyncio/h11 fallback).

@@ -1,274 +1,210 @@
-# Manual AWS ECS Deployment (No Terraform / CloudFormation)
+# Manual AWS ECS Deployment
 
-This guide is for customers who want to deploy the Wenrix Channel Relay on AWS ECS Fargate using
-the AWS CLI directly, without adopting the Terraform module or CloudFormation stack. It produces
-the same topology as those automated options: a private ECS Fargate service behind an HTTPS ALB,
-config delivered as a non-secret environment variable, and secrets sourced from AWS Secrets
-Manager.
+This guide deploys the Wenrix Channel Relay to Amazon ECS with the AWS CLI. It is intentionally
+small and follows the test configuration in `deployment/helm/chart/values-test.yaml`: one relay
+task, public GHCR image, Sabre and Amadeus defaults, Basic Auth disabled, PII disabled, telemetry
+metrics disabled, and no autoscaling.
 
-If you can adopt one of the automated paths, prefer it — it encodes the same hardening with far
-less manual work:
+The same task definition works with either:
 
-- `deployment/terraform/` — Terraform module.
-- `deployment/cloudformation/` — CloudFormation template.
+- **AWS Fargate**, which requires no customer-managed container instances.
+- **ECS on EC2**, using Linux container instances already registered with the ECS cluster.
 
-For the channel configuration schema itself (channel types, PII modes, authorization, process
-settings), see `docs/PROXY_CONFIGURATION_GUIDE.md`.
-
-> **Scope note:** the configuration JSON used in this guide carries no secrets — no channel
-> `credentials` block, no credential values of any kind. Channel credential swap is out of scope
-> for this manual walkthrough; if your deployment needs it, follow the credential guidance in
-> `docs/PROXY_CONFIGURATION_GUIDE.md` and inject those values the same way this guide injects
-> basic-auth credentials (Secrets Manager, never the config JSON).
+For a production deployment with automated scaling and alarms, use `deployment/terraform/` or
+`deployment/cloudformation/`.
 
 ## Prerequisites
 
-- An existing VPC with at least two private subnets (for the ECS tasks) and a route to a NAT
-  gateway or NAT instance for outbound internet access (channel APIs, DNS). Public subnets are
-  only needed for the ALB.
-- The relay container image accessible from the account/region you deploy into (a public registry
-  reference, or a private registry with pull credentials configured separately).
-- AWS CLI v2, authenticated with permissions to create the resources below.
-- An ACM certificate for the HTTPS listener, in the same region as the ALB.
+- AWS CLI v2 and `jq`.
+- An authenticated AWS CLI session with permission to create the resources below.
+- An existing VPC with two subnets for relay tasks and two subnets for the internet-facing ALB.
+- Outbound HTTPS access from the relay-task subnets to GHCR and the configured upstream services.
+- An ACM certificate in the deployment Region.
+- For ECS on EC2, an existing ECS cluster with compatible Linux container instances and available
+  CPU, memory, and ENI capacity. The ECS agent must support `awsvpc` and `awslogs`; when the task
+  execution role supplies the log permissions, set `ECS_ENABLE_AWSLOGS_EXECUTIONROLE_OVERRIDE=true`
+  in `/etc/ecs/ecs.config` and restart the agent.
 
-Throughout, replace the placeholder values (`REGION`, `VPC_ID`, subnet IDs, security group IDs,
-account ID, CIDRs, certificate ARN, image reference) with your own.
+## 1. Set deployment values
 
-## Primary path: AWS CLI
-
-### 1. CloudWatch log group
+Set these values once. All later AWS CLI commands use `AWS_REGION`, so resources cannot
+accidentally be created in a different configured Region.
 
 ```bash
-aws logs create-log-group \
-  --log-group-name /ecs/wenrix-relay \
-  --region "$REGION"
+export AWS_REGION="eu-west-1"
+export AWS_DEFAULT_REGION="$AWS_REGION"
+export AWS_PAGER=""
 
-aws logs put-retention-policy \
-  --log-group-name /ecs/wenrix-relay \
-  --retention-in-days 30 \
-  --region "$REGION"
+export CLUSTER_NAME="wenrix-relay"
+export SERVICE_NAME="wenrix-relay"
+export LAUNCH_TYPE="FARGATE" # FARGATE or EC2
+export IMAGE="ghcr.io/wenrixai/wenrix-relay:v0.1.0"
+
+export VPC_ID="vpc-0123456789abcdef0"
+export TASK_SUBNET_ID_1="subnet-0aaa1111"
+export TASK_SUBNET_ID_2="subnet-0bbb2222"
+export ALB_SUBNET_ID_1="subnet-0ccc3333"
+export ALB_SUBNET_ID_2="subnet-0ddd4444"
+export ALLOWED_CLIENT_CIDR="203.0.113.0/24"
+export CERTIFICATE_ARN="arn:aws:acm:eu-west-1:111122223333:certificate/REPLACE_ME"
 ```
 
-### 2. Secrets Manager secrets
-
-Basic-auth credentials (`user` / `pass` keys — the relay reads these via ECS `secrets`, not the
-config JSON):
+Use `LAUNCH_TYPE=EC2` only when `CLUSTER_NAME` already has suitable ECS container instances.
+For Fargate, create the cluster if it does not exist:
 
 ```bash
-aws secretsmanager create-secret \
-  --name wenrix-relay/basic-auth \
-  --description "Wenrix relay basic-auth credentials" \
-  --secret-string '{"user":"CHANGE_ME_USER","pass":"CHANGE_ME_PASSWORD"}' \
-  --region "$REGION"
+aws ecs create-cluster --cluster-name "$CLUSTER_NAME"
 ```
 
-PII keyring (`{"<epoch>": "<base64(32 random bytes)>"}`; generate a real key rather than reusing
-this example):
+## 2. Create the relay configuration
 
-```bash
-KEYRING_JSON=$(printf '{"0":"%s"}' "$(head -c32 /dev/urandom | base64)")
+Create `relay.json`:
 
-aws secretsmanager create-secret \
-  --name wenrix-relay/pii-keyring \
-  --description "Wenrix relay PII master keyring — never regenerate while tokens are outstanding" \
-  --secret-string "$KEYRING_JSON" \
-  --region "$REGION"
-```
-
-Note the two secret ARNs returned (`BASIC_AUTH_SECRET_ARN`, `PII_KEYRING_SECRET_ARN`); the IAM
-policy below is scoped to exactly these two.
-
-### 3. IAM roles
-
-Execution role (assumed by ECS to pull the image, write logs, and resolve secrets):
-
-```bash
-cat > /tmp/ecs-trust-policy.json <<'JSON'
+```json
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": { "Service": "ecs-tasks.amazonaws.com" },
-      "Action": "sts:AssumeRole"
-    }
+  "channels": [
+    { "name": "sabre", "type": "sabre" },
+    { "name": "amadeus", "type": "amadeus" }
   ]
 }
-JSON
+```
 
-aws iam create-role \
+Sabre and Amadeus use their built-in production hosts when `host` and `proxy_pass` are omitted.
+Other channel types may require one of those fields; see `docs/PROXY_CONFIGURATION_GUIDE.md`.
+
+This setup does not enable PII processing, so it does not require a PII keyring. If PII is enabled
+later, configure a valid `RELAY_PII_KEYRING` through the customer's approved secret-delivery
+mechanism before starting the service. Keep an installed keyring unchanged.
+
+Validate and compact the configuration for the task definition:
+
+```bash
+RELAY_CONFIG_JSON=$(jq -ce . relay.json)
+```
+
+## 3. Create the log group and execution role
+
+```bash
+aws logs create-log-group --log-group-name /ecs/wenrix-relay
+aws logs put-retention-policy \
+  --log-group-name /ecs/wenrix-relay \
+  --retention-in-days 30
+
+jq -n '{
+  Version: "2012-10-17",
+  Statement: [{
+    Effect: "Allow",
+    Principal: {Service: "ecs-tasks.amazonaws.com"},
+    Action: "sts:AssumeRole"
+  }]
+}' > /tmp/wenrix-relay-ecs-trust.json
+
+EXECUTION_ROLE_ARN=$(aws iam create-role \
   --role-name wenrix-relay-execution \
-  --assume-role-policy-document file:///tmp/ecs-trust-policy.json
+  --assume-role-policy-document file:///tmp/wenrix-relay-ecs-trust.json \
+  --query 'Role.Arn' --output text)
 
 aws iam attach-role-policy \
   --role-name wenrix-relay-execution \
   --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-
-cat > /tmp/ecs-secret-read-policy.json <<JSON
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": "secretsmanager:GetSecretValue",
-      "Resource": [
-        "$BASIC_AUTH_SECRET_ARN",
-        "$PII_KEYRING_SECRET_ARN"
-      ]
-    }
-  ]
-}
-JSON
-
-aws iam put-role-policy \
-  --role-name wenrix-relay-execution \
-  --policy-name wenrix-relay-secret-read \
-  --policy-document file:///tmp/ecs-secret-read-policy.json
 ```
 
-Task role — the relay makes no AWS API calls at runtime, so this role stays empty (kept only
-because ECS requires a task role reference for least-privilege posture, not because the app uses
-it):
+The application does not call AWS APIs, so no task role is needed.
+
+## 4. Register the task definition
+
+The task uses `awsvpc` networking for both Fargate and ECS on EC2. The root filesystem is read-only;
+the entrypoint writes the non-secret relay configuration to a writable `/tmp` volume.
 
 ```bash
-aws iam create-role \
-  --role-name wenrix-relay-task \
-  --assume-role-policy-document file:///tmp/ecs-trust-policy.json
-```
-
-### 4. Task definition
-
-The container config is delivered as the `RELAY_CONFIG_JSON` environment variable and written to
-the writable `/tmp` mount at startup (the root filesystem is read-only), via an entrypoint wrapper.
-No `credentials` block appears anywhere in this JSON.
-
-```bash
-cat > /tmp/wenrix-relay-task-def.json <<JSON
-{
-  "family": "wenrix-relay",
-  "requiresCompatibilities": ["FARGATE"],
-  "networkMode": "awsvpc",
-  "cpu": "1024",
-  "memory": "2048",
-  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/wenrix-relay-execution",
-  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/wenrix-relay-task",
-  "volumes": [
-    { "name": "tmp" }
-  ],
-  "containerDefinitions": [
-    {
-      "name": "relay",
-      "image": "ghcr.io/wenrixai/wenrix-relay:v0.1.0",
-      "essential": true,
-      "user": "100",
-      "readonlyRootFilesystem": true,
-      "stopTimeout": 120,
-      "entryPoint": ["/bin/sh", "-c"],
-      "command": [
-        "printf '%s' \"$RELAY_CONFIG_JSON\" > /tmp/relay.json && exec channel-relay"
+jq -n \
+  --arg launch_type "$LAUNCH_TYPE" \
+  --arg image "$IMAGE" \
+  --arg execution_role "$EXECUTION_ROLE_ARN" \
+  --arg region "$AWS_REGION" \
+  --arg relay_config "$RELAY_CONFIG_JSON" \
+  '{
+    family: "wenrix-relay",
+    requiresCompatibilities: [$launch_type],
+    networkMode: "awsvpc",
+    cpu: "256",
+    memory: "512",
+    executionRoleArn: $execution_role,
+    volumes: [{name: "tmp"}],
+    containerDefinitions: [{
+      name: "relay",
+      image: $image,
+      essential: true,
+      user: "100",
+      cpu: 256,
+      memory: 256,
+      readonlyRootFilesystem: true,
+      stopTimeout: 120,
+      entryPoint: ["/bin/sh", "-c"],
+      command: ["printf '\''%s'\'' \"$RELAY_CONFIG_JSON\" > /tmp/relay.json && exec channel-relay"],
+      portMappings: [{containerPort: 8080, protocol: "tcp"}],
+      environment: [
+        {name: "RELAY_CONFIG_FILE", value: "/tmp/relay.json"},
+        {name: "RELAY_CONFIG_JSON", value: $relay_config},
+        {name: "RELAY_PORT", value: "8080"},
+        {name: "RELAY_BASIC_AUTH_ENABLED", value: "false"},
+        {name: "RELAY_DEFAULT_CONNECT_TIMEOUT", value: "30"},
+        {name: "RELAY_DEFAULT_READ_TIMEOUT", value: "120"},
+        {name: "RELAY_MAX_INSPECT_BYTES", value: "8388608"},
+        {name: "RELAY_TELEMETRY_METRICS_ENABLED", value: "false"}
       ],
-      "portMappings": [
-        { "containerPort": 8080, "protocol": "tcp" }
-      ],
-      "environment": [
-        { "name": "RELAY_CONFIG_FILE", "value": "/tmp/relay.json" },
-        {
-          "name": "RELAY_CONFIG_JSON",
-          "value": "{\"channels\":[{\"name\":\"sabre-prod\",\"type\":\"sabre\"},{\"name\":\"amadeus-prod\",\"type\":\"amadeus\"}]}"
-        },
-        { "name": "RELAY_PORT", "value": "8080" },
-        { "name": "RELAY_BASIC_AUTH_ENABLED", "value": "true" }
-      ],
-      "secrets": [
-        {
-          "name": "RELAY_BASIC_AUTH_USER",
-          "valueFrom": "BASIC_AUTH_SECRET_ARN:user::"
-        },
-        {
-          "name": "RELAY_BASIC_AUTH_PASS",
-          "valueFrom": "BASIC_AUTH_SECRET_ARN:pass::"
-        },
-        {
-          "name": "RELAY_PII_KEYRING",
-          "valueFrom": "PII_KEYRING_SECRET_ARN"
-        }
-      ],
-      "mountPoints": [
-        { "sourceVolume": "tmp", "containerPath": "/tmp", "readOnly": false }
-      ],
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
+      mountPoints: [{sourceVolume: "tmp", containerPath: "/tmp", readOnly: false}],
+      logConfiguration: {
+        logDriver: "awslogs",
+        options: {
           "awslogs-group": "/ecs/wenrix-relay",
-          "awslogs-region": "REGION",
+          "awslogs-region": $region,
           "awslogs-stream-prefix": "relay"
         }
       },
-      "healthCheck": {
-        "command": ["CMD-SHELL", "wget -q -O- http://127.0.0.1:8080/liveness || exit 1"],
-        "interval": 30,
-        "timeout": 5,
-        "retries": 3,
-        "startPeriod": 10
+      healthCheck: {
+        command: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:8080/readiness || exit 1"],
+        interval: 30,
+        timeout: 5,
+        retries: 3,
+        startPeriod: 10
       }
-    }
-  ]
-}
-JSON
+    }]
+  }' > /tmp/wenrix-relay-task-definition.json
 
-# Substitute REGION/ACCOUNT_ID/BASIC_AUTH_SECRET_ARN/PII_KEYRING_SECRET_ARN before registering, e.g.:
-# sed -i '' \
-#   -e "s#REGION#${REGION}#g" \
-#   -e "s#ACCOUNT_ID#${ACCOUNT_ID}#g" \
-#   -e "s#BASIC_AUTH_SECRET_ARN#${BASIC_AUTH_SECRET_ARN}#g" \
-#   -e "s#PII_KEYRING_SECRET_ARN#${PII_KEYRING_SECRET_ARN}#g" \
-#   /tmp/wenrix-relay-task-def.json
-
-aws ecs register-task-definition \
-  --cli-input-json file:///tmp/wenrix-relay-task-def.json \
-  --region "$REGION"
+TASK_DEFINITION_ARN=$(aws ecs register-task-definition \
+  --cli-input-json file:///tmp/wenrix-relay-task-definition.json \
+  --query 'taskDefinition.taskDefinitionArn' --output text)
 ```
 
-Replace `RELAY_CONFIG_JSON`'s value with your actual channel list. Only `name` and `type` are
-required per channel; see `docs/PROXY_CONFIGURATION_GUIDE.md` for the full channel schema (hosts,
-PII, authorization). Keep credentials out of this value — they do not belong in the config JSON.
+Using `jq` preserves `$RELAY_CONFIG_JSON` for expansion inside the container and safely escapes the
+configuration value. No placeholder substitution is required.
 
-### 5. Networking: target group, ALB, security groups
-
-Task security group (ingress only from the ALB security group):
+## 5. Create security groups, target group, and ALB
 
 ```bash
 TASK_SG_ID=$(aws ec2 create-security-group \
   --group-name wenrix-relay-task \
-  --description "Wenrix relay tasks — ingress only from the ALB" \
+  --description "Wenrix relay tasks; ingress only from the ALB" \
   --vpc-id "$VPC_ID" \
-  --query 'GroupId' --output text)
-```
+  --query GroupId --output text)
 
-ALB security group (ingress from Wenrix/client CIDRs only — never `0.0.0.0/0`):
-
-```bash
 ALB_SG_ID=$(aws ec2 create-security-group \
   --group-name wenrix-relay-alb \
-  --description "Wenrix relay ALB — ingress from approved client CIDRs" \
+  --description "Wenrix relay ALB" \
   --vpc-id "$VPC_ID" \
-  --query 'GroupId' --output text)
+  --query GroupId --output text)
 
 aws ec2 authorize-security-group-ingress \
   --group-id "$ALB_SG_ID" \
   --protocol tcp --port 443 \
-  --cidr "203.0.113.0/24"
+  --cidr "$ALLOWED_CLIENT_CIDR"
 
 aws ec2 authorize-security-group-ingress \
   --group-id "$TASK_SG_ID" \
   --protocol tcp --port 8080 \
   --source-group "$ALB_SG_ID"
-```
 
-Target group (health check against `/readiness`, not `/liveness` — readiness reflects config
-validity):
-
-```bash
 TG_ARN=$(aws elbv2 create-target-group \
   --name wenrix-relay \
   --protocol HTTP --port 8080 \
@@ -285,98 +221,94 @@ TG_ARN=$(aws elbv2 create-target-group \
 aws elbv2 modify-target-group-attributes \
   --target-group-arn "$TG_ARN" \
   --attributes Key=deregistration_delay.timeout_seconds,Value=120
-```
 
-ALB (idle timeout above the relay's default 120s upstream read timeout) and HTTPS listener:
-
-```bash
 ALB_ARN=$(aws elbv2 create-load-balancer \
   --name wenrix-relay \
   --type application \
-  --subnets PUBLIC_SUBNET_ID_1 PUBLIC_SUBNET_ID_2 \
+  --subnets "$ALB_SUBNET_ID_1" "$ALB_SUBNET_ID_2" \
   --security-groups "$ALB_SG_ID" \
   --query 'LoadBalancers[0].LoadBalancerArn' --output text)
 
 aws elbv2 modify-load-balancer-attributes \
   --load-balancer-arn "$ALB_ARN" \
-  --attributes Key=idle_timeout.timeout_seconds,Value=130
+  --attributes \
+    Key=idle_timeout.timeout_seconds,Value=130 \
+    Key=routing.http.drop_invalid_header_fields.enabled,Value=true
 
 aws elbv2 create-listener \
   --load-balancer-arn "$ALB_ARN" \
   --protocol HTTPS --port 443 \
-  --ssl-policy ELBSecurityPolicy-TLS13-1-2-2021-06 \
+  --ssl-policy ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09 \
   --certificates CertificateArn="$CERTIFICATE_ARN" \
   --default-actions Type=forward,TargetGroupArn="$TG_ARN"
 ```
 
-### 6. ECS cluster and service
+The `ip` target type is required because the task definition uses `awsvpc`, including when the
+tasks run on ECS container instances.
+
+## 6. Create the ECS service
 
 ```bash
-aws ecs create-cluster --cluster-name wenrix-relay --region "$REGION"
-
 aws ecs create-service \
-  --cluster wenrix-relay \
-  --service-name wenrix-relay \
-  --task-definition wenrix-relay \
-  --desired-count 2 \
-  --launch-type FARGATE \
+  --cluster "$CLUSTER_NAME" \
+  --service-name "$SERVICE_NAME" \
+  --task-definition "$TASK_DEFINITION_ARN" \
+  --desired-count 1 \
+  --launch-type "$LAUNCH_TYPE" \
   --deployment-configuration '{
-    "deploymentCircuitBreaker": { "enable": true, "rollback": true },
+    "deploymentCircuitBreaker": {"enable": true, "rollback": true},
     "minimumHealthyPercent": 100,
     "maximumPercent": 200
   }' \
   --health-check-grace-period-seconds 60 \
-  --network-configuration "awsvpcConfiguration={subnets=[PRIVATE_SUBNET_ID_1,PRIVATE_SUBNET_ID_2],securityGroups=[$TASK_SG_ID],assignPublicIp=DISABLED}" \
-  --load-balancers "targetGroupArn=$TG_ARN,containerName=relay,containerPort=8080" \
-  --region "$REGION"
+  --network-configuration "awsvpcConfiguration={subnets=[$TASK_SUBNET_ID_1,$TASK_SUBNET_ID_2],securityGroups=[$TASK_SG_ID],assignPublicIp=DISABLED}" \
+  --load-balancers "targetGroupArn=$TG_ARN,containerName=relay,containerPort=8080"
 ```
 
-### 7. Verify
+This creates one task and does not configure autoscaling, matching the Helm test values. Increase
+the desired count or add service autoscaling separately when required.
+
+## 7. Verify
 
 ```bash
-# Wait for the deployment to stabilize.
-aws ecs wait services-stable --cluster wenrix-relay --services wenrix-relay --region "$REGION"
+aws ecs wait services-stable \
+  --cluster "$CLUSTER_NAME" \
+  --services "$SERVICE_NAME"
 
-# Confirm the service is reachable through the ALB.
-ALB_DNS=$(aws elbv2 describe-load-balancers \
-  --load-balancer-arns "$ALB_ARN" \
-  --query 'LoadBalancers[0].DNSName' --output text)
-curl -sSf "https://$ALB_DNS/liveness"
+aws ecs describe-services \
+  --cluster "$CLUSTER_NAME" \
+  --services "$SERVICE_NAME" \
+  --query 'services[0].{rollout:deployments[0].rolloutState,desired:desiredCount,running:runningCount}'
 
-# Tail recent container logs.
-aws logs tail /ecs/wenrix-relay --since 10m --region "$REGION"
+aws elbv2 describe-target-health \
+  --target-group-arn "$TG_ARN" \
+  --query 'TargetHealthDescriptions[].TargetHealth'
+
+aws logs tail /ecs/wenrix-relay --since 10m
 ```
 
-## Console notes
+Expected results:
 
-The same result via the AWS Console, at bullet level (not click-by-click):
+- ECS reports `COMPLETED`, with `desired` and `running` both equal to `1`.
+- The target reports `healthy`.
+- The relay log shows successful startup without configuration errors.
 
-- **CloudWatch Logs** → Log groups → create `/ecs/wenrix-relay`, set retention to 30 days.
-- **Secrets Manager** → Store a new secret → "Other type of secret" → key/value pairs `user`/`pass`
-  for basic-auth; a second secret with a single JSON blob for the PII keyring.
-- **IAM** → Roles → create `wenrix-relay-execution` trusted by `ecs-tasks.amazonaws.com`, attach
-  the `AmazonECSTaskExecutionRolePolicy` managed policy, add an inline policy granting
-  `secretsmanager:GetSecretValue` scoped to the two secret ARNs above. Create an empty
-  `wenrix-relay-task` role with the same trust policy and no permissions.
-- **ECS** → Task definitions → create new revision, Fargate, 1 vCPU / 2 GB, container user `100`,
-  read-only root filesystem on, add a bind mount named `tmp` at `/tmp`, set entry point/command to
-  the `printf ... && exec channel-relay` wrapper, set environment variables and secrets as in the
-  JSON above, awslogs driver pointed at the log group, stop timeout 120s, container health check
-  `wget` against `/liveness`.
-- **EC2** → Security Groups → create the ALB SG (ingress 443 from your CIDRs) and the task SG
-  (ingress 8080 from the ALB SG only).
-- **EC2** → Load Balancers → create an internet-facing ALB in the public subnets with the ALB SG,
-  idle timeout 130s; create a target group (HTTP 8080, IP target type, health check `/readiness`,
-  matcher 200, deregistration delay 120s); add an HTTPS:443 listener with your ACM certificate
-  forwarding to the target group.
-- **ECS** → Clusters → create cluster, then create a service on Fargate: desired count 2, private
-  subnets, `assignPublicIp` disabled, task SG, attach the load balancer/target group, enable the
-  deployment circuit breaker with rollback, health check grace period 60s.
-- Confirm rollout under the service's "Deployments" tab, then hit `https://<alb-dns>/liveness` and
-  check the CloudWatch log group for startup output.
+## Console mapping
+
+When using the AWS Console, use the same values from the CLI sections:
+
+- Register a Linux task definition for **Fargate** or **EC2**, using `awsvpc`, 0.25 vCPU, 512 MiB
+  task memory, the public GHCR image, a read-only root filesystem, and a writable `/tmp` volume.
+- Configure the environment and `/readiness` health check exactly as shown in the generated task
+  definition.
+- Create an IP target group on port 8080, an HTTPS ALB listener, and security groups that allow
+  task ingress only from the ALB.
+- Create a one-task replica service with the deployment circuit breaker and 60-second health-check
+  grace period.
 
 ## See also
 
-- `deployment/terraform/` — automated Terraform module for this same topology.
-- `deployment/cloudformation/` — automated CloudFormation template for this same topology.
-- `docs/PROXY_CONFIGURATION_GUIDE.md` — channel configuration schema, PII modes, process settings.
+- `deployment/helm/chart/values-test.yaml` — equivalent minimal Helm test configuration.
+- `deployment/terraform/` — automated ECS Fargate deployment with production controls.
+- `deployment/cloudformation/` — automated ECS Fargate deployment with production controls.
+- `docs/PROXY_CONFIGURATION_GUIDE.md` — channel and process configuration reference.
