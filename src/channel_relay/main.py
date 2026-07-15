@@ -386,7 +386,7 @@ def cli() -> None:
         host="0.0.0.0",  # relay binds all interfaces inside its container
         port=Settings().port,
         server_header=False,
-        timeout_keep_alive=75,
+        timeout_keep_alive=135,
         proxy_headers=True,
         forwarded_allow_ips="*",
         loop="uvloop",  # fail loud if the fast loop/parser is unavailable, not silent asyncio/h11
