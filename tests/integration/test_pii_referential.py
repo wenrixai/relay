@@ -1,8 +1,9 @@
 """End-to-end referential redaction: names extracted from structured fields are scrubbed from
 free-text remark fields (Amadeus/Sabre style), and embedded tokens round-trip back to plaintext.
 
-The mock channel serves both the rules API and the channel over one httpx.MockTransport; no real
-network. Mirrors ``test_pii_roundtrip`` for a channel that carries PII inside remark prose.
+The mock channel serves the channel over one httpx.MockTransport; no real network. The relay's
+baked rules bundle is swapped for this test's fixture ruleset. Mirrors ``test_pii_roundtrip`` for a
+channel that carries PII inside remark prose.
 """
 
 from __future__ import annotations
@@ -20,19 +21,16 @@ from channel_relay.main import create_app
 from channel_relay.pii.xml_ops import parse_bytes
 
 FIXTURES = Path(__file__).parent.parent / "fixtures" / "mock"
-RULES_URL = "https://rules.wenrix.test/v1"
 KEYRING_JSON = json.dumps({"0": pybase64.b64encode(bytes([5]) * 32).decode()})
 
 
 class MockChannel:
-    """Serves the rules API and the Amadeus-style channel; records forwarded request bodies."""
+    """Serves the Amadeus-style channel; records forwarded request bodies."""
 
     def __init__(self) -> None:
         self.channel_bodies: list[bytes] = []
 
     def handler(self, request: httpx.Request) -> httpx.Response:
-        if request.url.host == "rules.wenrix.test":
-            return httpx.Response(200, text=(FIXTURES / "remark_rules.json").read_text())
         self.channel_bodies.append(request.read())
         return httpx.Response(
             200,
@@ -49,7 +47,10 @@ def mock_channel_fixture() -> MockChannel:
 @pytest.fixture(name="client")
 def client_fixture(mock_channel: MockChannel, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setenv("RELAY_PII_KEYRING", KEYRING_JSON)
-    monkeypatch.setenv("RELAY_RULES_API_URL", RULES_URL)
+    monkeypatch.setattr(
+        "channel_relay.pii.rules_loader._read_baked_text",
+        lambda: (FIXTURES / "remark_rules.json").read_text(),
+    )
     config = RelayConfig(
         channels=[
             ChannelConfig(

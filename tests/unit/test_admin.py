@@ -42,7 +42,6 @@ def _admin_client(*, settings: Settings | None = None) -> TestClient:
     app.state.settings.basic_auth_user = "admin"
     app.state.settings.basic_auth_pass = "secret-pass"
     app.state.settings.otlp_endpoint = "https://otel.example.test:4317"
-    app.state.settings.rules_api_url = "https://rules.example.test/rules"
     app.state.settings.pii_keyring = KEYRING_JSON
     app.state.settings.pii_key_epoch_active = 0
     if settings is not None:
@@ -83,7 +82,6 @@ def test_admin_flare_returns_redacted_diagnostics_snapshot() -> None:
     assert body["readiness"] == {"status": "ready", "reasons": []}
     assert body["settings"]["basic_auth"] == {"enabled": True, "configured": True}
     assert body["settings"]["otlp_endpoint_configured"] is True
-    assert body["settings"]["rules_api_url_configured"] is True
     assert body["settings"]["pii_keyring_configured"] is True
     assert body["keyring"]["configured"] is True
     assert body["keyring"]["active_epoch"] == 0

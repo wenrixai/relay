@@ -43,24 +43,31 @@ without changing the stored rule.
 - **THEN** it encodes the method discriminator, per-method parameters, XPath-only path type,
   extraction patterns, and required-rule flag
 
-### Requirement: Startup fetch with baked fallback
-The relay SHALL fetch the ruleset from `RELAY_RULES_API_URL` once at startup (single attempt, short
-timeout, no retries, no periodic polling). On any fetch or validation failure it SHALL fall back to
-the baked bundle shipped in the image, logging the failure and recording the loaded version in the
-`rule_version` gauge. An incompatible `schema_version` SHALL be rejected wherever it appears; an
-invalid baked bundle SHALL abort startup when any channel has PII enabled.
+### Requirement: Local-only rules loading
 
-#### Scenario: Successful fetch wins
-- **WHEN** the rules API returns a valid ruleset at startup
-- **THEN** the fetched ruleset is active and `rule_version` reports its `rules_version`
+The relay SHALL load the ruleset exclusively from the baked bundle shipped in the image
+(`rules_fallback.json`). There SHALL be no runtime HTTP fetch of rules and no rules-API URL
+setting. An incompatible `schema_version` SHALL be rejected wherever it appears. An invalid baked
+bundle SHALL abort startup when any channel has PII enabled; without PII enabled it SHALL degrade to
+"no rules loaded" (logged, not fatal).
 
-#### Scenario: Fetch failure falls back
-- **WHEN** the rules API times out or returns malformed/incompatible content
-- **THEN** the baked bundle is active and the failure is logged (no retry, no crash)
+#### Scenario: Baked bundle loads at startup
+- **WHEN** the relay starts
+- **THEN** the ruleset is parsed from the baked bundle and `rule_version` reports its
+  `rules_version`
+- **AND** no network request is made to load rules
+
+#### Scenario: Invalid baked bundle aborts with PII enabled
+- **WHEN** the baked bundle fails validation and any channel has `pii.enabled: true`
+- **THEN** startup aborts with a non-zero exit
+
+#### Scenario: Invalid baked bundle degrades without PII
+- **WHEN** the baked bundle fails validation and no channel has PII enabled
+- **THEN** the relay starts with no rules loaded, logging the failure
 
 #### Scenario: No polling
 - **WHEN** the relay runs after startup
-- **THEN** no further rules-API requests are made
+- **THEN** no rules-related requests or re-reads occur
 
 ### Requirement: Reference rule kind in the ruleset
 

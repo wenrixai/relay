@@ -7,7 +7,7 @@ process-level scalars. Secrets are read from mounted files/env, never from the J
 
 from __future__ import annotations
 
-from pydantic import Field, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -40,18 +40,7 @@ class Settings(BaseSettings):
     telemetry_logs_enabled: bool = True
     telemetry_metrics_enabled: bool = True
     otlp_endpoint: str | None = None
-    rules_api_url: str | None = None
     pii_keyring: str | None = None
     pii_keyring_file: str | None = None
     pii_key_epoch_active: int | None = None
     debug: bool = False
-
-    @field_validator("rules_api_url")
-    @classmethod
-    def _validate_rules_api_url(cls, value: str | None) -> str | None:
-        """Fail at startup, not at the one-shot rules fetch. ``otlp_endpoint`` stays
-        permissive: bare ``host:port`` is a valid gRPC exporter form."""
-        if value is not None and not value.startswith(("http://", "https://")):
-            msg = "rules_api_url must be an http:// or https:// URL"
-            raise ValueError(msg)
-        return value

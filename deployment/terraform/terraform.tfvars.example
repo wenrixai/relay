@@ -33,8 +33,6 @@ max_capacity  = 10
 # basic_auth_user    = "..."
 # basic_auth_pass    = "..."
 
-# Optional PII rules API. Leave unset to omit RELAY_RULES_API_URL entirely.
-# rules_api_url = "https://rules.internal.example.com"
 
 # Optional private-registry (e.g. GHCR) pull credentials, as a Secrets Manager ARN holding
 # {"username":...,"password":...}. Leave unset to pull without repositoryCredentials.

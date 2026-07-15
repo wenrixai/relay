@@ -6,8 +6,8 @@ mock upstream) and assert what actually crosses the wire. The key primitive is
 forwards (empty lists ⇒ the upstream was never called — the fail-closed guarantee), and can raise
 an injected exception to simulate an upstream timeout.
 
-Network is always mocked (see repo instructions); no test performs a real upstream call. The baked
-``rules_fallback.json`` baseline is used because ``RELAY_RULES_API_URL`` is unset.
+Network is always mocked (see repo instructions); no test performs a real upstream call. Rules
+always load from the baked ``rules_fallback.json`` baseline.
 """
 
 from __future__ import annotations
@@ -155,7 +155,6 @@ class E2EClientFactory:
         metric_reader: MetricReader | None = None,
     ) -> TestClient:
         self.monkeypatch.setenv("RELAY_PII_KEYRING", KEYRING_JSON)
-        self.monkeypatch.delenv("RELAY_RULES_API_URL", raising=False)  # force baked fallback rules
         app = create_app(
             config=RelayConfig(channels=[channel]),
             http_client=httpx.AsyncClient(transport=httpx.MockTransport(upstream.handler)),

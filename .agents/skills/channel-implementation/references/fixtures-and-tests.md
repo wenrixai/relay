@@ -72,8 +72,8 @@ zero-filled fakes collide with other zeroed values (GUIDs) and false-positive.
 ## 3. Relay integration tests (`tests/integration/test_pii_<channel>_relay.py`)
 
 Mirror `tests/integration/test_pii_sabre_relay.py`: `httpx.MockTransport` serves the fixture
-(never real network), channel configured with `pii.enabled=true` and real-shaped credentials,
-`RELAY_RULES_API_URL` unset so the baked fallback loads. Assert:
+(never real network), channel configured with `pii.enabled=true` and real-shaped credentials; the
+relay always loads its baked rules bundle. Assert:
 
 - Response PII redacted end-to-end and supplier session token is an `ENC_` token (credential
   cleanup runs BEFORE redaction).

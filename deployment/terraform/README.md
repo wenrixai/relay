@@ -54,8 +54,6 @@ terraform apply
   private registry (e.g. GHCR). When set, it's wired in as `repositoryCredentials` on the
   container and the execution role is granted read access to that one secret; when unset, no
   registry credentials are configured.
-- **PII rules API** (`rules_api_url`, optional): when set, adds `RELAY_RULES_API_URL` to the
-  container environment; when empty, the variable is omitted entirely rather than passed empty.
 
 ## Alarming
 
