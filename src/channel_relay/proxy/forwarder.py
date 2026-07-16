@@ -189,14 +189,6 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
     debug_mode = settings is not None and settings.debug_mode
 
     body = await request.body()
-    if debug_mode and settings is not None:
-        _log_debug_body(
-            channel=channel.name,
-            trace_id=trace_id,
-            direction="request",
-            body=body,
-            max_bytes=settings.debug_mode_max_body_bytes,
-        )
     kind = classify_content(request.headers.get("content-type"))
     if requires_inspection(channel) and body_exceeds_cap(len(body), max_inspect_bytes):
         logger.bind(channel=channel.name, body_bytes=len(body)).warning("Inspectable body over cap")
@@ -242,6 +234,7 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
     need_session_deanon = handler.requires_response_keyring(channel) and keyring is not None and kind is ContentKind.XML
     need_deanon = need_pii or need_session_deanon
     need_cred_body = channel.credential_swap_enabled and handler.requires_body_inspection(channel)
+    debug_body = body
     if body and (need_deanon or need_cred_body):
         gzipped = request.headers.get("content-encoding", "").lower() == "gzip"
         try:
@@ -256,8 +249,8 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
             pii_outcome = _request_pii_stage(keyring=keyring, body=working, ctx=ctx)
             if isinstance(pii_outcome, Response):
                 return pii_outcome
-            working = pii_outcome
-            changed = True
+            working, decrypted = pii_outcome
+            changed = decrypted > 0
         if need_cred_body:
             swap_outcome = _request_credential_swap_stage(
                 handler=handler, body=working, headers=headers, keyring=keyring, ctx=ctx
@@ -266,10 +259,20 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
                 return swap_outcome
             working, cred_changed = swap_outcome
             changed = changed or cred_changed
+        debug_body = working
         if changed:
             body = _gzip_encode(working) if gzipped else working
             # The body changed size; stale framing headers must be recomputed by httpx.
             _remove_body_framing(headers)
+
+    if debug_mode and settings is not None:
+        _log_debug_body(
+            channel=channel.name,
+            trace_id=trace_id,
+            direction="request",
+            body=debug_body,
+            max_bytes=settings.debug_mode_max_body_bytes,
+        )
 
     try:
         upstream = await client.request(
@@ -451,8 +454,12 @@ def _response_credential_swap_stage(
         )
 
 
-def _request_pii_stage(*, keyring: Keyring, body: bytes, ctx: _StageContext) -> bytes | Response:
-    """Pipeline stage [7]: de-anonymize the (plaintext) request body; error → contract Response."""
+def _request_pii_stage(*, keyring: Keyring, body: bytes, ctx: _StageContext) -> tuple[bytes, int] | Response:
+    """Pipeline stage [7]: de-anonymize the (plaintext) request body; error → contract Response.
+
+    Returns the (possibly unchanged) body together with the number of tokens decrypted, so the
+    caller can skip re-serializing/re-gzipping a body where nothing actually changed.
+    """
     channel = ctx.channel
     try:
         working, decrypted = deanonymize_request_body(body, keyring=keyring, max_bytes=ctx.max_inspect_bytes)
@@ -474,7 +481,7 @@ def _request_pii_stage(*, keyring: Keyring, body: bytes, ctx: _StageContext) -> 
         logger.bind(channel=channel.name, decrypted=decrypted).debug("De-anonymized tokens")
         if ctx.metrics is not None:
             ctx.metrics.record_pii_decrypted(channel.name, decrypted)
-    return working
+    return working, decrypted
 
 
 def _response_pii_stage(
