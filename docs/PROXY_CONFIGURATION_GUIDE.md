@@ -219,7 +219,7 @@ The most common `RELAY_*` settings are:
 | `RELAY_BASIC_AUTH_ENABLED` | `true` | Enables HTTP Basic Auth for relay routes. |
 | `RELAY_BASIC_AUTH_USER` | unset | Basic-auth username. Supply from a secret. |
 | `RELAY_BASIC_AUTH_PASS` | unset | Basic-auth password. Supply from a secret. |
-| `RELAY_DNS_RESOLVER` | `8.8.8.8` | Upstream DNS resolver. |
+| `RELAY_DNS_RESOLVER` | unset (native/OS resolver) | Pin a specific upstream DNS resolver; unset uses the system resolver. |
 | `RELAY_DEFAULT_CONNECT_TIMEOUT` | `30` | Default upstream connect timeout in seconds. |
 | `RELAY_DEFAULT_READ_TIMEOUT` | `120` | Default upstream read timeout in seconds. |
 | `RELAY_MAX_INSPECT_BYTES` | `8388608` | Maximum body size inspected for XML/PII/authorization processing. |
@@ -289,7 +289,6 @@ config:
             version: "^1.0"
   env:
     RELAY_BASIC_AUTH_ENABLED: "true"
-    RELAY_DNS_RESOLVER: "8.8.8.8"
     RELAY_DEFAULT_CONNECT_TIMEOUT: "30"
     RELAY_DEFAULT_READ_TIMEOUT: "120"
     RELAY_MAX_INSPECT_BYTES: "8388608"

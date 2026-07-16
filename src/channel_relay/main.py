@@ -235,7 +235,12 @@ def create_app(
     ``server_header=False`` is enforced at the server level (uvicorn) per §9.1.
     """
     settings = Settings()
-    configure_logging(debug=settings.debug)
+    configure_logging(debug=settings.debug or settings.debug_mode)
+    if settings.debug_mode:
+        logger.warning(
+            "debug_mode is enabled: full (trimmed) request/response bodies will be logged at "
+            "DEBUG level, including plaintext PII. Do not enable in production."
+        )
 
     meter_provider = build_meter_provider(settings, reader=metric_reader)
     metrics = RelayMetrics(meter_provider.get_meter(METER_NAME))

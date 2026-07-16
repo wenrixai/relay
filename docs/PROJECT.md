@@ -52,7 +52,7 @@ channels (Amadeus, Sabre, Travelport), and real observability/testability/Helm d
 | XML | **lxml**, hardened parser (§9.4) | Namespace-aware XPath + structural edits. `xmltodict` not used. |
 | Compression | **smaz** (antirez) | Compress PII plaintext before encryption (§8.4). |
 | Crypto | **cryptography** (`hazmat`) | AES-256-CTR, HKDF (§8.3–8.4). |
-| Logging | **Loguru** | Structured JSON; never logs PII/keys/bodies. |
+| Logging | **Loguru** | Structured JSON; never logs PII/keys/bodies except opt-in `debug_mode` (§11.0). |
 | Telemetry | **OpenTelemetry SDK**; bundled **otelcol** (later phase) | MVP = in-process OTLP/metrics (§11). |
 | Lint/format | **ruff** (lint + format) | |
 | Types | **mypy** (strict) | Required type hints on all public code. |
@@ -382,6 +382,17 @@ be processed twice. Bodies exceeding the inspectable-size cap when inspection is
   → localhost → Wenrix. Collector failure must not crash the relay.
 - Dashboard monitors each deployment; export a Prometheus/OTLP surface a `ServiceMonitor` can scrape
   (§13.5).
+
+### 11.0 `debug_mode` (troubleshooting escape hatch)
+`RELAY_DEBUG_MODE=true` logs the full (trimmed) request and response body at DEBUG level for
+every relayed call, tagged `channel`, `trace_id`, `direction`. This is the one deliberate
+exception to "never log bodies" (§Security) — it exists purely for local/staging troubleshooting
+of a live channel integration. Bodies logged this way can carry **plaintext PII**: the request
+body is already de-anonymized by the time it's logged, and the response body is logged before
+redaction. A startup warning is emitted whenever the flag is on; there is no environment gate, so
+operators are responsible for never enabling it in production. `RELAY_DEBUG_MODE_MAX_BODY_BYTES`
+(default 65536) trims each logged body; bodies over the cap are truncated with a `<truncated, N
+bytes total>` marker rather than dropped.
 
 ### 11.1 Custom metrics
 | Name | Type | Description | Tags |

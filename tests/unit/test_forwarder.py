@@ -549,3 +549,67 @@ def test_forward_supports_common_methods(method: str, travelfusion_client: Trave
         client.request(method, "/channel/tf/op")
 
     assert captured["req"].method == method
+
+
+def test_debug_mode_logs_full_request_and_response_body(
+    monkeypatch: pytest.MonkeyPatch,
+    travelfusion_client: TravelFusionClientFactory,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # ``create_app`` (invoked by the ``travelfusion_client`` fixture) rebinds Loguru's sink to
+    # the live ``sys.stderr`` via ``configure_logging``; capsys must already be active for that
+    # sink to land in captured output, so read it after the request via ``capsys.readouterr()``.
+    monkeypatch.setenv("RELAY_DEBUG_MODE", "true")
+    upstream_body = b"<Response><Fare>123</Fare></Response>"
+    transport = httpx.MockTransport(
+        lambda _request: httpx.Response(200, content=upstream_body, headers={"content-type": "application/xml"})
+    )
+
+    with travelfusion_client(transport) as client:
+        resp = client.post(
+            "/channel/tf/op",
+            content=b"<Search><Name>Jane</Name></Search>",
+            headers={"content-type": "application/xml", "x-wenrix-trace-id": "trace-debug"},
+        )
+
+    assert resp.status_code == 200
+    output = capsys.readouterr().err
+    assert "<Search><Name>Jane</Name></Search>" in output
+    assert "<Response><Fare>123</Fare></Response>" in output
+    assert "trace-debug" in output
+    assert '"direction": "request"' in output
+    assert '"direction": "response"' in output
+
+
+def test_debug_mode_off_by_default_does_not_log_body(
+    travelfusion_client: TravelFusionClientFactory,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transport = httpx.MockTransport(lambda _request: httpx.Response(200, content=b"<Ok/>"))
+
+    with travelfusion_client(transport) as client:
+        client.post(
+            "/channel/tf/op",
+            content=b"<TopSecretPassport>X1234567</TopSecretPassport>",
+            headers={"content-type": "application/xml"},
+        )
+
+    assert "TopSecretPassport" not in capsys.readouterr().err
+
+
+def test_debug_mode_trims_oversized_body(
+    monkeypatch: pytest.MonkeyPatch,
+    travelfusion_client: TravelFusionClientFactory,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setenv("RELAY_DEBUG_MODE", "true")
+    monkeypatch.setenv("RELAY_DEBUG_MODE_MAX_BODY_BYTES", "16")
+    big_body = b"<Search>" + b"x" * 100 + b"</Search>"
+    transport = httpx.MockTransport(lambda _request: httpx.Response(200, content=b"<Ok/>"))
+
+    with travelfusion_client(transport) as client:
+        client.post("/channel/tf/op", content=big_body, headers={"content-type": "application/xml"})
+
+    output = capsys.readouterr().err
+    assert f"truncated, {len(big_body)} bytes total" in output
+    assert "x" * 100 not in output
