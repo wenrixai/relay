@@ -38,18 +38,18 @@ config:
   telemetry:
     otlpEndpoint: ""
 
-# --- PII master-key Secret (PROJECT.md §13.2, §8.3, D4) ---
-# Created create-if-absent by a pre-install hook; NEVER regenerated on `helm upgrade`.
-# Keyring JSON: {"<epoch_int>": "<base64(32-byte key)>"}. Rotate by adding a new epoch and setting
-# activeEpoch; retain prior epochs so existing tokens stay decryptable.
+# --- PII master-key Secret (PROJECT.md §13.2, §8.3) ---
+# Created create-if-absent by a normal template guarded by `lookup`; NEVER regenerated on `helm upgrade`.
+# Keyring source: a single base64(32-byte) master key. Key rotation is not handled by the relay;
+# it will be reintroduced later through a dedicated KMS store plugin.
 piiKeyring:
   enabled: true
   # Name of the Secret holding the keyring file. Defaults to <fullname>-pii-keyring.
   secretName: ""
   # Key within the Secret and the mount path wired to RELAY_PII_KEYRING_FILE.
+  # Kept as keyring.json for backward compatibility with existing Secrets (holds a bare key now).
   key: keyring.json
   mountPath: /etc/wenrix/keys
-  activeEpoch: 0
   # When true, a plain (non-hook) template guarded by a `lookup` generates the key only if the
   # Secret is absent. `lookup` needs install-time RBAC and always returns empty under offline
   # rendering (`helm template`, GitOps controllers) — see README's GitOps section before using this

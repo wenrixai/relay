@@ -54,11 +54,11 @@ committed to the repository.
   generated once if it does not already exist and is **never regenerated on `helm
   upgrade`**.
 - **Never logged** and **never committed** to the repository.
-- Used to HKDF-derive the per-epoch encryption keys that protect traveler PII (see the
-  threat model below). Rotation is handled through the **1-byte key epoch** in the
-  keyring: a new epoch is added, new data is encrypted under the new epoch, and existing
-  tokens remain decryptable under their original epoch until retired.
-- Provisioning and step-by-step epoch rotation for the Helm deployment are documented in
+- Used to HKDF-derive the encryption keys that protect traveler PII (see the
+  threat model below). Key rotation is not handled by the relay — it will be reintroduced
+  later through a dedicated KMS store plugin; the relay loads a single master key and never
+  rotates or re-encrypts.
+- Provisioning for the Helm deployment is documented in
   `deployment/helm/chart/README.md` (create-if-absent Secret, `lookup` guard, mounted at
   `RELAY_PII_KEYRING_FILE`).
 
@@ -97,8 +97,7 @@ individual PII fields.
 
 - **Field confidentiality**: PII fields are encrypted with **AES-256-CTR** into
   self-describing `ENC_<base64url(control byte || 96-bit IV || ciphertext)>` tokens.
-  Plaintext is smaz-compressed before encryption. Keys are HKDF-derived and selected by a
-  1-byte key epoch.
+  Plaintext is smaz-compressed before encryption. Keys are HKDF-derived from a single master key.
 - **Transport integrity**: provided by **TLS**.
 - **Credential swapping and transparency**: channel credentials are swapped
   **structurally** (via lxml, never find-and-replace), and relay-specific headers are

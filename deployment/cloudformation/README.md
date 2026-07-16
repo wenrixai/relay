@@ -40,7 +40,7 @@ Set the keyring after the stack exists (the secret is created empty and **retain
 ```bash
 aws secretsmanager put-secret-value \
   --secret-id wenrix-relay/pii-keyring \
-  --secret-string '{"0":"'"$(head -c32 /dev/urandom | base64)"'"}'
+  --secret-string "$(head -c32 /dev/urandom | base64)"
 ```
 
 ## Security posture
@@ -82,5 +82,5 @@ aws cloudformation validate-template --template-body file://deployment/cloudform
 ```
 
 Parameters mirror the Terraform variables (`ImageUri`, `WenrixIngressCidr`, `CertificateArn`,
-`RelayConfigJson`, `PiiKeyEpochActive`, `BasicAuthEnabled`, `BasicAuthUser`, `BasicAuthPass`,
+`RelayConfigJson`, `BasicAuthEnabled`, `BasicAuthUser`, `BasicAuthPass`,
 `DesiredCount`, `Min/MaxCapacity`, `VpcCidr`, …).

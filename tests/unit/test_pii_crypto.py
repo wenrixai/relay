@@ -1,4 +1,4 @@
-"""Tests for the PII crypto keyring: loading, epochs, HKDF derivation (T2.1)."""
+"""Tests for the PII crypto keyring: loading, single-key format, HKDF derivation (T2.1)."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ from channel_relay.main import build_keyring
 from channel_relay.pii.crypto import (
     Keyring,
     KeyringError,
-    UnknownEpochError,
     load_keyring,
 )
 from channel_relay.settings import Settings
@@ -24,131 +23,94 @@ def b64key(seed: int) -> str:
     return pybase64.b64encode(bytes([seed]) * 32).decode()
 
 
-def keyring_json(epochs: dict[int, str]) -> str:
-    return json.dumps({str(epoch): key for epoch, key in epochs.items()})
+def legacy_object(entries: dict[int, str]) -> str:
+    """A legacy ``{epoch: key}`` JSON keyring document."""
+    return json.dumps({str(epoch): key for epoch, key in entries.items()})
 
 
-def test_valid_keyring_loads_epochs() -> None:
-    keyring = Keyring.from_json(keyring_json({0: b64key(1), 1: b64key(2)}))
-    assert keyring.epochs == (0, 1)
-    assert len(keyring.enc_key(0)) == 32
-    assert len(keyring.enc_key(1)) == 32
+def test_bare_base64_key_loads() -> None:
+    keyring = Keyring.from_json(b64key(1))
+    assert len(keyring.enc_key) == 32
 
 
-def test_epoch_out_of_range_rejected() -> None:
-    with pytest.raises(KeyringError):
-        Keyring.from_json(keyring_json({16: b64key(1)}))
-    with pytest.raises(KeyringError):
-        Keyring.from_json(keyring_json({-1: b64key(1)}))
+def test_legacy_single_entry_object_loads() -> None:
+    keyring = Keyring.from_json(legacy_object({0: b64key(1)}))
+    assert len(keyring.enc_key) == 32
 
 
-def test_non_integer_epoch_rejected() -> None:
-    with pytest.raises(KeyringError):
-        Keyring.from_json(json.dumps({"zero": b64key(1)}))
+def test_multi_entry_object_rejected() -> None:
+    with pytest.raises(KeyringError, match="rotation"):
+        Keyring.from_json(legacy_object({0: b64key(1), 1: b64key(2)}))
+
+
+def test_single_non_zero_entry_object_rejected() -> None:
+    # A one-key {"5": ...} secret loads a valid key but its epoch-5 tokens would 502; fail closed.
+    with pytest.raises(KeyringError, match="rotation"):
+        Keyring.from_json(legacy_object({5: b64key(1)}))
 
 
 def test_wrong_key_length_rejected() -> None:
     short = pybase64.b64encode(b"short").decode()
     with pytest.raises(KeyringError):
-        Keyring.from_json(keyring_json({0: short}))
+        Keyring.from_json(short)
+    with pytest.raises(KeyringError):
+        Keyring.from_json(legacy_object({0: short}))
 
 
 def test_malformed_base64_rejected() -> None:
     with pytest.raises(KeyringError):
-        Keyring.from_json(json.dumps({"0": "!!!not-base64!!!"}))
+        Keyring.from_json("!!!not-base64!!!")
 
 
-def test_malformed_json_rejected() -> None:
+def test_malformed_json_object_rejected() -> None:
     with pytest.raises(KeyringError):
         Keyring.from_json("{not json")
 
 
-def test_empty_keyring_rejected() -> None:
+def test_empty_object_rejected() -> None:
     with pytest.raises(KeyringError):
         Keyring.from_json("{}")
 
 
-def test_active_epoch_defaults_to_highest() -> None:
-    keyring = Keyring.from_json(keyring_json({0: b64key(1), 3: b64key(2)}))
-    assert keyring.active_epoch == 3
-
-
-def test_configured_active_epoch_used() -> None:
-    keyring = Keyring.from_json(keyring_json({0: b64key(1), 3: b64key(2)}), active_epoch=0)
-    assert keyring.active_epoch == 0
-
-
-def test_configured_active_epoch_missing_rejected() -> None:
-    with pytest.raises(KeyringError):
-        Keyring.from_json(keyring_json({0: b64key(1)}), active_epoch=5)
-
-
 def test_hkdf_derivation_deterministic() -> None:
-    ring_a = Keyring.from_json(keyring_json({0: b64key(1)}))
-    ring_b = Keyring.from_json(keyring_json({0: b64key(1)}))
-    assert ring_a.enc_key(0) == ring_b.enc_key(0)
-
-
-def test_different_epoch_keys_derive_differently() -> None:
-    keyring = Keyring.from_json(keyring_json({0: b64key(1), 1: b64key(2)}))
-    assert keyring.enc_key(0) != keyring.enc_key(1)
+    ring_a = Keyring.from_json(b64key(1))
+    ring_b = Keyring.from_json(b64key(1))
+    assert ring_a.enc_key == ring_b.enc_key
 
 
 def test_derived_key_differs_from_master() -> None:
-    keyring = Keyring.from_json(keyring_json({0: b64key(1)}))
-    assert keyring.enc_key(0) != bytes([1]) * 32
+    keyring = Keyring.from_json(b64key(1))
+    assert keyring.enc_key != bytes([1]) * 32
 
 
 def test_siv_key_is_64_bytes() -> None:
-    keyring = Keyring.from_json(keyring_json({0: b64key(1)}))
-    assert len(keyring.siv_key(0)) == 64
+    keyring = Keyring.from_json(b64key(1))
+    assert len(keyring.siv_key) == 64
 
 
 def test_siv_key_derivation_deterministic() -> None:
-    ring_a = Keyring.from_json(keyring_json({0: b64key(1)}))
-    ring_b = Keyring.from_json(keyring_json({0: b64key(1)}))
-    assert ring_a.siv_key(0) == ring_b.siv_key(0)
-
-
-def test_different_epoch_siv_keys_derive_differently() -> None:
-    keyring = Keyring.from_json(keyring_json({0: b64key(1), 1: b64key(2)}))
-    assert keyring.siv_key(0) != keyring.siv_key(1)
+    ring_a = Keyring.from_json(b64key(1))
+    ring_b = Keyring.from_json(b64key(1))
+    assert ring_a.siv_key == ring_b.siv_key
 
 
 def test_siv_key_domain_separated_from_enc_key() -> None:
-    keyring = Keyring.from_json(keyring_json({0: b64key(1)}))
-    enc, siv = keyring.enc_key(0), keyring.siv_key(0)
+    keyring = Keyring.from_json(b64key(1))
+    enc, siv = keyring.enc_key, keyring.siv_key
     assert enc != siv
     assert not siv.startswith(enc)
 
 
 def test_siv_key_differs_from_master() -> None:
-    keyring = Keyring.from_json(keyring_json({0: b64key(1)}))
-    assert not keyring.siv_key(0).startswith(bytes([1]) * 32)
-
-
-def test_siv_key_unknown_epoch_raises_with_epoch_only() -> None:
-    keyring = Keyring.from_json(keyring_json({0: b64key(7)}))
-    with pytest.raises(UnknownEpochError) as excinfo:
-        keyring.siv_key(9)
-    message = str(excinfo.value)
-    assert "9" in message
-    assert b64key(7) not in message
-
-
-def test_unknown_epoch_raises_with_epoch_only() -> None:
-    keyring = Keyring.from_json(keyring_json({0: b64key(7)}))
-    with pytest.raises(UnknownEpochError) as excinfo:
-        keyring.enc_key(9)
-    message = str(excinfo.value)
-    assert "9" in message
-    assert b64key(7) not in message
+    keyring = Keyring.from_json(b64key(1))
+    assert not keyring.siv_key.startswith(bytes([1]) * 32)
 
 
 def test_error_messages_never_contain_key_material() -> None:
     with pytest.raises(KeyringError) as excinfo:
-        Keyring.from_json(keyring_json({16: b64key(5)}))
+        Keyring.from_json(legacy_object({0: b64key(5), 1: b64key(6)}))
     assert b64key(5) not in str(excinfo.value)
+    assert b64key(6) not in str(excinfo.value)
 
 
 def test_load_keyring_returns_none_without_sources() -> None:
@@ -156,22 +118,22 @@ def test_load_keyring_returns_none_without_sources() -> None:
 
 
 def test_load_keyring_from_inline() -> None:
-    keyring = load_keyring(inline=keyring_json({0: b64key(1)}), file_path=None)
+    keyring = load_keyring(inline=b64key(1), file_path=None)
     assert keyring is not None
-    assert keyring.epochs == (0,)
+    assert len(keyring.enc_key) == 32
 
 
 def test_load_keyring_file_wins_over_inline(tmp_path: Path) -> None:
-    path = tmp_path / "keyring.json"
-    path.write_text(keyring_json({2: b64key(9)}))
-    keyring = load_keyring(inline=keyring_json({0: b64key(1)}), file_path=str(path))
+    path = tmp_path / "keyring.key"
+    path.write_text(b64key(9))
+    keyring = load_keyring(inline=b64key(1), file_path=str(path))
     assert keyring is not None
-    assert keyring.epochs == (2,)
+    assert keyring.enc_key == Keyring.from_json(b64key(9)).enc_key
 
 
 def test_load_keyring_missing_file_rejected(tmp_path: Path) -> None:
     with pytest.raises(KeyringError):
-        load_keyring(inline=None, file_path=str(tmp_path / "absent.json"))
+        load_keyring(inline=None, file_path=str(tmp_path / "absent.key"))
 
 
 def _config_with_pii(enabled: bool) -> RelayConfig:
@@ -198,10 +160,10 @@ def test_startup_tolerates_missing_keyring_when_pii_disabled() -> None:
 
 
 def test_startup_loads_keyring_when_configured() -> None:
-    settings = Settings(pii_keyring=keyring_json({0: b64key(1)}))
+    settings = Settings(pii_keyring=b64key(1))
     keyring = build_keyring(settings, _config_with_pii(enabled=True))
     assert keyring is not None
-    assert keyring.active_epoch == 0
+    assert len(keyring.enc_key) == 32
 
 
 def test_startup_rejects_invalid_keyring_even_without_pii() -> None:

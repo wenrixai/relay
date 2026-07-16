@@ -21,7 +21,7 @@ terraform apply
 Provide the PII keyring out-of-band (never commit it):
 
 ```bash
-export TF_VAR_pii_keyring_json='{"0":"'"$(head -c32 /dev/urandom | base64)"'"}'
+export TF_VAR_pii_keyring_json="$(head -c32 /dev/urandom | base64)"
 terraform apply
 ```
 
@@ -40,8 +40,9 @@ terraform apply
   `RELAY_CONFIG_FILE`. This deployment does not use channel credential swap, so the config JSON
   itself carries no secrets — it is still marked `sensitive` in Terraform to avoid it leaking into
   plan/apply output. For larger/static config, bake it into a derived image instead.
-- `RELAY_PII_KEYRING` is injected from Secrets Manager. Rotate by adding a new epoch to the keyring
-  JSON and bumping `pii_key_epoch_active`; keep prior epochs so existing tokens stay decryptable.
+- `RELAY_PII_KEYRING` is injected from Secrets Manager as a single base64(32-byte) master key. Key
+  rotation is not handled by the relay — it will be reintroduced later through a dedicated KMS store
+  plugin.
 - **Basic auth** (`basic_auth_enabled`, default `true`): the app crash-loops if enabled without
   credentials, so `basic_auth_user` / `basic_auth_pass` are required (non-empty) whenever it's
   enabled — a `check` block fails `plan`/`apply` early with a clear error if they're missing.

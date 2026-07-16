@@ -22,7 +22,6 @@ def _basic(user: str, password: str) -> str:
 
 
 KEYRING_VALUE = "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE="
-KEYRING_JSON = f'{{"0": "{KEYRING_VALUE}"}}'
 
 
 def _admin_client(*, settings: Settings | None = None) -> TestClient:
@@ -42,8 +41,7 @@ def _admin_client(*, settings: Settings | None = None) -> TestClient:
     app.state.settings.basic_auth_user = "admin"
     app.state.settings.basic_auth_pass = "secret-pass"
     app.state.settings.otlp_endpoint = "https://otel.example.test:4317"
-    app.state.settings.pii_keyring = KEYRING_JSON
-    app.state.settings.pii_key_epoch_active = 0
+    app.state.settings.pii_keyring = KEYRING_VALUE
     if settings is not None:
         app.state.settings = settings
     return TestClient(app)
@@ -84,7 +82,6 @@ def test_admin_flare_returns_redacted_diagnostics_snapshot() -> None:
     assert body["settings"]["otlp_endpoint_configured"] is True
     assert body["settings"]["pii_keyring_configured"] is True
     assert body["keyring"]["configured"] is True
-    assert body["keyring"]["active_epoch"] == 0
 
     rules = body["rules"]
     assert rules["loaded"] is True

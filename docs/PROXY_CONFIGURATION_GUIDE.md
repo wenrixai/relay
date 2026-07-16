@@ -155,7 +155,7 @@ Migration is intentionally fail-fast. Existing Travelport configurations must re
 keys or an incomplete `username`/`password` pair do not start. Travelport session keys are encrypted
 on responses and restored in the documented `SessTok/@id` and request `SessionKey` attributes, so an
 enabled Travelport credential swap requires `RELAY_PII_KEYRING` or `RELAY_PII_KEYRING_FILE` even when
-`pii.enabled` is false. Keep old key epochs until all outstanding sessions have expired.
+`pii.enabled` is false. Keep the master key stable until all outstanding sessions have expired.
 
 ## PII Configuration
 
@@ -181,21 +181,19 @@ Use these modes:
 | Encrypted tokens | `pii.enabled: true`, `force_redact: false` | Wenrix must be able to send encrypted fields back through the relay for de-anonymization. |
 | Fixed redaction | `pii.enabled: true`, `force_redact: true` | The customer wants irreversible redaction rather than reversible encrypted tokens. |
 
-Encrypted-token mode requires a PII keyring. The keyring format is:
+Encrypted-token mode requires a PII keyring. The keyring source is a single base64-encoded
+32-byte master key:
 
-```json
-{
-  "0": "BASE64_ENCODED_32_BYTE_KEY"
-}
+```
+BASE64_ENCODED_32_BYTE_KEY
 ```
 
-Key rotation uses integer epochs:
+A legacy one-entry `{"0": "BASE64_ENCODED_32_BYTE_KEY"}` object is still accepted for
+already-provisioned secrets.
 
-1. Add a new epoch to the keyring.
-2. Set the active epoch to the new value.
-3. Keep old epochs until no outstanding tokens reference them.
-
-Never replace or remove an existing epoch while tokens created with that epoch may still be in use.
+Key rotation is not handled by the relay. It will be reintroduced later through a dedicated KMS
+store plugin. Until then, never replace or remove the master key while tokens created with it may
+still be in use — doing so makes those tokens undecryptable.
 
 ### Supported content for inspection
 
@@ -226,7 +224,6 @@ The most common `RELAY_*` settings are:
 | `RELAY_OTLP_ENDPOINT` | unset | Optional OTLP/gRPC endpoint. URL form (`http://host:4317`) is recommended; a bare `host:port` is also accepted. |
 | `RELAY_PII_KEYRING` | unset | Inline keyring JSON. Prefer mounted files or managed secrets where available. |
 | `RELAY_PII_KEYRING_FILE` | unset | Mounted keyring file path. Takes precedence over inline keyring. |
-| `RELAY_PII_KEY_EPOCH_ACTIVE` | highest epoch | Active key epoch for new encrypted tokens. |
 | `RELAY_DEBUG` | `false` | Verbose startup behavior. Secrets and PII are still not logged. |
 
 When `RELAY_BASIC_AUTH_ENABLED` is true, both `RELAY_BASIC_AUTH_USER` and
@@ -268,7 +265,6 @@ helm install relay deployment/helm/chart \
 | `basicAuth.enabled` | Keep enabled unless another approved client-auth control is in place. |
 | `basicAuth.secretName` | Required when `basicAuth.enabled` is true. Kubernetes Secret with `user` and `pass` keys. |
 | `piiKeyring.enabled` | Mount a PII keyring Secret when encrypted PII tokens are used. |
-| `piiKeyring.activeEpoch` | Active key epoch for new tokens. |
 
 Example channel values:
 
@@ -355,7 +351,6 @@ relay_config_json = <<JSON
 }
 JSON
 
-pii_key_epoch_active = 0
 otlp_endpoint        = "http://otel-collector.telemetry.internal:4317"
 desired_count        = 2
 min_capacity         = 2
@@ -365,7 +360,7 @@ max_capacity         = 10
 Provide the PII keyring out of band:
 
 ```bash
-export TF_VAR_pii_keyring_json='{"0":"BASE64_ENCODED_32_BYTE_KEY"}'
+export TF_VAR_pii_keyring_json="BASE64_ENCODED_32_BYTE_KEY"
 terraform apply
 ```
 
@@ -400,7 +395,7 @@ The relay exposes these operational endpoints:
 Use `/readiness` for load-balancer and orchestrator health checks.
 
 The `/admin/flare` response is designed for support diagnostics. It includes runtime details,
-readiness status, redacted configuration shape, keyring epoch metadata, rules version, channel
+readiness status, redacted configuration shape, whether a keyring is configured, rules version, channel
 summaries, and metric counters. It does not return secret values.
 
 ## Validation Checklist
@@ -414,7 +409,6 @@ Before opening traffic to Wenrix, verify:
 - Egress reaches DNS, upstream channel APIs, and the telemetry endpoint if configured.
 - `config.channels` contains no plaintext production secrets.
 - The PII keyring is present when any channel requires encrypted PII tokens.
-- The active PII key epoch exists in the keyring.
 - Telemetry and logs are visible in the customer's monitoring platform.
 - A test request reaches the expected upstream channel through `/channel/{name}/...`.
 
@@ -428,7 +422,7 @@ Before opening traffic to Wenrix, verify:
 | Requests return `404` | Unknown channel name | Confirm the route channel name matches a configured `channels[].name`. |
 | Requests return `413` | Body exceeds `RELAY_MAX_INSPECT_BYTES` and inspection is required | Increase the limit only after confirming expected message sizes and memory impact. |
 | Requests return `502` with XML or credential errors | Payload must be inspected but is malformed or missing expected credential targets | Confirm channel type, upstream operation format, and credential-swap settings. |
-| PII tokens cannot be decrypted | Keyring epoch missing or changed | Restore the original epoch key and keep historical epochs until tokens expire. |
+| PII tokens cannot be decrypted | Master key missing or changed | Restore the original master key; it must stay stable while tokens are outstanding. |
 | Upstream timeouts | Channel unreachable or timeout too low | Verify egress allow-lists, DNS, channel endpoint, and per-channel timeout values. |
 
 For support escalation, provide the relay version, deployment platform, channel name, readiness

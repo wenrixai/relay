@@ -61,17 +61,14 @@ GitOps users **must** create the keyring Secret externally (out-of-band, once) a
 `piiKeyring.secretName` to its name so this template is skipped entirely; do not rely on the
 `lookup` guard when the chart is rendered/applied by a GitOps controller.
 
-Keyring format: `{"<epoch_int>": "<base64(32-byte key)>"}`.
+Keyring format: a single base64(32-byte) master key. (A legacy one-entry
+`{"0": "<base64(32-byte key)>"}` object is still accepted for already-provisioned Secrets.)
 
-### Epoch rotation
+### Key rotation
 
-Rotation uses the 1-byte key epoch — **never** replace an existing epoch's key while its tokens are
-still outstanding, or those tokens become undecryptable:
-
-1. Add a new epoch entry to the keyring JSON (keep all prior epochs).
-2. Set `piiKeyring.activeEpoch` to the new epoch. New tokens encrypt under it; old tokens still
-   decrypt under their original epoch.
-3. Retire an old epoch only once no outstanding token references it.
+Key rotation is not handled by the relay. It will be reintroduced later through a dedicated KMS
+store plugin. Until then the keyring holds a single master key; **never** replace it while its
+tokens are still outstanding, or those tokens become undecryptable.
 
 ## Key values
 

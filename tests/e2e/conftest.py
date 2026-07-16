@@ -25,8 +25,8 @@ from channel_relay.config.models import ChannelConfig, ChannelPII, ChannelType, 
 from channel_relay.main import create_app
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
-# Deterministic single-epoch keyring: 32 bytes of 'A'. Matches the integration suite.
-KEYRING_JSON = '{"0": "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE="}'
+# Deterministic single-key keyring: base64 of 32 bytes of 'A'. Matches the integration suite.
+KEYRING_JSON = "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE="
 # Replacement SOAP security fragment installed by the credential swap; ">RELAY<" is the marker.
 SOAP_SECURITY = '<wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">RELAY</wsse:Security>'
 _SOAP_ENV = "http://schemas.xmlsoap.org/soap/envelope/"

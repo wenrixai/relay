@@ -104,16 +104,10 @@ variable "relay_config_json" {
 }
 
 variable "pii_keyring_json" {
-  description = "PII keyring JSON {\"<epoch>\":\"<base64(32B)>\"}. Stored in Secrets Manager."
+  description = "PII keyring: a single base64(32-byte) master key. Stored in Secrets Manager."
   type        = string
   sensitive   = true
   default     = ""
-}
-
-variable "pii_key_epoch_active" {
-  description = "Active PII key epoch."
-  type        = number
-  default     = 0
 }
 
 variable "otlp_endpoint" {

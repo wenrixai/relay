@@ -54,9 +54,10 @@ content follows the `transparent-relay` fail-closed contract; rules cannot reque
 For channels with `pii.enabled: true`, the relay SHALL de-anonymize requests envelope-driven (no
 rules required): parse the XML, scan text and attribute values for `ENC_` tokens — matching each
 occurrence of the token contract (`TOKEN_RE`) whether it constitutes the entire value or is embedded
-within surrounding free text — decode and decrypt each via the keyring (epoch from the control byte,
-smaz-decompress when flagged), splice the plaintext over each matched span, re-serialize, and
-forward. The channel always receives plaintext.
+within surrounding free text — decode and decrypt each via the keyring (smaz-decompress when
+flagged), splice the plaintext over each successfully decrypted span, re-serialize, and forward.
+Every token that decrypts is delivered to the channel as plaintext; a failed embedded span is left
+unchanged per the shape-based failure semantics below.
 
 Failure semantics differ by shape, because an embedded `ENC_`-prefixed word in prose is ambiguous
 (a user may legitimately type it) whereas a whole-value token is not: when a value is EXACTLY one

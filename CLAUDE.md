@@ -116,7 +116,7 @@ Two config layers, an app factory, a handler registry, and a linear forward pipe
 - Keep pipeline stages small and independently testable.
 
 ## Security (hard constraints)
-- Field crypto: AES-256-CTR, HKDF `K_enc`, keyring by 1-byte epoch; smaz-compress before encrypt
+- Field crypto: AES-256-CTR, HKDF `K_enc`, single master key; smaz-compress before encrypt
   (compress-if-smaller, flagged); token `ENC_ + base64url(control ‖ 96-bit IV ‖ ciphertext)`.
   Confidentiality-only in v1; do not drop IV below 96-bit; keep the format versioned.
 - Keys come from the mounted Secret/env; never hard-coded, logged, or committed. The Helm Secret is
