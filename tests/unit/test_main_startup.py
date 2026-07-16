@@ -18,6 +18,7 @@ from channel_relay.main import (
     build_http_client,
     client_limits,
     cli,
+    create_app,
     validate_auth_config,
     warn_insecure_tls_config,
     warn_unenforced_config,
@@ -110,6 +111,21 @@ def test_no_warning_without_insecure_tls_channel() -> None:
     finally:
         logger.remove(sink_id)
     assert sink.getvalue() == ""
+
+
+def test_debug_mode_warns_at_app_creation(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    # ``create_app`` calls ``configure_logging``, which rebinds Loguru's sink to the live
+    # ``sys.stderr`` (removing any sink added beforehand) — read via capsys, not logger.add.
+    monkeypatch.setenv("RELAY_DEBUG_MODE", "true")
+    create_app(config=RelayConfig())
+    output = capsys.readouterr().err
+    assert "debug_mode" in output
+    assert "production" in output
+
+
+def test_no_debug_mode_warning_by_default(capsys: pytest.CaptureFixture[str]) -> None:
+    create_app(config=RelayConfig())
+    assert "debug_mode" not in capsys.readouterr().err
 
 
 def test_cli_uvicorn_hardening_kwargs(monkeypatch: pytest.MonkeyPatch) -> None:

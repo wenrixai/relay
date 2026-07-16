@@ -109,7 +109,10 @@ Two config layers, an app factory, a handler registry, and a linear forward pipe
   bodies. Credential swaps and redaction are **structural** (parse → locate node → edit → re-serialize).
   `extract_patterns` regex on a value already reached by XPath (e.g. an SSN inside a remark/free-text
   node) is fine — the node is still located structurally; the regex only narrows the rewritten span.
-- Logging: Loguru JSON. Log `x-wenrix-trace-id`; never log bodies, PII, keys, or credentials.
+- Logging: Loguru JSON. Log `x-wenrix-trace-id`; never log bodies, PII, keys, or credentials —
+  except the opt-in `debug_mode` flag (`RELAY_DEBUG_MODE`), which deliberately logs trimmed
+  request/response bodies for troubleshooting (docs/PROJECT.md §11.0). Never enable in production;
+  a startup warning fires whenever it's on.
 - Keep pipeline stages small and independently testable.
 
 ## Security (hard constraints)

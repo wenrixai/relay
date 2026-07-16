@@ -40,8 +40,7 @@ from channel_relay.pii.engine import (
     redact_response,
 )
 from channel_relay.pii.rules import RuleSet
-from channel_relay.pii.xml_ops import XmlOpsError, XmlOversizeError
-from channel_relay.pii.xml_ops import parse_bytes, serialize
+from channel_relay.pii.xml_ops import XmlOpsError, XmlOversizeError, parse_bytes, serialize
 from channel_relay.proxy.errors import (
     TRACE_ID_HEADER,
     ErrorReason,
@@ -51,6 +50,7 @@ from channel_relay.proxy.errors import (
     unsupported_content_response,
     upstream_timeout_response,
 )
+from channel_relay.settings import Settings
 
 # Headers that become stale once the relay rewrites a body (recomputed downstream).
 _BODY_SENSITIVE_HEADERS = frozenset({"content-length", "content-encoding"})
@@ -125,6 +125,23 @@ def _gzip_encode(body: bytes) -> bytes:
     return gzip.compress(body)
 
 
+def _trim_for_debug(body: bytes, max_bytes: int) -> str:
+    """Decode a body for debug logging, trimming to ``max_bytes`` (§debug-mode).
+
+    Never raises on non-UTF-8 bytes; undecodable bytes are replaced so logging can never crash
+    the request path.
+    """
+    truncated = len(body) > max_bytes
+    text = body[:max_bytes].decode("utf-8", errors="replace")
+    return f"{text}...<truncated, {len(body)} bytes total>" if truncated else text
+
+
+def _log_debug_body(*, channel: str, trace_id: str | None, direction: str, body: bytes, max_bytes: int) -> None:
+    logger.bind(channel=channel, trace_id=trace_id, direction=direction).debug(
+        "debug_mode body", body=_trim_for_debug(body, max_bytes)
+    )
+
+
 async def forward(
     client: httpx.AsyncClient,
     channel: ChannelConfig,
@@ -168,7 +185,18 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
         logger.bind(channel=channel.name).error("Channel has no upstream base configured")
         return internal_error_response(ErrorReason.INTERNAL_ERROR, "channel has no upstream configured", trace_id)
 
+    settings: Settings | None = getattr(request.app.state, "settings", None)
+    debug_mode = settings is not None and settings.debug_mode
+
     body = await request.body()
+    if debug_mode and settings is not None:
+        _log_debug_body(
+            channel=channel.name,
+            trace_id=trace_id,
+            direction="request",
+            body=body,
+            max_bytes=settings.debug_mode_max_body_bytes,
+        )
     kind = classify_content(request.headers.get("content-type"))
     if requires_inspection(channel) and body_exceeds_cap(len(body), max_inspect_bytes):
         logger.bind(channel=channel.name, body_bytes=len(body)).warning("Inspectable body over cap")
@@ -298,6 +326,15 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
         for name in list(response_headers):
             if name.lower() in _BODY_SENSITIVE_HEADERS:
                 del response_headers[name]
+
+    if debug_mode and settings is not None:
+        _log_debug_body(
+            channel=channel.name,
+            trace_id=trace_id,
+            direction="response",
+            body=content,
+            max_bytes=settings.debug_mode_max_body_bytes,
+        )
 
     return Response(
         content=content,

@@ -44,3 +44,8 @@ class Settings(BaseSettings):
     pii_keyring_file: str | None = None
     pii_key_epoch_active: int | None = None
     debug: bool = False
+    # Logs the full (trimmed) request/response body at DEBUG level for every relayed call.
+    # Bodies may carry plaintext PII (de-anonymized request / pre-redaction response) — never
+    # enable in production. A startup warning is emitted whenever this is on (§11).
+    debug_mode: bool = False
+    debug_mode_max_body_bytes: int = Field(default=65_536, ge=0)

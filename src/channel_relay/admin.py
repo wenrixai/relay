@@ -108,6 +108,7 @@ def diagnostics_snapshot(request: Request) -> dict[str, Any]:
             "hostname": socket.gethostname(),
             "uptime_seconds": max(0.0, time.time() - started_at),
             "debug": settings.debug,
+            "debug_mode": settings.debug_mode,
         },
         "readiness": {
             "status": "not_ready" if reasons else "ready",
