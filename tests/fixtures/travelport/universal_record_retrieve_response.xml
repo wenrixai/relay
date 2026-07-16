@@ -1,0 +1,63 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+               xmlns:universal="http://www.travelport.com/schema/universal_v52_0"
+               xmlns:common="http://www.travelport.com/schema/common_v52_0"
+               xmlns:air="http://www.travelport.com/schema/air_v52_0">
+  <soap:Body>
+    <universal:UniversalRecordRetrieveRsp TraceId="TEST-TRACE-0001" TransactionId="TEST-TRANSACTION-0001">
+      <universal:UniversalRecord LocatorCode="TESTAA" Version="1" Status="Active">
+        <common:BookingTraveler Key="TEST-KEY-0001" NameNumber="1.1" TravelerType="ADT" DOB="1980-01-15" Gender="M">
+          <common:BookingTravelerName First="JOHN" Last="SMITH"/>
+          <common:PhoneNumber Key="TEST-KEY-0002" Type="None" Number="14155550100">
+            <common:ProviderReservationInfoRef Key="TEST-KEY-0003"/>
+          </common:PhoneNumber>
+          <common:Email Key="TEST-KEY-0004" EmailID="john.smith@example.test" Type="To">
+          </common:Email>
+          <common:LoyaltyCard Key="TEST-KEY-0005" SupplierCode="AA" CardNumber="AB123456" SupplierType="Air">
+            <common:ProviderReservationInfoRef Key="TEST-KEY-0003"/>
+          </common:LoyaltyCard>
+          <common:SSR Key="TEST-KEY-0006" Status="HK" Type="DOCS" FreeText="1/US/123456789/US/15JAN80/M/01JAN30/SMITH/JOHN" Carrier="AA" ProviderReservationInfoRef="TEST-KEY-0003"/>
+          <common:SSR Key="TEST-KEY-0007" Status="HK" Type="PSPT" FreeText="1/123456789/US/15JAN80/M" Carrier="YY" ProviderReservationInfoRef="TEST-KEY-0003"/>
+          <common:SSR Key="TEST-KEY-0008" Status="HK" Type="FOID" FreeText="USHK1/NI123456789-001.01" Carrier="AA" ProviderReservationInfoRef="TEST-KEY-0003"/>
+          <common:SSR Key="TEST-KEY-0009" Status="HK" Type="CTCE" FreeText="1/john.smith@example.test" Carrier="YY" ProviderReservationInfoRef="TEST-KEY-0003"/>
+          <common:SSR Key="TEST-KEY-0010" Status="HK" Type="CTCM" FreeText="14155550100" Carrier="YY" ProviderReservationInfoRef="TEST-KEY-0003"/>
+          <common:SSR Key="TEST-KEY-0011" SegmentRef="TEST-KEY-0012" Status="HK" Type="TKNE" FreeText="0991234567890C1" Carrier="AA" ProviderReservationInfoRef="TEST-KEY-0003"/>
+        </common:BookingTraveler>
+        <common:BookingTraveler Key="TEST-KEY-0013" NameNumber="2.1" TravelerType="ADT">
+          <common:BookingTravelerName First="JANE" Last="DOE"/>
+          <common:SSR Key="TEST-KEY-0014" Status="HK" Type="CTCR" FreeText="/REFUSED TO PROVIDE-1DOE/JANE" Carrier="YY" ProviderReservationInfoRef="TEST-KEY-0003"/>
+          <common:Address Key="TEST-KEY-0015">
+            <common:AddressName>JANE DOE</common:AddressName>
+            <common:Street>100 TEST STREET</common:Street>
+            <common:City>TESTVILLE</common:City>
+            <common:State>CA</common:State>
+            <common:PostalCode>00000</common:PostalCode>
+            <common:Country>US</common:Country>
+            <common:ProviderReservationInfoRef Key="TEST-KEY-0003"/>
+          </common:Address>
+        </common:BookingTraveler>
+        <common:OSI Key="TEST-KEY-0016" Carrier="YY" Text="CTCH 14155550199" ProviderReservationInfoRef="TEST-KEY-0003"/>
+        <common:OSI Key="TEST-KEY-0017" Carrier="YY" Text="DOE/J MISS DOB 15JAN20" ProviderReservationInfoRef="TEST-KEY-0003"/>
+        <common:OSI Key="TEST-KEY-0018" Carrier="YY" Text="SNC RLOC AA TESTBB" ProviderReservationInfoRef="TEST-KEY-0003"/>
+        <universal:ProviderReservationInfo Key="TEST-KEY-0003" ProviderCode="1P" LocatorCode="TESTCC" OwningPCC="TST"/>
+        <air:AirReservation LocatorCode="TESTDD">
+          <common:SupplierLocator SupplierCode="AA" SupplierLocatorCode="TESTEE" ProviderReservationInfoRef="TEST-KEY-0003"/>
+          <common:BookingTravelerRef Key="TEST-KEY-0001"/>
+          <common:ProviderReservationInfoRef Key="TEST-KEY-0003"/>
+          <air:AirSegment Key="TEST-KEY-0019" Carrier="AA" FlightNumber="100" Origin="JFK" Destination="LAX" ProviderReservationInfoRef="TEST-KEY-0003"/>
+          <air:DocumentInfo>
+            <air:TicketInfo AirPricingInfoRef="TEST-KEY-0020" BookingTravelerRef="TEST-KEY-0001" CountryCode="US" IATANumber="00000000" Number="0991234567890" Status="S" TicketIssueDate="2026-01-01T00:00:00.000+00:00" TicketingAgentSignOn="TST0001">
+              <common:Name First="JOHN" Last="SMITH"/>
+            </air:TicketInfo>
+          </air:DocumentInfo>
+        </air:AirReservation>
+        <common:GeneralRemark Key="TEST-KEY-0021" Category="Vendor" TypeInGds="Vendor" SupplierType="Air" ProviderReservationInfoRef="TEST-KEY-0003" SupplierCode="AA" Direction="Incoming">
+          <common:RemarkData>PASSENGER SMITH CONTACT CONFIRMED</common:RemarkData>
+        </common:GeneralRemark>
+        <common:FormOfPayment Key="TEST-KEY-0022" Type="Credit" Reusable="false" ProfileKey="TEST-PROFILE-0001">
+          <common:CreditCard Type="CA" Number="************1234" ExpDate="2030-12"/>
+          <common:ProviderReservationInfoRef Key="TEST-KEY-0003"/>
+        </common:FormOfPayment>
+      </universal:UniversalRecord>
+    </universal:UniversalRecordRetrieveRsp>
+  </soap:Body>
+</soap:Envelope>

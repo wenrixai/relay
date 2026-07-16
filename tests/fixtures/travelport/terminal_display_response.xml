@@ -1,0 +1,15 @@
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+               xmlns:terminal="http://www.travelport.com/schema/terminal_v52_0">
+  <soap:Body>
+    <terminal:TerminalRsp TraceId="TEST-TRACE-0002" TransactionId="TEST-TRANSACTION-0002" ResponseTime="1">
+      <terminal:TerminalCommandResponse>
+        <terminal:Text>TKT NO: 0991234567890                   ISSUED: 01JAN26 000000Z </terminal:Text>
+        <terminal:Text>RLOC  : 1P TESTAA GDS        VLOC: 1A TESTBB                    </terminal:Text>
+        <terminal:Text>NAME  : SMITH/JOHN MR                                           </terminal:Text>
+        <terminal:Text>1.1SMITH/JOHN MR 2.1DOE/JANEMISS</terminal:Text>
+        <terminal:Text>PRICE : 01JAN2026            PRICING PCC:  TST  CARRIER: AA     </terminal:Text>
+        <terminal:Text/>
+      </terminal:TerminalCommandResponse>
+    </terminal:TerminalRsp>
+  </soap:Body>
+</soap:Envelope>
