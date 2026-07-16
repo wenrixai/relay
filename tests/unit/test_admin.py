@@ -86,6 +86,16 @@ def test_admin_flare_returns_redacted_diagnostics_snapshot() -> None:
     assert body["keyring"]["configured"] is True
     assert body["keyring"]["active_epoch"] == 0
 
+    rules = body["rules"]
+    assert rules["loaded"] is True
+    assert rules["schema_version"]
+    assert rules["rules_version"]
+    assert rules["rule_count"] > 0
+    assert sum(rules["by_rule_type"].values()) == rules["rule_count"]
+    assert sum(rules["by_pii_type"].values()) == rules["rule_count"]
+    assert sum(rules["by_channel"].values()) == rules["rule_count"]
+    assert sum(rules["by_action"].values()) == rules["rule_count"]
+
     channel = body["channels"][0]
     assert channel["name"] == "sabre-prod"
     assert channel["type"] == "sabre"
