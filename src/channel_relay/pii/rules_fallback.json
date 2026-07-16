@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion+travelport-baseline-2026-07-16",
+  "rules_version": "amadeus+sabre+travelfusion+travelport-baseline-2026-07-16.1",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -137,6 +137,22 @@
       "extract_patterns": [
         {
           "pattern": "(\\d{3}-\\d{2}-\\d{4})"
+        }
+      ]
+    },
+    {
+      "id": "amadeus.pnr.remark_email",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv/a:miscellaneousRemarks/a:remarks/a:freetext | //a:dataElementsIndiv/a:extendedRemark/a:structuredRemark/a:freetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "email",
+      "method": "mask",
+      "extract_patterns": [
+        {
+          "pattern": "([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})"
         }
       ]
     },
