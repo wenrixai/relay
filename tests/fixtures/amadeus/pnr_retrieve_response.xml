@@ -524,6 +524,23 @@
                     <elementManagementData>
                         <reference>
                             <qualifier>OT</qualifier>
+                            <number>86</number>
+                        </reference>
+                        <segmentName>RM</segmentName>
+                        <lineNumber>27</lineNumber>
+                    </elementManagementData>
+                    <extendedRemark>
+                        <structuredRemark>
+                            <type>RM</type>
+                            <category>*</category>
+                            <freetext>0112*PARK JANGBIN MR RQ SEAT CHANGE</freetext>
+                        </structuredRemark>
+                    </extendedRemark>
+                </dataElementsIndiv>
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
                             <number>36</number>
                         </reference>
                         <segmentName>TK</segmentName>

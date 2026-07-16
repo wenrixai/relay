@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion+travelport-baseline-2026-07-16.1",
+  "rules_version": "amadeus+sabre+travelfusion+travelport-baseline-2026-07-16.2",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -155,6 +155,19 @@
           "pattern": "([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})"
         }
       ]
+    },
+    {
+      "id": "amadeus.pnr.remarks_reference",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "rule_type": "reference",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='RM']/a:otherDataFreetext/a:longFreetext | //a:dataElementsIndiv/a:miscellaneousRemarks/a:remarks/a:freetext | //a:dataElementsIndiv/a:extendedRemark/a:structuredRemark/a:freetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "source_pii_types": ["person", "email", "phone", "frequent_flyer"],
+      "pii_type": "person",
+      "method": "encrypt"
     },
     {
       "id": "amadeus.sales.person_name",
