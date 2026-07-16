@@ -7,7 +7,7 @@ how the code is laid out, not the full requirements. Canonical requirements live
 first:
 
 - **`openspec/specs/`** — product, security, architecture, and configuration requirements
-  (source of truth). Section refs like `§8.4` throughout the code point here / into `docs/PROJECT.md`.
+  (source of truth). Section refs like `§8.4` throughout the code point here / into `docs/PROJECT.md`. Usefull to understand how the code works and getting context.
 - **`docs/PROJECT.md`** — engineering spec: pipeline design, token format, error contract, decisions.
 - **`CONTRIBUTING.md`** — full workflow: Definition of Done, TDD, OpenSpec loop + exemptions, PR rules.
 
