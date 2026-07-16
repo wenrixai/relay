@@ -55,8 +55,6 @@ spec:
             {{- if .Values.piiKeyring.enabled }}
             - name: RELAY_PII_KEYRING_FILE
               value: {{ printf "%s/%s" .Values.piiKeyring.mountPath .Values.piiKeyring.key | quote }}
-            - name: RELAY_PII_KEY_EPOCH_ACTIVE
-              value: {{ .Values.piiKeyring.activeEpoch | quote }}
             {{- end }}
             {{- if .Values.basicAuth.enabled }}
             {{- $basicAuthSecretName := required "basicAuth.secretName is required when basicAuth.enabled=true — create it first: kubectl create secret generic <name> --from-literal=user=... --from-literal=pass=..." .Values.basicAuth.secretName }}

@@ -60,8 +60,8 @@ Implementation: `src/channel_relay/pii/` (`crypto.py`, `codec.py`, `engine.py`, 
 
 - **Cipher:** AES-256-CTR (default mode), confidentiality-only in v1.
 - **Token format:** `ENC_ + base64url_nopad(control_byte ‖ 96-bit IV ‖ ciphertext)`. The control byte
-  carries a 4-bit key epoch, a "compressed" flag, a "deterministic" flag, and 2 reserved-zero bits
-  (version headroom). `codec.py`.
+  carries a "compressed" flag, a "deterministic" flag, and 6 reserved-zero bits (version headroom).
+  `codec.py`.
 - **IV:** 12 random bytes (96-bit) per encryption, generated with `os.urandom`; the IV is unique per
   `(key, field)` and random IVs prevent ciphertext-equality correlation. Contractually never reduced
   below 96 bits.
@@ -70,7 +70,7 @@ Implementation: `src/channel_relay/pii/` (`crypto.py`, `codec.py`, `engine.py`, 
 
 ### 3.2 Deterministic mode (opt-in, authenticated)
 
-- Optional per-rule **AES-256-SIV** (RFC 5297, no nonce). Same plaintext + same key epoch yields the
+- Optional per-rule **AES-256-SIV** (RFC 5297, no nonce). The same plaintext yields the
   same token, so a consuming system can compare redacted values by equality. This equality is a
   deliberate, documented, bounded leak enabled only for PII types the caller genuinely correlates.
 - The 16-byte SIV synthetic IV doubles as an **authentication tag**, so deterministic tokens are
@@ -78,22 +78,21 @@ Implementation: `src/channel_relay/pii/` (`crypto.py`, `codec.py`, `engine.py`, 
 
 ### 3.3 Key management
 
-- **Master keys** live in an epoch-indexed keyring `{epoch: base64(32 bytes)}`, epochs 0–15. Master
-  keys are **never used directly** as cipher keys.
-- **Key derivation:** per-epoch `K_enc` and `K_siv` are derived via **HKDF-SHA256** with distinct
-  domain-separation info strings (`wenrix-pii-enc-v1`, `wenrix-pii-siv-v1`). `crypto.py`.
-- **Rotation:** via the 1-byte key epoch. A new epoch's key is added; new data encrypts under the new
-  epoch; existing tokens stay decryptable under their original epoch until retired. No re-encryption
-  event, no orphaned tokens.
+- **Master key** is a single base64(32-byte) key (a legacy one-entry `{"0": base64(32 bytes)}`
+  object is still accepted). The master key is **never used directly** as a cipher key.
+- **Key derivation:** `K_enc` and `K_siv` are derived from the single master key via **HKDF-SHA256**
+  with distinct domain-separation info strings (`wenrix-pii-enc-v1`, `wenrix-pii-siv-v1`). `crypto.py`.
+- **Rotation:** not handled by the relay. Key rotation will be reintroduced later through a dedicated
+  KMS store plugin. The relay loads a single master key and never rotates or re-encrypts.
 - **Provisioning (Kubernetes):** the master-key Secret is **create-if-absent** and is
   **never regenerated on `helm upgrade`** (`helm.sh/resource-policy: keep` + a `lookup` guard). The
   keyring is mounted read-only and referenced by `RELAY_PII_KEYRING_FILE`. See §7.
 - **Provisioning (AWS):** master key stored in AWS Secrets Manager with a 30-day recovery window and a
   `Retain` deletion/update-replace policy so tokens are never orphaned. See §8.
-- **Validation:** keyring parsing rejects malformed JSON, empty keyrings, out-of-range/non-integer
-  epochs, wrong key length (must decode to exactly 32 bytes), bad base64, or a missing active epoch.
-  All error messages reference epoch numbers only — **never key material**.
-- **Exposure surface:** only the epoch **ids** and the active epoch are ever exposed (e.g. via
+- **Validation:** keyring parsing rejects malformed JSON, an empty source, a multi-key object (key
+  rotation was removed), wrong key length (must decode to exactly 32 bytes), or bad base64. Error
+  messages **never** include key material.
+- **Exposure surface:** only whether a keyring is configured is ever exposed (e.g. via
   `/admin/flare`); raw key bytes are never returned outside internal crypto calls, logged, or committed.
 
 ### 3.4 Fail-closed crypto/PII behavior
@@ -105,7 +104,7 @@ error response (§6) and drops the body.
   `RedactionError` / `DeanonymizationError` and the caller returns **HTTP 502**. Error strings carry
   **only the exception type name** — never field values, tokens, or keys. `engine.py`.
 - Token decryption fails closed on: missing `ENC_` prefix, malformed base64, truncated payload,
-  **reserved control bits set (unsupported future version)**, unknown key epoch, SIV authentication
+  **reserved control bits set (unsupported future version)**, SIV authentication
   failure (`InvalidTag` → "token authentication failed"), failed decompression, or non-UTF-8 output.
   `codec.py`.
 - **Shape-dependent failure semantics:** a value that is *exactly* one `ENC_` token that will not
@@ -249,8 +248,8 @@ here").
   and `x-wenrix-trace-id` only.
 - **`/admin/flare`** returns redacted operational diagnostics only: channel name/type/host, *sanitized*
   `proxy_pass` (userinfo/query/fragment stripped), booleans for swap/PII/auth enablement, credential
-  **key names and counts (never values)**, rules version, key epoch **ids** (never key material), and
-  readiness reasons. Protected by fail-closed admin auth.
+  **key names and counts (never values)**, rules version, whether a keyring is configured (never key
+  material), and readiness reasons. Protected by fail-closed admin auth.
 - **Metrics:** in-process OpenTelemetry with OTLP export (push). Custom counters/gauges for redaction,
   de-anonymization, blocked operations, upstream timeouts, XML parse errors, and rules version.
 

@@ -5,7 +5,6 @@ Network is always mocked; no test performs a real upstream call (see repo instru
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable
 from importlib.resources import files
 from pathlib import Path
@@ -80,9 +79,9 @@ def unreachable_transport() -> httpx.MockTransport:
 
 @pytest.fixture(name="pii_keyring")
 def pii_keyring_fixture() -> Keyring:
-    """A deterministic single-epoch keyring for golden PII tests."""
+    """A deterministic single-key keyring for golden PII tests."""
     key = pybase64.b64encode(bytes([7]) * 32).decode()
-    return Keyring.from_json(json.dumps({"0": key}))
+    return Keyring.from_json(key)
 
 
 @pytest.fixture(name="baked_ruleset")

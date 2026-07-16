@@ -1,8 +1,5 @@
-# crypto-keyring Specification
+## ADDED Requirements
 
-## Purpose
-Define key derivation and secret-loading requirements for PII cryptography.
-## Requirements
 ### Requirement: Single master keyring
 The relay SHALL load a single PII master key from the `RELAY_PII_KEYRING` setting (inline)
 or a mounted secret file (file takes precedence when both are set). The source SHALL be a
@@ -46,6 +43,8 @@ credentials require a response-auth keyring. A channel with `pii.enabled: true` 
   channel's credentials require a response-auth keyring, and no keyring is configured
 - **THEN** startup succeeds and readiness is reached
 
+## MODIFIED Requirements
+
 ### Requirement: HKDF key derivation
 The relay SHALL derive two keys from the master key using HKDF-SHA256 with fixed, distinct
 domain-separation info strings: the 32-byte field-encryption key `K_enc` (existing info
@@ -61,3 +60,19 @@ derived keys.
 #### Scenario: Domain separation between derived keys
 - **WHEN** `K_enc` and `K_siv` are derived from the same master key
 - **THEN** neither is a prefix of or equal to the other (distinct HKDF info labels)
+
+## REMOVED Requirements
+
+### Requirement: Epoch-indexed keyring
+**Reason**: Key rotation via the 1-byte epoch is removed; rotation will be reintroduced
+later through a KMS store plugin. The keyring is now a single master key (see the added
+"Single master keyring" requirement).
+**Migration**: Provide a single base64(32-byte) key as the keyring source. Existing
+single-entry `{"0": "<base64>"}` secrets remain accepted; multi-entry keyrings are no longer
+supported and are rejected at startup.
+
+### Requirement: Active epoch selection
+**Reason**: With a single master key there is no active-epoch concept; new tokens always
+encrypt under the sole key.
+**Migration**: Remove `RELAY_PII_KEY_EPOCH_ACTIVE` from configuration. All tokens encrypt
+and decrypt under the single loaded key.

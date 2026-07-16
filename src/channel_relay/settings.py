@@ -43,7 +43,6 @@ class Settings(BaseSettings):
     otlp_endpoint: str | None = None
     pii_keyring: str | None = None
     pii_keyring_file: str | None = None
-    pii_key_epoch_active: int | None = None
     debug: bool = False
     # Logs the full (trimmed) request/response body at DEBUG level for every relayed call.
     # Bodies may carry plaintext PII (de-anonymized request / pre-redaction response) — never

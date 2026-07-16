@@ -206,10 +206,10 @@ hand-maintained `schema.json`. On invalid config, log the validation error and *
 **`deterministic` (encrypt only, default `false`).** Random-IV `encrypt` yields a *different*
 token per occurrence, so any caller logic comparing PII values by equality (matching a passenger
 across responses, deduplicating names) breaks. Setting `"deterministic": true` switches that rule
-to AES-SIV (§8.4): same plaintext + same key epoch → same token, preserving equality for the
+to AES-SIV (§8.4): same plaintext → same token, preserving equality for the
 caller. Authoring guidance: enable it only for pii_types the caller genuinely correlates by value
 (coordinate with the consuming team — `person` is the expected first case); it deliberately
-reveals equality patterns (the same passenger is recognizable across responses within an epoch),
+reveals equality patterns (the same passenger is recognizable across responses),
 an accepted, bounded leak. Rollout order matters: deploy relays that understand the flag
 everywhere *before* flipping it in rules — older relays reject deterministic tokens fail-closed.
 Within one response no flag is needed: the engine reuses the same token for every occurrence of
@@ -237,23 +237,24 @@ Detect channel from route; parse operation from body; select rules where `channe
 re-serialize preserving structure/namespaces.
 
 ### 8.3 Keys
-Master key per **key-epoch**; HKDF domain separation (`K_enc`; `K_siv` for deterministic §8.4;
+Single master key; HKDF domain separation (`K_enc`; `K_siv` for deterministic §8.4;
 `K_ref` only for optional §8.9).
 Master key from a Helm **create-if-absent Secret** (§13.5) so restarts/upgrades never orphan tokens.
-Rotation via the 1-byte epoch keyring: add a new epoch's key, retain prior epochs for decryption.
+Key rotation is not handled by the relay — it will be reintroduced later through a dedicated KMS
+store plugin.
 
 ### 8.4 Token format (self-describing, transparent)
 ```
 plaintext  = utf8(field_value)
 comp       = smaz(plaintext)
 payload    = comp if len(comp) < len(plaintext) else plaintext
-control    = (key_epoch & 0x0F) | (compressed << 4) | (deterministic << 5)  # bits 6-7 reserved
+control    = (compressed << 4) | (deterministic << 5)  # bits 0-3 and 6-7 reserved zero
 # default mode (deterministic bit clear):
 iv         = random 12 bytes (96-bit)
-ciphertext = AES-256-CTR(K_enc[key_epoch], counter=iv||0x00000000, payload)
+ciphertext = AES-256-CTR(K_enc, counter=iv||0x00000000, payload)
 token      = "ENC_" + base64url_nopad(control || iv || ciphertext)
 # deterministic mode (bit 5 set, opt-in per rule):
-token      = "ENC_" + base64url_nopad(control || AES-256-SIV(K_siv[key_epoch], payload))
+token      = "ENC_" + base64url_nopad(control || AES-256-SIV(K_siv, payload))
 ```
 Regex `^ENC_([A-Za-z0-9_-]+)$`. Default mode: IV prepended in clear (CTR cannot encrypt its own
 IV); unique per (key,field); random IV prevents ciphertext-equality correlation.
@@ -269,7 +270,8 @@ PII; IV length is tunable in `codec.py` (never below 96-bit).
 ### 8.5 / 8.6 Encrypt (response) / decrypt (request)
 Encrypt: parse → select rules → per node compute payload/iv/ciphertext → replace with `ENC_...` →
 re-serialize. Decrypt: scan values for the `ENC_` marker (envelope-driven, no rule needed) → decode
-→ epoch → key → CTR-decrypt → smaz-decompress if flagged → replace. The scan matches each `ENC_`
+→ select AES-SIV or CTR by the deterministic control bit → decrypt → smaz-decompress if flagged →
+replace. The scan matches each `ENC_`
 token whether it is the whole value or **embedded** in free text (so remark-scrubbed names, §8.1
 reference rules, round-trip). Shape decides failure semantics: a whole-value token that will not
 decrypt → **502 JSON** (§10.3, fail closed); an embedded `ENC_`-lookalike span that will not
@@ -433,7 +435,7 @@ This item is flagged in §18 (O5) for confirmation of the v1 pass-through assump
 ### 12.7 Admin/status endpoint
 A **redacted** `GET /admin/status` (and an equivalent CLI subcommand) returns operational state with
 **no secrets/PII**: config summary, active channels (name/type/host, swap-configured bool,
-pii-enabled bool), `rules_version`, available key epochs (ids only, never key material), telemetry
+pii-enabled bool), `rules_version`, whether a keyring is configured (never key material), telemetry
 state (signals enabled + endpoints), and readiness reasons (why not-ready if applicable). Protected
 by the same auth as other routes; safe to expose to operators.
 
@@ -448,8 +450,8 @@ stage. App (+ otelcol in the later phase) with a healthcheck. Semver tags; produ
 against `latest`.
 
 ### 13.2 Key provisioning (Helm)
-Master key Secret **created-if-absent** (pre-install hook / lookup), never regenerated on
-`helm upgrade`; all pods mount the same Secret; rotation via key epoch documented.
+Master key Secret **created-if-absent** (a normal template guarded by `lookup`), never regenerated on
+`helm upgrade`; all pods mount the same Secret. Key rotation is deferred to a future KMS store plugin.
 
 ### 13.3 Testing
 - pytest layers: `unit`, `integration`, `e2e` (against local mock channel servers).
@@ -529,7 +531,7 @@ required checks. Primary review skill: `thermo-nuclear-code-quality-review`.
 | D1 | Field cipher: AES-256-CTR, confidentiality-only in v1 (TLS for integrity). |
 | D2 | Self-describing token `ENC_ + base64url(control ‖ 96-bit IV ‖ ciphertext)`; IV in payload; nothing echoed. |
 | D3 | smaz compress-if-smaller, flagged in `control` byte. |
-| D4 | Key rotation via 1-byte epoch keyring; master key from Helm create-if-absent Secret. |
+| D4 | Single master key from a Helm create-if-absent Secret; key rotation deferred to a future KMS store plugin. |
 | D5 | lxml only, **hardened** (§9.4); `xmltodict` not used. |
 | D6 | Operation always parsed from the body (unspoofable). |
 | D7 | Rules: baked bundle only, loaded at startup; no remote fetch, no periodic poll. |

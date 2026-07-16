@@ -17,9 +17,8 @@ certificate_arn = "arn:aws:acm:eu-west-1:111122223333:certificate/xxxxxxxx-xxxx-
 # carries no secrets — basic-auth and PII secrets live in Secrets Manager (see below), not here.
 relay_config_json = "{\"channels\":[{\"name\":\"travelport\",\"type\":\"travelport\"}]}"
 
-# PII keyring — supply via a secret var file / TF_VAR, not committed. {"<epoch>":"\"base64-32-bytes\""}.
-# pii_keyring_json     = "{\"0\":\"...base64-32-bytes...\"}"
-pii_key_epoch_active = 0
+# PII keyring — supply via a secret var file / TF_VAR, not committed. A single base64(32-byte) key.
+# pii_keyring_json = "...base64-32-bytes..."
 
 otlp_endpoint = "http://otel-collector.telemetry.internal:4317"
 

@@ -78,7 +78,6 @@ def build_keyring(settings: Settings, config: RelayConfig | None) -> Keyring | N
     keyring = load_keyring(
         inline=settings.pii_keyring,
         file_path=settings.pii_keyring_file,
-        active_epoch=settings.pii_key_epoch_active,
     )
     keyring_required = config is not None and any(
         (channel.pii.enabled and not channel.pii.force_redact) or credentials_require_response_keyring(channel)
