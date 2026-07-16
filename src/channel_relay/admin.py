@@ -6,6 +6,7 @@ import os
 import platform
 import socket
 import time
+from collections import Counter
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
@@ -17,6 +18,7 @@ from channel_relay.health import readiness_reasons
 from channel_relay.middleware.auth import auth_active
 from channel_relay.observability.metrics import RelayMetrics
 from channel_relay.pii.crypto import Keyring
+from channel_relay.pii.rules import RuleSet
 from channel_relay.settings import Settings
 
 
@@ -52,6 +54,39 @@ def _channel_snapshot(channel: ChannelConfig) -> dict[str, Any]:
             "allowed_operations_count": len(channel.authorization.allowed_operations),
             "external_configured": channel.authorization.external is not None,
         },
+    }
+
+
+def _rules_snapshot(rules: RuleSet | None) -> dict[str, Any]:
+    if rules is None:
+        return {
+            "loaded": False,
+            "schema_version": None,
+            "rules_version": None,
+            "rule_count": 0,
+            "by_rule_type": {},
+            "by_pii_type": {},
+            "by_channel": {},
+            "by_action": {},
+        }
+    by_rule_type: Counter[str] = Counter()
+    by_pii_type: Counter[str] = Counter()
+    by_channel: Counter[str] = Counter()
+    by_action: Counter[str] = Counter()
+    for rule in rules.rules:
+        by_rule_type[rule.rule_type] += 1
+        by_pii_type[rule.pii_type.value] += 1
+        by_channel[rule.channel] += 1
+        by_action[rule.action.method] += 1
+    return {
+        "loaded": True,
+        "schema_version": rules.schema_version,
+        "rules_version": rules.rules_version,
+        "rule_count": len(rules.rules),
+        "by_rule_type": dict(sorted(by_rule_type.items())),
+        "by_pii_type": dict(sorted(by_pii_type.items())),
+        "by_channel": dict(sorted(by_channel.items())),
+        "by_action": dict(sorted(by_action.items())),
     }
 
 
@@ -104,10 +139,7 @@ def diagnostics_snapshot(request: Request) -> dict[str, Any]:
             "active_epoch": keyring.active_epoch if keyring is not None else None,
             "epochs": list(keyring.epochs) if keyring is not None else [],
         },
-        "rules": {
-            "loaded": rules is not None,
-            "rules_version": rules.rules_version if rules is not None else None,
-        },
+        "rules": _rules_snapshot(rules),
         "channels": [_channel_snapshot(channel) for channel in config.channels] if config is not None else [],
         "statistics": metrics.snapshot(),
     }
