@@ -37,7 +37,7 @@ def test_operation_is_pnr_reply(response_body: bytes) -> None:
 
 def test_counts_match_baseline(response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
     _, counts = redact_response_body(response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring)
-    assert counts == {"person": 5, "frequent_flyer": 3, "phone": 2, "email": 2, "passport_id": 1, "ssn": 1}
+    assert counts == {"person": 5, "frequent_flyer": 3, "phone": 2, "email": 4, "passport_id": 1, "ssn": 1}
 
 
 def test_names_and_ff_number_encrypt_and_round_trip(
@@ -91,6 +91,21 @@ def test_ssn_in_general_remark_masked_one_way(
     assert b"123-45-6789" not in redacted
     assert counts["ssn"] == 1
     assert b"PSGR SSN" in redacted and b"ON FILE" in redacted  # surrounding remark text preserved
+
+
+def test_email_in_general_remark_masked_one_way(
+    response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring
+) -> None:
+    """Email embedded in RM general-remark free text (miscellaneousRemarks + extendedRemark
+    mirror) is masked in place; surrounding operational remark text is preserved."""
+    redacted, counts = redact_response_body(
+        response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+    )
+    assert b"AGENT@EXAMPLE.COM" not in redacted
+    assert counts["email"] == 4  # 2 CTCE SSR + 2 general-remark freetext mirrors
+    # Only the email span is masked; the operational remark text stays verbatim.
+    assert b"PROCESSED BY CBR TO" in redacted and b"*10JUL*0948Z" in redacted
+    assert b"*0702*" in redacted
 
 
 def test_non_pii_preserved(response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:

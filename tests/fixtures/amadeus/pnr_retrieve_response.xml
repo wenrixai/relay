@@ -500,6 +500,30 @@
                     <elementManagementData>
                         <reference>
                             <qualifier>OT</qualifier>
+                            <number>85</number>
+                        </reference>
+                        <segmentName>RM</segmentName>
+                        <lineNumber>26</lineNumber>
+                    </elementManagementData>
+                    <miscellaneousRemarks>
+                        <remarks>
+                            <type>RM</type>
+                            <category>Z</category>
+                            <freetext>*CONF*TKT* PROCESSED BY CBR TO AGENT@EXAMPLE.COM*10JUL*0948Z</freetext>
+                        </remarks>
+                    </miscellaneousRemarks>
+                    <extendedRemark>
+                        <structuredRemark>
+                            <type>RM</type>
+                            <category>Z</category>
+                            <freetext>*0702*AGENT@EXAMPLE.COM</freetext>
+                        </structuredRemark>
+                    </extendedRemark>
+                </dataElementsIndiv>
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
                             <number>36</number>
                         </reference>
                         <segmentName>TK</segmentName>
