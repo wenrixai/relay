@@ -5,7 +5,6 @@ locals {
     { name = "RELAY_CONFIG_FILE", value = "/tmp/relay.json" },
     { name = "RELAY_CONFIG_JSON", value = var.relay_config_json },
     { name = "RELAY_PORT", value = tostring(var.container_port) },
-    { name = "RELAY_PII_KEY_EPOCH_ACTIVE", value = tostring(var.pii_key_epoch_active) },
     { name = "RELAY_BASIC_AUTH_ENABLED", value = tostring(var.basic_auth_enabled) },
     { name = "RELAY_OTLP_ENDPOINT", value = var.otlp_endpoint },
   ]

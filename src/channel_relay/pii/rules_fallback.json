@@ -157,6 +157,18 @@
       ]
     },
     {
+      "id": "amadeus.sales.person_name",
+      "channel": "amadeus",
+      "operation": "^SalesReports_DisplayQueryReportReply$",
+      "path": "//a:documentData/a:passengerName/a:paxDetails/a:surname",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/TSRQRR_22_2_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "required": true
+    },
+    {
       "id": "sabre.res.passenger_name",
       "channel": "sabre",
       "operation": "^GetReservationRS$",

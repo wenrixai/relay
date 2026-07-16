@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import contextlib
-import json
 import re
 
 import pybase64
@@ -18,14 +17,13 @@ TOKEN_CONTRACT = re.compile(r"^ENC_[A-Za-z0-9_-]+$")
 FIXED_OVERHEAD = 13
 
 
-def make_keyring(epochs: dict[int, int], active: int | None = None) -> Keyring:
-    ring = {str(e): pybase64.b64encode(bytes([seed]) * 32).decode() for e, seed in epochs.items()}
-    return Keyring.from_json(json.dumps(ring), active_epoch=active)
+def make_keyring(seed: int = 1) -> Keyring:
+    return Keyring.from_json(pybase64.b64encode(bytes([seed]) * 32).decode())
 
 
 @pytest.fixture(name="keyring")
 def keyring_fixture() -> Keyring:
-    return make_keyring({0: 1, 1: 2})
+    return make_keyring()
 
 
 @pytest.mark.parametrize(
@@ -77,29 +75,38 @@ def test_incompressible_stays_raw(keyring: Keyring) -> None:
     assert not payload[0] & 0x10
 
 
-def test_active_epoch_encoded_in_control(keyring: Keyring) -> None:
+def test_former_epoch_bits_written_zero(keyring: Keyring) -> None:
     token = encrypt("value", keyring)
     payload = pybase64.urlsafe_b64decode(token[len("ENC_") :] + "==")
-    assert payload[0] & 0x0F == keyring.active_epoch
+    assert payload[0] & 0x0F == 0  # bits 0-3 (former key epoch) are reserved zero
 
 
-def test_old_epoch_still_decrypts() -> None:
-    old = make_keyring({0: 1}, active=0)
-    token = encrypt("historic", old)
-    rotated = make_keyring({0: 1, 1: 9}, active=1)
-    assert decrypt(token, rotated) == "historic"
+def test_historic_epoch0_token_decrypts_under_single_key() -> None:
+    """A token minted before rotation removal (control low nibble = 0) still round-trips.
+
+    Locks the backward-compat guarantee: this deterministic token was produced by the codec
+    when the keyring was epoch-indexed and the active epoch was 0. It must keep decrypting
+    under the collapsed single-key keyring.
+    """
+    key = pybase64.b64encode(bytes([7]) * 32).decode()
+    # Ciphertext under the fixed test key above, not a real secret.
+    historic_token = "ENC_MPro6LDsEKAT725CZuK7J16XpfcInCxUAEiQLBnB"  # gitleaks:allow
+    assert pybase64.urlsafe_b64decode(historic_token[len("ENC_") :] + "==")[0] & 0x0F == 0
+    assert decrypt(historic_token, Keyring.from_json(key)) == "Historic Passenger"
 
 
-def test_unknown_epoch_fails(keyring: Keyring) -> None:
-    token = encrypt("value", make_keyring({5: 7}))
-    with pytest.raises(TokenError) as excinfo:
-        decrypt(token, make_keyring({0: 1}))
-    assert "5" in str(excinfo.value)
+def test_legacy_object_and_bare_key_decrypt_interchangeably() -> None:
+    """A token encrypted under a legacy {"0": key} keyring decrypts under the bare-key form."""
+    key = pybase64.b64encode(bytes([3]) * 32).decode()
+    legacy = Keyring.from_json(f'{{"0": "{key}"}}')
+    bare = Keyring.from_json(key)
+    token = encrypt("Round Trip", legacy)
+    assert decrypt(token, bare) == "Round Trip"
 
 
-def test_wrong_key_garbles_or_fails(keyring: Keyring) -> None:
-    token = encrypt("John Smith", make_keyring({0: 1}))
-    other = make_keyring({0: 99})
+def test_wrong_key_garbles_or_fails() -> None:
+    token = encrypt("John Smith", make_keyring(1))
+    other = make_keyring(99)
     # A smaz/utf-8 decode failure (TokenError) is equally acceptable to garbled output.
     with contextlib.suppress(TokenError):
         assert decrypt(token, other) != "John Smith"
@@ -123,6 +130,16 @@ def test_reserved_control_bits_rejected(keyring: Keyring) -> None:
     forged = "ENC_" + pybase64.urlsafe_b64encode(bytes(payload)).decode().rstrip("=")
     with pytest.raises(TokenError):
         decrypt(forged, keyring)
+
+
+def test_former_epoch_bits_rejected_on_decode(keyring: Keyring) -> None:
+    for bit in (0x01, 0x02, 0x04, 0x08):  # bits 0-3 are now reserved-must-be-zero
+        token = encrypt("value", keyring)
+        payload = bytearray(pybase64.urlsafe_b64decode(token[len("ENC_") :] + "=="))
+        payload[0] |= bit
+        forged = "ENC_" + pybase64.urlsafe_b64encode(bytes(payload)).decode().rstrip("=")
+        with pytest.raises(TokenError):
+            decrypt(forged, keyring)
 
 
 def test_missing_prefix_rejected(keyring: Keyring) -> None:
@@ -166,16 +183,6 @@ def test_deterministic_distinct_plaintexts_differ(keyring: Keyring) -> None:
     assert encrypt("John", keyring, deterministic=True) != encrypt("Jane", keyring, deterministic=True)
 
 
-def test_deterministic_epoch_rotation_changes_token() -> None:
-    old = make_keyring({0: 1}, active=0)
-    token_old = encrypt("John Smith", old, deterministic=True)
-    rotated = make_keyring({0: 1, 1: 9}, active=1)
-    token_new = encrypt("John Smith", rotated, deterministic=True)
-    assert token_old != token_new
-    assert decrypt(token_old, rotated) == "John Smith"
-    assert decrypt(token_new, rotated) == "John Smith"
-
-
 def test_deterministic_tampered_ciphertext_fails(keyring: Keyring) -> None:
     token = encrypt("John Smith", keyring, deterministic=True)
     payload = bytearray(pybase64.urlsafe_b64decode(token[len("ENC_") :] + "=="))
@@ -203,13 +210,6 @@ def test_deterministic_incompressible_round_trip(keyring: Keyring) -> None:
     token = encrypt("日本語", keyring, deterministic=True)
     assert not _control(token) & 0x10
     assert decrypt(token, keyring) == "日本語"
-
-
-def test_deterministic_unknown_epoch_fails(keyring: Keyring) -> None:
-    token = encrypt("value", make_keyring({5: 7}), deterministic=True)
-    with pytest.raises(TokenError) as excinfo:
-        decrypt(token, make_keyring({0: 1}))
-    assert "5" in str(excinfo.value)
 
 
 def test_remaining_reserved_bits_still_rejected(keyring: Keyring) -> None:

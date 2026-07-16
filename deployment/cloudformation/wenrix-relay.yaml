@@ -19,9 +19,6 @@ Parameters:
     Description: Channel configuration JSON (no secrets).
     Default: '{"channels":[]}'
     NoEcho: true
-  PiiKeyEpochActive:
-    Type: Number
-    Default: 0
   BasicAuthEnabled:
     Type: String
     AllowedValues: ["true", "false"]
@@ -352,7 +349,6 @@ Resources:
             - { Name: RELAY_CONFIG_FILE, Value: /tmp/relay.json }
             - { Name: RELAY_CONFIG_JSON, Value: !Ref RelayConfigJson }
             - { Name: RELAY_PORT, Value: !Ref ContainerPort }
-            - { Name: RELAY_PII_KEY_EPOCH_ACTIVE, Value: !Ref PiiKeyEpochActive }
             - { Name: RELAY_BASIC_AUTH_ENABLED, Value: !Ref BasicAuthEnabled }
             - { Name: RELAY_OTLP_ENDPOINT, Value: !Ref OtlpEndpoint }
           Secrets:

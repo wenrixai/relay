@@ -108,6 +108,7 @@ def diagnostics_snapshot(request: Request) -> dict[str, Any]:
             "hostname": socket.gethostname(),
             "uptime_seconds": max(0.0, time.time() - started_at),
             "debug": settings.debug,
+            "debug_mode": settings.debug_mode,
         },
         "readiness": {
             "status": "not_ready" if reasons else "ready",
@@ -132,12 +133,9 @@ def diagnostics_snapshot(request: Request) -> dict[str, Any]:
             "otlp_endpoint_configured": settings.otlp_endpoint is not None,
             "pii_keyring_configured": settings.pii_keyring is not None or settings.pii_keyring_file is not None,
             "pii_keyring_file_configured": settings.pii_keyring_file is not None,
-            "pii_key_epoch_active_configured": settings.pii_key_epoch_active is not None,
         },
         "keyring": {
             "configured": keyring is not None,
-            "active_epoch": keyring.active_epoch if keyring is not None else None,
-            "epochs": list(keyring.epochs) if keyring is not None else [],
         },
         "rules": _rules_snapshot(rules),
         "channels": [_channel_snapshot(channel) for channel in config.channels] if config is not None else [],

@@ -19,7 +19,6 @@ config:
       # host/proxy_pass omitted -> defaults to prod: nodeD3.production.webservices.amadeus.com
   env:
     RELAY_BASIC_AUTH_ENABLED: "false"   # test setup, no auth in front
-    RELAY_DNS_RESOLVER: "8.8.8.8"
     RELAY_DEFAULT_CONNECT_TIMEOUT: "30"
     RELAY_DEFAULT_READ_TIMEOUT: "120"
     RELAY_MAX_INSPECT_BYTES: "8388608"

@@ -69,11 +69,10 @@ def main() -> None:
     parser.add_argument("--token-output", type=Path, required=True)
     args = parser.parse_args()
 
-    keyring_json = os.environ.get("RELAY_PII_KEYRING")
-    if keyring_json is None:
+    keyring_source = os.environ.get("RELAY_PII_KEYRING")
+    if keyring_source is None:
         raise RuntimeError("RELAY_PII_KEYRING must be set for the perf preflight")
-    active_epoch = int(os.environ.get("RELAY_PII_KEY_EPOCH_ACTIVE", "0"))
-    token = run_preflight(args.relay_url, Keyring.from_json(keyring_json, active_epoch))
+    token = run_preflight(args.relay_url, Keyring.from_json(keyring_source))
     args.token_output.write_text(token, encoding="utf-8")
 
 

@@ -24,8 +24,7 @@ MOCK_PORT=9000 MOCK_LATENCY_MS=50 MOCK_BODY_FILE=perf/mock-response.xml \
   uv run python deployment/mock_channel.py &
 
 # 2. Start the relay with the perf channel config (basic auth off for simplicity).
-export RELAY_PII_KEYRING='{"0":"'$(head -c32 /dev/urandom | base64)'"}'
-export RELAY_PII_KEY_EPOCH_ACTIVE=0
+export RELAY_PII_KEYRING=$(head -c32 /dev/urandom | base64)
 RELAY_CONFIG_FILE=perf/relay.perf.json RELAY_BASIC_AUTH_ENABLED=false \
   uv run uvicorn channel_relay.main:app --port 8080 &
 

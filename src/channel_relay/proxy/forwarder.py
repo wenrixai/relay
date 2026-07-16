@@ -40,8 +40,7 @@ from channel_relay.pii.engine import (
     redact_response,
 )
 from channel_relay.pii.rules import RuleSet
-from channel_relay.pii.xml_ops import XmlOpsError, XmlOversizeError
-from channel_relay.pii.xml_ops import parse_bytes, serialize
+from channel_relay.pii.xml_ops import XmlOpsError, XmlOversizeError, parse_bytes, serialize
 from channel_relay.proxy.errors import (
     TRACE_ID_HEADER,
     ErrorReason,
@@ -51,6 +50,7 @@ from channel_relay.proxy.errors import (
     unsupported_content_response,
     upstream_timeout_response,
 )
+from channel_relay.settings import Settings
 
 # Headers that become stale once the relay rewrites a body (recomputed downstream).
 _BODY_SENSITIVE_HEADERS = frozenset({"content-length", "content-encoding"})
@@ -125,6 +125,23 @@ def _gzip_encode(body: bytes) -> bytes:
     return gzip.compress(body)
 
 
+def _trim_for_debug(body: bytes, max_bytes: int) -> str:
+    """Decode a body for debug logging, trimming to ``max_bytes`` (§debug-mode).
+
+    Never raises on non-UTF-8 bytes; undecodable bytes are replaced so logging can never crash
+    the request path.
+    """
+    truncated = len(body) > max_bytes
+    text = body[:max_bytes].decode("utf-8", errors="replace")
+    return f"{text}...<truncated, {len(body)} bytes total>" if truncated else text
+
+
+def _log_debug_body(*, channel: str, trace_id: str | None, direction: str, body: bytes, max_bytes: int) -> None:
+    logger.bind(channel=channel, trace_id=trace_id, direction=direction).debug(
+        "debug_mode body", body=_trim_for_debug(body, max_bytes)
+    )
+
+
 async def forward(
     client: httpx.AsyncClient,
     channel: ChannelConfig,
@@ -167,6 +184,9 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
     if channel.proxy_pass is None:
         logger.bind(channel=channel.name).error("Channel has no upstream base configured")
         return internal_error_response(ErrorReason.INTERNAL_ERROR, "channel has no upstream configured", trace_id)
+
+    settings: Settings | None = getattr(request.app.state, "settings", None)
+    debug_mode = settings is not None and settings.debug_mode
 
     body = await request.body()
     kind = classify_content(request.headers.get("content-type"))
@@ -214,6 +234,7 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
     need_session_deanon = handler.requires_response_keyring(channel) and keyring is not None and kind is ContentKind.XML
     need_deanon = need_pii or need_session_deanon
     need_cred_body = channel.credential_swap_enabled and handler.requires_body_inspection(channel)
+    debug_body = body
     if body and (need_deanon or need_cred_body):
         gzipped = request.headers.get("content-encoding", "").lower() == "gzip"
         try:
@@ -228,8 +249,8 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
             pii_outcome = _request_pii_stage(keyring=keyring, body=working, ctx=ctx)
             if isinstance(pii_outcome, Response):
                 return pii_outcome
-            working = pii_outcome
-            changed = True
+            working, decrypted = pii_outcome
+            changed = decrypted > 0
         if need_cred_body:
             swap_outcome = _request_credential_swap_stage(
                 handler=handler, body=working, headers=headers, keyring=keyring, ctx=ctx
@@ -238,10 +259,20 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
                 return swap_outcome
             working, cred_changed = swap_outcome
             changed = changed or cred_changed
+        debug_body = working
         if changed:
             body = _gzip_encode(working) if gzipped else working
             # The body changed size; stale framing headers must be recomputed by httpx.
             _remove_body_framing(headers)
+
+    if debug_mode and settings is not None:
+        _log_debug_body(
+            channel=channel.name,
+            trace_id=trace_id,
+            direction="request",
+            body=debug_body,
+            max_bytes=settings.debug_mode_max_body_bytes,
+        )
 
     try:
         upstream = await client.request(
@@ -298,6 +329,15 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
         for name in list(response_headers):
             if name.lower() in _BODY_SENSITIVE_HEADERS:
                 del response_headers[name]
+
+    if debug_mode and settings is not None:
+        _log_debug_body(
+            channel=channel.name,
+            trace_id=trace_id,
+            direction="response",
+            body=content,
+            max_bytes=settings.debug_mode_max_body_bytes,
+        )
 
     return Response(
         content=content,
@@ -414,8 +454,12 @@ def _response_credential_swap_stage(
         )
 
 
-def _request_pii_stage(*, keyring: Keyring, body: bytes, ctx: _StageContext) -> bytes | Response:
-    """Pipeline stage [7]: de-anonymize the (plaintext) request body; error → contract Response."""
+def _request_pii_stage(*, keyring: Keyring, body: bytes, ctx: _StageContext) -> tuple[bytes, int] | Response:
+    """Pipeline stage [7]: de-anonymize the (plaintext) request body; error → contract Response.
+
+    Returns the (possibly unchanged) body together with the number of tokens decrypted, so the
+    caller can skip re-serializing/re-gzipping a body where nothing actually changed.
+    """
     channel = ctx.channel
     try:
         working, decrypted = deanonymize_request_body(body, keyring=keyring, max_bytes=ctx.max_inspect_bytes)
@@ -437,7 +481,7 @@ def _request_pii_stage(*, keyring: Keyring, body: bytes, ctx: _StageContext) -> 
         logger.bind(channel=channel.name, decrypted=decrypted).debug("De-anonymized tokens")
         if ctx.metrics is not None:
             ctx.metrics.record_pii_decrypted(channel.name, decrypted)
-    return working
+    return working, decrypted
 
 
 def _response_pii_stage(

@@ -11,10 +11,9 @@ Health:
 {{- if .Values.piiKeyring.enabled }}
 
 PII keyring:
-  Secret {{ include "wenrix-relay.piiKeyringSecretName" . }} is created-if-absent and is NEVER
-  regenerated on `helm upgrade`. Active epoch: {{ .Values.piiKeyring.activeEpoch }}.
-  Rotate by adding a new epoch to the keyring JSON and bumping piiKeyring.activeEpoch; retain prior
-  epochs so existing tokens stay decryptable.
+  Secret {{ include "wenrix-relay.piiKeyringSecretName" . }} holds a single base64(32-byte) master
+  key. It is created-if-absent and is NEVER regenerated on `helm upgrade`. Key rotation is not
+  handled by the relay — it will be reintroduced later through a dedicated KMS store plugin.
 {{- end }}
 
 Network segmentation: this chart does not ship a NetworkPolicy. Restrict ingress/egress using your

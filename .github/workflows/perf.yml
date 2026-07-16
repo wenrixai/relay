@@ -56,13 +56,12 @@ jobs:
         run: |
           key_b64="$(openssl rand -base64 32 | tr -d '\n')"
           echo "::add-mask::$key_b64"
-          printf 'RELAY_PII_KEYRING={"0":"%s"}\n' "$key_b64" >> "$GITHUB_ENV"
+          printf 'RELAY_PII_KEYRING=%s\n' "$key_b64" >> "$GITHUB_ENV"
 
       - name: Start relay
         run: |
           RELAY_CONFIG_FILE=perf/relay.perf.json \
           RELAY_BASIC_AUTH_ENABLED=false \
-          RELAY_PII_KEY_EPOCH_ACTIVE=0 \
           uv run uvicorn channel_relay.main:app --port 8080 &
           for _ in $(seq 1 30); do
             curl -fsS http://127.0.0.1:8080/readiness && break
@@ -70,8 +69,6 @@ jobs:
           done
 
       - name: Preflight measured stages
-        env:
-          RELAY_PII_KEY_EPOCH_ACTIVE: "0"
         run: uv run python perf/preflight.py --token-output /tmp/perf-roundtrip-token
 
       - name: Run k6

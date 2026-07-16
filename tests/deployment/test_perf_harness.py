@@ -35,7 +35,7 @@ def test_perf_channels_enable_the_stages_they_measure() -> None:
 
 
 def test_perf_mock_response_exercises_baked_redaction_rules() -> None:
-    keyring = Keyring.from_json('{"0":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="}', active_epoch=0)
+    keyring = Keyring.from_json("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")
     ruleset = load_baked_rules()
 
     redacted, counts = redact_response_body(

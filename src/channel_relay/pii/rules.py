@@ -58,8 +58,8 @@ class EncryptAction(BaseModel):
     deterministic: bool = Field(
         default=False,
         description=(
-            "Use deterministic (AES-SIV) encryption: the same plaintext under the same key "
-            "epoch always yields the same token, preserving value equality for the caller."
+            "Use deterministic (AES-SIV) encryption: the same plaintext always yields the "
+            "same token, preserving value equality for the caller."
         ),
     )
 

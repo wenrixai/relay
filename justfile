@@ -68,8 +68,7 @@ helm-test:
 perf payload_size="2048":
     #!/usr/bin/env bash
     set -euo pipefail
-    export RELAY_PII_KEYRING="{\"0\":\"$(head -c32 /dev/urandom | base64)\"}"
-    export RELAY_PII_KEY_EPOCH_ACTIVE=0
+    export RELAY_PII_KEYRING="$(head -c32 /dev/urandom | base64)"
     MOCK_PORT=9000 MOCK_LATENCY_MS=50 MOCK_BODY_FILE=perf/mock-response.xml \
       MOCK_CONTENT_TYPE=application/xml MOCK_EXPECTED_LOGIN=perf-login \
       MOCK_EXPECTED_ROUNDTRIP=PERF_ROUNDTRIP_PLAINTEXT uv run python deployment/mock_channel.py &

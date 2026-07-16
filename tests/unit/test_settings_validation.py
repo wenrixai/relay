@@ -28,3 +28,14 @@ def test_tls_port_out_of_range_rejected(port: int) -> None:
 def test_otlp_endpoint_stays_permissive() -> None:
     # Bare host:port is a valid gRPC exporter form; must not be rejected.
     assert Settings(otlp_endpoint="collector:4317").otlp_endpoint == "collector:4317"
+
+
+def test_debug_mode_defaults_off() -> None:
+    settings = Settings()
+    assert settings.debug_mode is False
+    assert settings.debug_mode_max_body_bytes == 65_536
+
+
+def test_debug_mode_max_body_bytes_rejects_negative() -> None:
+    with pytest.raises(ValidationError):
+        Settings(debug_mode_max_body_bytes=-1)

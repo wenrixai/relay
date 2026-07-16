@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gzip
 from collections.abc import Callable
 from typing import Any, Protocol, cast
 
@@ -239,6 +240,33 @@ def test_bad_gzip_request_body_returns_xml_parse_error(
     assert_proxy_error(resp, 502, "xml_parse_error")
 
 
+def test_gzipped_request_with_no_pii_tokens_forwarded_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+    relay_client_factory: RelayClientFactory,
+) -> None:
+    """A PII-enabled channel must not re-gzip a request body that had zero ``ENC_`` tokens."""
+    monkeypatch.setenv("RELAY_PII_KEYRING", KEYRING_JSON)
+    channel = ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION, pii={"enabled": True})
+    original_xml = b"<Search><Name>Jane</Name></Search>"
+    gzipped_body = gzip.compress(original_xml)
+    captured: dict[str, httpx.Request] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["req"] = request
+        return httpx.Response(200, content=b"<Ok/>", headers={"content-type": "application/xml"})
+
+    with relay_client_factory(channel, httpx.MockTransport(handler)) as client:
+        resp = client.post(
+            "/channel/tf/op",
+            content=gzipped_body,
+            headers={"content-type": "application/xml", "content-encoding": "gzip"},
+        )
+
+    assert resp.status_code == 200
+    assert captured["req"].content == gzipped_body
+    assert captured["req"].headers["content-encoding"] == "gzip"
+
+
 def test_malformed_request_xml_during_credential_swap_returns_xml_parse_error(
     relay_client_factory: RelayClientFactory,
     unreachable_transport: httpx.MockTransport,
@@ -394,14 +422,16 @@ def test_request_pii_stage_records_decrypted_tokens() -> None:
     metrics = _CountingMetrics()
     channel = ChannelConfig(name="mock", type=ChannelType.TRAVELFUSION)
 
-    body = _request_pii_stage(
+    outcome = _request_pii_stage(
         keyring=keyring,
         body=f"<Root><Value>{token}</Value></Root>".encode(),
         ctx=_StageContext(channel=channel, max_inspect_bytes=1024, trace_id=None, metrics=cast(Any, metrics)),
     )
 
-    assert isinstance(body, bytes)
+    assert isinstance(outcome, tuple)
+    body, decrypted = outcome
     assert b"secret" in body
+    assert decrypted == 1
     assert metrics.decrypted == [("mock", 1)]
 
 
@@ -549,3 +579,95 @@ def test_forward_supports_common_methods(method: str, travelfusion_client: Trave
         client.request(method, "/channel/tf/op")
 
     assert captured["req"].method == method
+
+
+def test_debug_mode_logs_full_request_and_response_body(
+    monkeypatch: pytest.MonkeyPatch,
+    travelfusion_client: TravelFusionClientFactory,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # ``create_app`` (invoked by the ``travelfusion_client`` fixture) rebinds Loguru's sink to
+    # the live ``sys.stderr`` via ``configure_logging``; capsys must already be active for that
+    # sink to land in captured output, so read it after the request via ``capsys.readouterr()``.
+    monkeypatch.setenv("RELAY_DEBUG_MODE", "true")
+    upstream_body = b"<Response><Fare>123</Fare></Response>"
+    transport = httpx.MockTransport(
+        lambda _request: httpx.Response(200, content=upstream_body, headers={"content-type": "application/xml"})
+    )
+
+    with travelfusion_client(transport) as client:
+        resp = client.post(
+            "/channel/tf/op",
+            content=b"<Search><Name>Jane</Name></Search>",
+            headers={"content-type": "application/xml", "x-wenrix-trace-id": "trace-debug"},
+        )
+
+    assert resp.status_code == 200
+    output = capsys.readouterr().err
+    assert "<Search><Name>Jane</Name></Search>" in output
+    assert "<Response><Fare>123</Fare></Response>" in output
+    assert "trace-debug" in output
+    assert '"direction": "request"' in output
+    assert '"direction": "response"' in output
+
+
+def test_debug_mode_off_by_default_does_not_log_body(
+    travelfusion_client: TravelFusionClientFactory,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transport = httpx.MockTransport(lambda _request: httpx.Response(200, content=b"<Ok/>"))
+
+    with travelfusion_client(transport) as client:
+        client.post(
+            "/channel/tf/op",
+            content=b"<TopSecretPassport>X1234567</TopSecretPassport>",
+            headers={"content-type": "application/xml"},
+        )
+
+    assert "TopSecretPassport" not in capsys.readouterr().err
+
+
+def test_debug_mode_logs_decoded_body_for_gzipped_request(
+    monkeypatch: pytest.MonkeyPatch,
+    relay_client_factory: RelayClientFactory,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A gzip-encoded request must be logged as readable XML, not the compressed wire bytes."""
+    monkeypatch.setenv("RELAY_DEBUG_MODE", "true")
+    monkeypatch.setenv("RELAY_PII_KEYRING", KEYRING_JSON)
+    channel = ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION, pii={"enabled": True})
+    original_xml = b"<Search><Name>Jane</Name></Search>"
+    gzipped_body = gzip.compress(original_xml)
+    transport = httpx.MockTransport(
+        lambda _request: httpx.Response(200, content=b"<Ok/>", headers={"content-type": "application/xml"})
+    )
+
+    with relay_client_factory(channel, transport) as client:
+        resp = client.post(
+            "/channel/tf/op",
+            content=gzipped_body,
+            headers={"content-type": "application/xml", "content-encoding": "gzip"},
+        )
+
+    assert resp.status_code == 200
+    output = capsys.readouterr().err
+    assert "<Search><Name>Jane</Name></Search>" in output
+    assert gzipped_body.decode("latin-1") not in output
+
+
+def test_debug_mode_trims_oversized_body(
+    monkeypatch: pytest.MonkeyPatch,
+    travelfusion_client: TravelFusionClientFactory,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setenv("RELAY_DEBUG_MODE", "true")
+    monkeypatch.setenv("RELAY_DEBUG_MODE_MAX_BODY_BYTES", "16")
+    big_body = b"<Search>" + b"x" * 100 + b"</Search>"
+    transport = httpx.MockTransport(lambda _request: httpx.Response(200, content=b"<Ok/>"))
+
+    with travelfusion_client(transport) as client:
+        client.post("/channel/tf/op", content=big_body, headers={"content-type": "application/xml"})
+
+    output = capsys.readouterr().err
+    assert f"truncated, {len(big_body)} bytes total" in output
+    assert "x" * 100 not in output
