@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion-baseline-2026-07-15",
+  "rules_version": "amadeus+sabre+travelfusion+travelport-baseline-2026-07-16",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -1073,6 +1073,192 @@
       ],
       "pii_type": "person",
       "method": "encrypt"
+    },
+    {
+      "id": "travelport.core.traveler_name",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='BookingTravelerName']/@First | //*[local-name()='BookingTravelerName']/@Last | //*[local-name()='Name'][@First and @Last]/@First | //*[local-name()='Name'][@First and @Last]/@Last | //*[local-name()='AddressName']",
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelport.core.email",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='Email']/@EmailID",
+      "pii_type": "email",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelport.core.phone",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='PhoneNumber']/@Number",
+      "pii_type": "phone",
+      "method": "mask"
+    },
+    {
+      "id": "travelport.core.dob",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='BookingTraveler']/@DOB",
+      "pii_type": "dob",
+      "method": "replace",
+      "replacement": "1900-01-01"
+    },
+    {
+      "id": "travelport.core.gender",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='BookingTraveler']/@Gender",
+      "pii_type": "gender",
+      "method": "remove"
+    },
+    {
+      "id": "travelport.core.frequent_flyer",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='LoyaltyCard']/@CardNumber",
+      "pii_type": "frequent_flyer",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelport.core.address",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='Address' or local-name()='ShippingAddress']/*[local-name()='Street'] | //*[local-name()='Address' or local-name()='ShippingAddress']/*[local-name()='City'] | //*[local-name()='Address' or local-name()='ShippingAddress']/*[local-name()='PostalCode']",
+      "pii_type": "address",
+      "method": "mask"
+    },
+    {
+      "id": "travelport.core.card_number",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='CreditCard']/@Number",
+      "pii_type": "payment",
+      "method": "mask"
+    },
+    {
+      "id": "travelport.core.card_expiry",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='CreditCard']/@ExpDate",
+      "pii_type": "payment",
+      "method": "mask",
+      "mask_char": "0"
+    },
+    {
+      "id": "travelport.core.identity_doc_freetext",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='SSR'][@Type='DOCS' or @Type='DOCO' or @Type='DOCA' or @Type='PSPT' or @Type='FOID' or @Type='INFT']/@FreeText",
+      "pii_type": "visa",
+      "method": "mask"
+    },
+    {
+      "id": "travelport.core.ctce_freetext",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='SSR'][@Type='CTCE']/@FreeText",
+      "pii_type": "email",
+      "method": "mask"
+    },
+    {
+      "id": "travelport.core.ctcm_freetext",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='SSR'][@Type='CTCM']/@FreeText",
+      "pii_type": "phone",
+      "method": "mask"
+    },
+    {
+      "id": "travelport.core.ctcr_freetext",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='SSR'][@Type='CTCR']/@FreeText",
+      "pii_type": "person",
+      "method": "mask"
+    },
+    {
+      "id": "travelport.core.osi_phone",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='OSI']/@Text",
+      "pii_type": "phone",
+      "method": "mask",
+      "extract_patterns": [
+        {
+          "pattern": "(\\d{7,})"
+        }
+      ]
+    },
+    {
+      "id": "travelport.core.osi_dob",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='OSI']/@Text",
+      "pii_type": "dob",
+      "method": "mask",
+      "extract_patterns": [
+        {
+          "pattern": "DOB\\s+(\\d{2}[A-Z]{3}\\d{2})"
+        }
+      ]
+    },
+    {
+      "id": "travelport.core.osi_name",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "path": "//*[local-name()='OSI']/@Text",
+      "pii_type": "person",
+      "method": "mask",
+      "extract_patterns": [
+        {
+          "pattern": "([A-Z]+/[A-Z]+)\\s+(?:MR|MRS|MISS|MSTR|MS)\\s+DOB"
+        }
+      ]
+    },
+    {
+      "id": "travelport.core.remarks_reference",
+      "channel": "travelport",
+      "operation": ".*Rsp$",
+      "rule_type": "reference",
+      "path": "//*[local-name()='RemarkData'] | //*[local-name()='SellMessage']",
+      "source_pii_types": [
+        "person",
+        "email",
+        "phone",
+        "frequent_flyer"
+      ],
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelport.terminal.ticket_display_name",
+      "channel": "travelport",
+      "operation": "^(TerminalRsp|BookingTerminalRsp)$",
+      "path": "//*[local-name()='Text']",
+      "pii_type": "person",
+      "method": "mask",
+      "extract_patterns": [
+        {
+          "pattern": "NAME\\s*:\\s*([A-Z][A-Z .]*/[A-Z][A-Z .]*)"
+        }
+      ]
+    },
+    {
+      "id": "travelport.terminal.pnr_display_name",
+      "channel": "travelport",
+      "operation": "^(TerminalRsp|BookingTerminalRsp)$",
+      "path": "//*[local-name()='Text']",
+      "pii_type": "person",
+      "method": "mask",
+      "extract_patterns": [
+        {
+          "pattern": "(?:^|\\s)(\\d+\\.\\d*[A-Z]+/[A-Z]+(?:MR|MRS|MS|MSTR|MISS|DR)?)"
+        }
+      ]
     }
   ]
 }
