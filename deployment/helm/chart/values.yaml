@@ -30,7 +30,6 @@ config:
       proxy_pass: http://mock-channel:9000
   env:
     RELAY_BASIC_AUTH_ENABLED: "true"
-    RELAY_DNS_RESOLVER: "8.8.8.8"
     RELAY_DEFAULT_CONNECT_TIMEOUT: "30"
     RELAY_DEFAULT_READ_TIMEOUT: "120"
     RELAY_MAX_INSPECT_BYTES: "8388608"

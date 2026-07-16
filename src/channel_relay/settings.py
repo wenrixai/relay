@@ -24,7 +24,8 @@ class Settings(BaseSettings):
     basic_auth_enabled: bool = True
     basic_auth_user: str | None = None
     basic_auth_pass: str | None = None
-    dns_resolver: str = "8.8.8.8"
+    # Unset uses the OS/native resolver; only set to pin a specific upstream resolver.
+    dns_resolver: str | None = None
     default_connect_timeout: int = 30
     default_read_timeout: int = 120
     max_inspect_bytes: int = 8_388_608
