@@ -37,7 +37,7 @@ def test_operation_is_pnr_reply(response_body: bytes) -> None:
 
 def test_counts_match_baseline(response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
     _, counts = redact_response_body(response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring)
-    assert counts == {"person": 5, "frequent_flyer": 3, "phone": 2, "email": 4, "passport_id": 1, "ssn": 1}
+    assert counts == {"person": 7, "frequent_flyer": 3, "phone": 2, "email": 4, "passport_id": 1, "ssn": 1}
 
 
 def test_names_and_ff_number_encrypt_and_round_trip(
@@ -55,9 +55,10 @@ def test_names_and_ff_number_encrypt_and_round_trip(
     assert decrypt(first, pii_keyring) == "JANGBIN MR"
     assert decrypt(given, pii_keyring) == "JANGBIN MR"
     assert all(decrypt(m, pii_keyring) == "4144402077" for m in memberships)
-    # Round-trip: re-sending the encrypted body de-anonymizes every token (4 names + 2 FF).
+    # Round-trip: re-sending the encrypted body de-anonymizes every token (4 names + 2 FF +
+    # 2 name occurrences the reference rule scrubbed from a general remark).
     restored, decrypted = deanonymize_request_body(redacted, keyring=pii_keyring)
-    assert decrypted == 6
+    assert decrypted == 8
     assert b"PARK" in restored and b"JANGBIN MR" in restored and b"4144402077" in restored
 
 
@@ -108,6 +109,28 @@ def test_email_in_general_remark_masked_one_way(
     assert b"*0702*" in redacted
 
 
+def test_name_in_general_remark_encrypted_via_reference(
+    response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+) -> None:
+    """A passenger name echoed in a structuredRemark freetext (e.g. an agent note) is not a
+    structured field, but it IS one of the values a structured name field already collected
+    this pass — the reference rule scrubs it, preserving the surrounding operational text and
+    reusing the same token the structured surname/firstName field received."""
+    redacted, counts = redact_response_body(
+        response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+    )
+    assert b"PARK JANGBIN MR" not in redacted
+    assert counts["person"] == 7  # 4 structured name fields + 1 FF freetext mirror + 2 remark hits
+    assert b"0112*" in redacted and b"RQ SEAT CHANGE" in redacted  # surrounding remark text preserved
+
+    surnames = xml_texts(redacted, "surname")
+    remark_text = next(t for t in xml_texts(redacted, "freetext") if "0112*" in t)
+    remark_tokens = [tok for tok in remark_text.replace("0112*", "").split() if TOKEN_RE.fullmatch(tok)]
+    assert len(remark_tokens) == 2
+    assert remark_tokens[0] == surnames[0]  # reference hit reuses the structured field's token
+    assert decrypt(remark_tokens[1], pii_keyring) == "JANGBIN MR"
+
+
 def test_non_pii_preserved(response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
     redacted, _ = redact_response_body(response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring)
     # PNR reference and e-ticket/fare freetext are not PII (§7) and stay verbatim.
@@ -122,3 +145,8 @@ def test_required_passenger_name_anchor_fails_closed_on_schema_drift(
     drifted = response_body.replace(b"<surname>", b"<surnameV2>").replace(b"</surname>", b"</surnameV2>")
     with pytest.raises(RedactionError):
         redact_response_body(drifted, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring)
+
+
+def test_ruleset_version_covers_amadeus(baked_ruleset: RuleSet) -> None:
+    assert any(rule.channel == "amadeus" for rule in baked_ruleset.rules)
+    assert "amadeus" in baked_ruleset.rules_version
