@@ -1410,6 +1410,17 @@
       "method": "mask"
     },
     {
+      "id": "farelogix.doc.doca_freetext",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//aug:SpecialServiceRequest[aug:SSRCode='DOCA']/aug:Text",
+      "namespaces": {
+        "aug": "http://ndc.farelogix.com/aug"
+      },
+      "pii_type": "address",
+      "method": "mask"
+    },
+    {
       "id": "farelogix.freetext.names",
       "channel": "farelogix",
       "operation": "^XXTransactionResponse$",

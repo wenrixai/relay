@@ -6,10 +6,9 @@ inner message it is (OrderViewRS, AirShoppingRS, …) is decided purely by XPath
 The NDC business elements sit in no namespace; the passenger-name echo and SSR free text sit
 under ``AugmentationPoint`` in the ``http://ndc.farelogix.com/aug`` default namespace.
 
-Policy under test (decision: *structured + name-echo only*): structured PII is redacted and
-passenger names echoed inside SSR/remark free text are reference-encrypted, but the DOB / gender /
-document residue left in a DOCS slash-string (and the DOCA address echo) is intentionally NOT
-scrubbed — only the names in those nodes are.
+Policy under test: structured PII is redacted and passenger names echoed inside SSR/remark free
+text are reference-encrypted. The DOCA address free-text node is masked wholesale; the DOB / gender
+/ document residue left in a DOCS slash-string is intentionally NOT scrubbed — only its names are.
 """
 
 from __future__ import annotations
@@ -56,7 +55,7 @@ def test_order_view_redacts_every_pii_surface(baked_ruleset: RuleSet, pii_keyrin
         "dob": 4,
         "passport_id": 1,
         "phone": 1,
-        "address": 7,
+        "address": 8,
         "payment": 3,
     }
 
@@ -115,13 +114,15 @@ def test_masked_and_replaced_fields(baked_ruleset: RuleSet, pii_keyring: Keyring
 
 
 def test_docs_free_text_names_encrypted_dob_and_gender_remain(baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
-    """The DOCS slash-string has its passenger names reference-encrypted; the DOB/gender residue
-    stays (the *structured + name-echo only* decision), and the TKNE ticket number is untouched."""
+    """DOCS slash-string: passenger names reference-encrypted, DOB/gender residue left; DOCA
+    address free text masked wholesale; TKNE ticket number untouched."""
     redacted, _ = _redact(_fixture("order_view_response.xml"), baked_ruleset, pii_keyring)
     text = redacted.decode()
-    # Names no longer present in the DOCS free text; DOB + gender token still there.
+    # DOCS: names gone, DOB + gender token still there.
     assert "//DOE/DAVE" not in text
     assert "/////01MAR77/M//ENC_" in text
+    # DOCA: whole address free-text node masked (no address fragments survive).
+    assert "/D/US/" not in text and "123 STREET/MIAMI" not in text
     # Ticket number in the TKNE SSR free text is not PII and survives.
     assert "00157549767336C1" in text
 
