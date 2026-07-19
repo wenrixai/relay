@@ -19,6 +19,19 @@ def test_minimal_channel_applies_type_host_default() -> None:
     assert channel.proxy_pass == "https://api.travelfusion.com"
 
 
+def test_channel_family_collapses_farelogix_variants() -> None:
+    for variant in (
+        ChannelType.FARELOGIX_AA,
+        ChannelType.FARELOGIX_LH,
+        ChannelType.FARELOGIX_UA,
+        ChannelType.FARELOGIX_EK,
+    ):
+        assert variant.family == "farelogix"
+    # Every non-farelogix type is its own family (the alias is a no-op for them).
+    assert ChannelType.AMADEUS.family == "amadeus"
+    assert ChannelType.SABRE.family == "sabre"
+
+
 def test_explicit_host_overrides_default() -> None:
     channel = ChannelConfig(name="tf", type=ChannelType.TRAVELFUSION, host="example.test")
     assert channel.host == "example.test"

@@ -503,7 +503,7 @@ def _response_pii_stage(
         # httpx already decoded any content-encoding, so `content` is plain XML.
         outcome = redact_response(
             content,
-            channel=(channel.type.value, channel.name),
+            channel=(channel.type.value, channel.type.family, channel.name),
             ruleset=rules,
             keyring=keyring,
             force_redact=channel.pii.force_redact,

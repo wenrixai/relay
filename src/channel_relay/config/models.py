@@ -26,6 +26,13 @@ class ChannelType(StrEnum):
     SABRE = "sabre"
     TRAVELPORT = "travelport"
 
+    @property
+    def family(self) -> str:
+        """Rule-matching family key: the per-airline ``farelogix-*`` variants share one NDC
+        schema, so they collapse to a single ``farelogix`` PII baseline; every other type is
+        its own family."""
+        return "farelogix" if self.value.startswith("farelogix-") else self.value
+
 
 # Per-type default host (the relay-configuration spec). ``None`` = per-deployment; host must be supplied.
 _DEFAULT_HOSTS: dict[ChannelType, str | None] = {
