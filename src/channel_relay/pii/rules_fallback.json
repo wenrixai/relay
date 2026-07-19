@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion+travelport-baseline-2026-07-16.2",
+  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-baseline-2026-07-19",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -1300,6 +1300,127 @@
           "pattern": "(?:^|\\s)(\\d+\\.\\d*[A-Z]+/[A-Z]+(?:MR|MRS|MS|MSTR|MISS|DR)?)"
         }
       ]
+    },
+    {
+      "id": "farelogix.pax.name",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//Individual/Surname | //Individual/GivenName | //Individual/MiddleName",
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "farelogix.pax.aug_name",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//aug:AddlName/aug:Name",
+      "namespaces": {
+        "aug": "http://ndc.farelogix.com/aug"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "farelogix.payment.holder_name",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//PaymentCardMethod/CardHolderName",
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "farelogix.contact.email",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//EmailAddress/EmailAddressValue",
+      "pii_type": "email",
+      "method": "encrypt"
+    },
+    {
+      "id": "farelogix.loyalty.account",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//LoyaltyProgramAccount/AccountNumber",
+      "pii_type": "frequent_flyer",
+      "method": "encrypt"
+    },
+    {
+      "id": "farelogix.pax.gender",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//Individual/Gender",
+      "pii_type": "gender",
+      "method": "mask"
+    },
+    {
+      "id": "farelogix.pax.dob",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//Passenger/Birthdate | //Individual/Birthdate",
+      "pii_type": "dob",
+      "method": "replace",
+      "replacement": "1901-01-01"
+    },
+    {
+      "id": "farelogix.doc.number",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//IdentityDocument/IdentityDocumentNumber",
+      "pii_type": "passport_id",
+      "method": "mask"
+    },
+    {
+      "id": "farelogix.doc.visa_number",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//IdentityDocument/Visa/VisaNumber",
+      "pii_type": "visa",
+      "method": "mask"
+    },
+    {
+      "id": "farelogix.contact.phone",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//Phone/PhoneNumber",
+      "pii_type": "phone",
+      "method": "mask"
+    },
+    {
+      "id": "farelogix.contact.address",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//PostalAddress/Street | //PostalAddress/PostalCode | //PostalAddress/CityName | //PostalAddress/CountrySubdivisionName",
+      "pii_type": "address",
+      "method": "mask"
+    },
+    {
+      "id": "farelogix.payment.card",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//PaymentCardMethod/MaskedCardNumber | //PaymentCardMethod/CardNumber | //PaymentCardMethod/SeriesCode | //PaymentCardMethod/EffectiveExpireDate/Expiration",
+      "pii_type": "payment",
+      "method": "mask"
+    },
+    {
+      "id": "farelogix.payment.holder_address",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//CardholderAddress/StructuredAddress/Street | //CardholderAddress/StructuredAddress/PostalCode | //CardholderAddress/StructuredAddress/CityName",
+      "pii_type": "address",
+      "method": "mask"
+    },
+    {
+      "id": "farelogix.freetext.names",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "rule_type": "reference",
+      "path": "//aug:SpecialServiceRequest/aug:Text | //aug:Remark | //Remark",
+      "namespaces": {
+        "aug": "http://ndc.farelogix.com/aug"
+      },
+      "source_pii_types": ["person"],
+      "pii_type": "person",
+      "method": "encrypt"
     }
   ]
 }

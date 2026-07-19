@@ -1,0 +1,177 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/1999/XMLSchema/" xmlns:xsi="http://www.w3.org/1999/XMLSchema/instance/">
+  <SOAP-ENV:Header>
+    <t:Transaction xmlns:t="xxs">
+      <tc>
+        <pid>PID123</pid>
+        <tid>TID456</tid>
+        <dt>2025-03-27T18:12:36Z</dt>
+      </tc>
+    </t:Transaction>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <ns1:XXTransactionResponse xmlns:ns1="xxs">
+      <RSP>
+        <OrderViewRS Version="17.2" TransactionIdentifier="05e9035a975a400fb2d339cb667b9a6d">
+          <Party>
+            <Sender>
+              <TravelAgencySender>
+                <PseudoCity>MIA1S2179</PseudoCity>
+                <AgencyID>07560685</AgencyID>
+              </TravelAgencySender>
+            </Sender>
+          </Party>
+          <Response>
+            <Order OrderID="SN082H12Q84A5" Owner="AA">
+              <BookingReferences>
+                <BookingReference>
+                  <ID>BMSHY5</ID>
+                </BookingReference>
+              </BookingReferences>
+              <OrderItems>
+                <OrderItem>
+                  <TicketDocInfo>
+                    <TicketDocument>
+                      <TicketDocNbr>00157549767336</TicketDocNbr>
+                    </TicketDocument>
+                  </TicketDocInfo>
+                </OrderItem>
+              </OrderItems>
+              <Payments>
+                <Payment>
+                  <Method>
+                    <PaymentCardMethod>
+                      <CardCode>MC</CardCode>
+                      <MaskedCardNumber>XXXXXXXXXXXX0007</MaskedCardNumber>
+                      <CardHolderName>DAVE DOE</CardHolderName>
+                      <CardholderAddress>
+                        <StructuredAddress>
+                          <Street>124 BILLING STREET</Street>
+                          <CityName>MIAMI</CityName>
+                          <StateProv>FL</StateProv>
+                          <PostalCode>33161</PostalCode>
+                          <CountryCode>US</CountryCode>
+                        </StructuredAddress>
+                      </CardholderAddress>
+                      <SeriesCode>737</SeriesCode>
+                      <EffectiveExpireDate>
+                        <Expiration>0139</Expiration>
+                      </EffectiveExpireDate>
+                    </PaymentCardMethod>
+                  </Method>
+                </Payment>
+              </Payments>
+            </Order>
+          </Response>
+          <DataLists>
+            <PassengerList>
+              <Passenger PassengerID="T1">
+                <PTC>ADT</PTC>
+                <Birthdate>1977-03-01</Birthdate>
+                <Individual>
+                  <Birthdate>1977-03-01</Birthdate>
+                  <Gender>Male</Gender>
+                  <NameTitle>MR</NameTitle>
+                  <GivenName>DAVE</GivenName>
+                  <Surname>DOE</Surname>
+                </Individual>
+                <ContactInfoRef>CI1</ContactInfoRef>
+                <IdentityDocument>
+                  <IdentityDocumentNumber>X1234321</IdentityDocumentNumber>
+                  <IdentityDocumentType>VI</IdentityDocumentType>
+                  <IssuingCountryCode>ROU</IssuingCountryCode>
+                  <IssueDate>2023-12-06</IssueDate>
+                  <ExpiryDate>2033-12-04</ExpiryDate>
+                </IdentityDocument>
+                <LoyaltyProgramAccount>
+                  <ProgramName>AAdvantage</ProgramName>
+                  <AccountNumber>AA9988776</AccountNumber>
+                </LoyaltyProgramAccount>
+              </Passenger>
+              <Passenger PassengerID="T2">
+                <PTC>ADT</PTC>
+                <Birthdate>1980-03-26</Birthdate>
+                <Individual>
+                  <Birthdate>1980-03-26</Birthdate>
+                  <Gender>Female</Gender>
+                  <NameTitle>MRS</NameTitle>
+                  <GivenName>RACHEL</GivenName>
+                  <Surname>DOE</Surname>
+                </Individual>
+                <ContactInfoRef>CI1</ContactInfoRef>
+              </Passenger>
+            </PassengerList>
+            <ContactList>
+              <ContactInformation ContactID="CI1">
+                <PostalAddress>
+                  <Label>AddressAtDestination</Label>
+                  <Street>123 STREET</Street>
+                  <PostalCode>33160</PostalCode>
+                  <CityName>MIAMI</CityName>
+                  <CountrySubdivisionName>FL</CountrySubdivisionName>
+                  <CountryName>United States</CountryName>
+                  <CountryCode>US</CountryCode>
+                </PostalAddress>
+                <ContactProvided>
+                  <Phone>
+                    <Label>Home</Label>
+                    <PhoneNumber>17865554433</PhoneNumber>
+                  </Phone>
+                </ContactProvided>
+                <ContactProvided>
+                  <EmailAddress>
+                    <EmailAddressValue>DAVE.DOE@EXAMPLE.COM</EmailAddressValue>
+                  </EmailAddress>
+                </ContactProvided>
+              </ContactInformation>
+            </ContactList>
+          </DataLists>
+          <Metadata>
+            <PassengerMetadata MetadataKey="M1">
+              <AugmentationPoint>
+                <AugPoint>
+                  <AddlName xmlns="http://ndc.farelogix.com/aug">
+                    <Name>DAVE MR</Name>
+                    <NameTypeCode>EquivGivenName</NameTypeCode>
+                    <PassengerRef>T1</PassengerRef>
+                  </AddlName>
+                  <AddlName xmlns="http://ndc.farelogix.com/aug">
+                    <Name>DOE</Name>
+                    <NameTypeCode>EquivSurname</NameTypeCode>
+                    <PassengerRef>T1</PassengerRef>
+                  </AddlName>
+                </AugPoint>
+                <AugPoint>
+                  <SpecialServiceRequest xmlns="http://ndc.farelogix.com/aug">
+                    <TravelerIDRef>T1</TravelerIDRef>
+                    <AirlineCode>AA</AirlineCode>
+                    <SSRCode>DOCS</SSRCode>
+                    <Text>/////01MAR77/M//DOE/DAVE</Text>
+                    <ActionCode>HK</ActionCode>
+                  </SpecialServiceRequest>
+                </AugPoint>
+                <AugPoint>
+                  <SpecialServiceRequest xmlns="http://ndc.farelogix.com/aug">
+                    <TravelerIDRef>T1</TravelerIDRef>
+                    <AirlineCode>AA</AirlineCode>
+                    <SSRCode>DOCA</SSRCode>
+                    <Text>/D/US/123 STREET/MIAMI/FL/33160</Text>
+                    <ActionCode>HK</ActionCode>
+                  </SpecialServiceRequest>
+                </AugPoint>
+                <AugPoint>
+                  <SpecialServiceRequest xmlns="http://ndc.farelogix.com/aug">
+                    <TravelerIDRef>T1</TravelerIDRef>
+                    <AirlineCode>AA</AirlineCode>
+                    <SSRCode>TKNE</SSRCode>
+                    <Text>00157549767336C1</Text>
+                    <ActionCode>HK</ActionCode>
+                  </SpecialServiceRequest>
+                </AugPoint>
+              </AugmentationPoint>
+            </PassengerMetadata>
+          </Metadata>
+        </OrderViewRS>
+      </RSP>
+    </ns1:XXTransactionResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
