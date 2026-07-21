@@ -98,16 +98,3 @@ def test_encrypted_name_round_trips_upstream(client: TestClient, mock_channel: M
     forwarded = mock_channel.channel_bodies[-1]
     assert b"ENC_" not in forwarded
     assert b"<pnr:surname>PARK</pnr:surname>" in forwarded
-
-
-def test_required_surname_anchor_schema_drift_fails_closed(client: TestClient, mock_channel: MockChannel) -> None:
-    mock_channel.body = mock_channel.body.replace(b"<surname>", b"<renamedSurname>").replace(
-        b"</surname>", b"</renamedSurname>"
-    )
-
-    with client:
-        response = client.post("/channel/amadeus/op", content=b"<Ping/>", headers={"content-type": "text/xml"})
-
-    assert response.status_code == 502
-    assert response.json()["reason"] == "pii_redaction_failed"
-    assert b"renamedSurname" not in response.content

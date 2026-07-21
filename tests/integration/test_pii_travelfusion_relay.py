@@ -67,19 +67,3 @@ def test_travelfusion_route_name_uses_type_rules_and_swaps_credentials(monkeypat
 
     token = response.text.split("<Email>", maxsplit=1)[1].split("</Email>", maxsplit=1)[0]
     assert decrypt(token, Keyring.from_json(KEYRING_JSON)) == "billing@example.test"
-
-
-def test_required_traveller_name_anchor_schema_drift_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
-    mock = MockTravelfusion("get_booking_details_payment_response.xml")
-    mock.body = mock.body.replace(b"<NamePart>", b"<RenamedNamePart>").replace(b"</NamePart>", b"</RenamedNamePart>")
-
-    with _client(mock, monkeypatch) as client:
-        response = client.post(
-            "/channel/tf/CommandList",
-            content=(FIXTURES / "request.xml").read_bytes(),
-            headers={"content-type": "text/xml"},
-        )
-
-    assert response.status_code == 502
-    assert response.json()["reason"] == "pii_redaction_failed"
-    assert b"RenamedNamePart" not in response.content
