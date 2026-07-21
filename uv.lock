@@ -205,7 +205,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28" },
     { name = "loguru", specifier = ">=0.7" },
     { name = "lxml", specifier = ">=5.3" },
-    { name = "opentelemetry-exporter-otlp", specifier = ">=1.43.0" },
+    { name = "opentelemetry-exporter-otlp", specifier = ">=1.44.0" },
     { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.64b0" },
     { name = "opentelemetry-instrumentation-httpx", specifier = ">=0.65b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.43.0" },
