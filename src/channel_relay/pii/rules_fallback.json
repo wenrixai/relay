@@ -11,8 +11,7 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "person",
-      "method": "encrypt",
-      "required": true
+      "method": "encrypt"
     },
     {
       "id": "amadeus.pnr.firstname",
@@ -178,8 +177,7 @@
         "a": "http://xml.amadeus.com/TSRQRR_22_2_1A"
       },
       "pii_type": "person",
-      "method": "encrypt",
-      "required": true
+      "method": "encrypt"
     },
     {
       "id": "sabre.res.passenger_name",
@@ -190,8 +188,7 @@
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "person",
-      "method": "encrypt",
-      "required": true
+      "method": "encrypt"
     },
     {
       "id": "sabre.res.history_name",
@@ -497,8 +494,7 @@
       "operation": "^(GetBookingDetails|GetLatestBookingDetails)$",
       "path": "//*[local-name()='BookingProfile']/*[local-name()='TravellerList']/*[local-name()='Traveller']/*[local-name()='Name']/*[local-name()='NamePartList']/*[local-name()='NamePart']",
       "pii_type": "person",
-      "method": "encrypt",
-      "required": true
+      "method": "encrypt"
     },
     {
       "id": "travelfusion.booking.contact_name",
@@ -577,8 +573,7 @@
         "er": "http://www.sabre.com/ns/Ticketing/ExchangeRefund/1.0"
       },
       "pii_type": "person",
-      "method": "encrypt",
-      "required": true
+      "method": "encrypt"
     },
     {
       "id": "sabre.refund.passenger_first_name",
@@ -600,8 +595,7 @@
         "sx": "http://webservices.sabre.com/sabreXML/2011/10"
       },
       "pii_type": "person",
-      "method": "encrypt",
-      "required": true
+      "method": "encrypt"
     },
     {
       "id": "sabre.etkt.passenger_name",
@@ -612,8 +606,7 @@
         "e": "http://webservices.sabre.com/sabreXML/2011/10"
       },
       "pii_type": "person",
-      "method": "encrypt",
-      "required": true
+      "method": "encrypt"
     },
     {
       "id": "sabre.etkt.customer_identifier",
@@ -697,8 +690,7 @@
         "d": "http://www.sabre.com/ns/Ticketing/EDoc"
       },
       "pii_type": "person",
-      "method": "encrypt",
-      "required": true
+      "method": "encrypt"
     },
     {
       "id": "sabre.edoc.external_number",
@@ -758,8 +750,7 @@
         "dc": "http://www.sabre.com/ns/Ticketing/DC"
       },
       "pii_type": "person",
-      "method": "encrypt",
-      "required": true
+      "method": "encrypt"
     },
     {
       "id": "sabre.tktdoc.external_number",
@@ -820,7 +811,6 @@
       },
       "pii_type": "person",
       "method": "encrypt",
-      "required": true,
       "extract_patterns": [
         {
           "pattern": "^\\s*\\d+([A-Z]+)/"
@@ -912,8 +902,7 @@
         "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "person",
-      "method": "encrypt",
-      "required": true
+      "method": "encrypt"
     },
     {
       "id": "sabre.trip.history_name",

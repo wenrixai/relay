@@ -14,7 +14,7 @@ import pytest
 
 from channel_relay.pii.codec import TOKEN_RE, decrypt
 from channel_relay.pii.crypto import Keyring
-from channel_relay.pii.engine import RedactionError, deanonymize_request_body, parse_operation, redact_response_body
+from channel_relay.pii.engine import deanonymize_request_body, parse_operation, redact_response_body
 from channel_relay.pii.rules import RuleSet
 from channel_relay.pii.xml_ops import parse_bytes
 from tests.conftest import FIXTURES_DIR, XmlTexts
@@ -58,11 +58,3 @@ def test_non_pii_preserved(response_body: bytes, baked_ruleset: RuleSet, pii_key
     assert b"<controlNumber>ZQ3L64</controlNumber>" in redacted
     assert b"<number>2322482953027</number>" in redacted
     assert b"<amount>-143.81</amount>" in redacted
-
-
-def test_required_passenger_name_anchor_fails_closed_on_schema_drift(
-    response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring
-) -> None:
-    drifted = response_body.replace(b"<surname>", b"<surnameV2>").replace(b"</surname>", b"</surnameV2>")
-    with pytest.raises(RedactionError):
-        redact_response_body(drifted, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring)

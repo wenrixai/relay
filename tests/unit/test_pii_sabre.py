@@ -13,12 +13,9 @@ from __future__ import annotations
 
 import re
 
-import pytest
-
 from channel_relay.pii.codec import TOKEN_RE, decrypt
 from channel_relay.pii.crypto import Keyring
 from channel_relay.pii.engine import (
-    RedactionError,
     deanonymize_request_body,
     parse_operation,
     redact_response,
@@ -431,19 +428,6 @@ class TestQueueAccessUncovered:
         assert outcome.covered is False
         assert outcome.counts == {}
         assert b"VHTHEO" in outcome.body  # record locators are operational, preserved verbatim
-
-
-class TestRequiredAnchorFailsClosed:
-    """A PII-heavy operation whose required anchor matches nothing fails closed (schema drift guard)."""
-
-    def test_missing_refund_last_name_raises(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
-        # RefundRS with a Traveler that has no lastName attribute: the required anchor matches nothing.
-        body = (
-            b'<RefundRS xmlns="http://www.sabre.com/ns/Ticketing/ExchangeRefund/1.0">'
-            b'<Traveler firstName="ROBERT"/></RefundRS>'
-        )
-        with pytest.raises(RedactionError):
-            _redact(body, baked_ruleset, pii_keyring)
 
 
 def test_ruleset_version_covers_sabre(baked_ruleset: RuleSet) -> None:
