@@ -176,10 +176,20 @@ def _span_for_match(match: re.Match[str]) -> _Span | None:
     return start, end
 
 
+def _token_spans(value: str) -> list[_Span]:
+    """Spans of ``ENC_`` tokens already present in ``value``.
+
+    Token payloads are randomized base64url, so digit runs, dashes, or even collected
+    names can appear inside them; any rule rewriting part of a token would corrupt the
+    ciphertext, so these spans are off-limits to extraction and reference matching.
+    """
+    return [match.span() for match in _EMBEDDED_TOKEN_RE.finditer(value)]
+
+
 def _extract_spans(rule: FieldRule, value: str) -> list[_Span]:
-    """Return non-overlapping extraction spans in source order."""
+    """Return non-overlapping extraction spans in source order, never inside a token."""
     spans: list[_Span] = []
-    occupied: list[_Span] = []
+    occupied: list[_Span] = list(_token_spans(value))
     for pattern in rule.extract_re:
         for match in pattern.finditer(value):
             span = _span_for_match(match)
@@ -289,6 +299,35 @@ def _reference_pattern(rule: ReferenceRule, values: set[str]) -> re.Pattern[str]
     return re.compile(alternation, re.IGNORECASE)
 
 
+def _overlaps_any(span: _Span, spans: Sequence[_Span]) -> bool:
+    """Whether ``span`` overlaps any of ``spans`` (used to shield existing tokens)."""
+    start, end = span
+    return any(start < used_end and end > used_start for used_start, used_end in spans)
+
+
+def _reference_sub(pattern: re.Pattern[str], text: str, replace: Callable[[str], str]) -> tuple[str, int]:
+    """Substitute pattern matches in ``text`` via ``replace``, skipping any match that falls
+    inside an existing ``ENC_`` token.
+
+    Token payloads are base64url, so ``-``/``_`` inside them read as word boundaries and a
+    collected value can appear as a token substring; rewriting there would corrupt the
+    ciphertext. Matches overlapping a token span are left verbatim.
+    """
+    protected = _token_spans(text)
+    out: list[str] = []
+    cursor = 0
+    hits = 0
+    for match in pattern.finditer(text):
+        if _overlaps_any(match.span(), protected):
+            continue
+        out.append(text[cursor : match.start()])
+        out.append(replace(match.group(0)))
+        cursor = match.end()
+        hits += 1
+    out.append(text[cursor:])
+    return "".join(out), hits
+
+
 def _redact_reference_rule(
     root: etree._Element, rule: ReferenceRule, ctx: _RedactionCtx, counts: dict[str, int]
 ) -> None:
@@ -307,21 +346,20 @@ def _redact_reference_rule(
         assert ctx.keyring is not None
     keyring = ctx.keyring
     deterministic = rule.action.deterministic
+
+    def _replace(matched: str) -> str:
+        if ctx.force_redact:
+            return _FORCE_REDACT_PLACEHOLDER
+        assert keyring is not None
+        return _encrypt_cached(matched, keyring, deterministic, ctx.token_cache)
+
     for node in _locate(root, rule, ctx.path_error_callback):
         if not isinstance(node, etree._Element):  # pylint: disable=protected-access  # lxml public-in-practice
             continue
         text = node.text
         if text is None:
             continue
-        if ctx.force_redact:
-            new_text, hits = pattern.subn(_FORCE_REDACT_PLACEHOLDER, text)
-        else:
-
-            def _replace(m: re.Match[str]) -> str:
-                assert keyring is not None
-                return _encrypt_cached(m.group(0), keyring, deterministic, ctx.token_cache)
-
-            new_text, hits = pattern.subn(_replace, text)
+        new_text, hits = _reference_sub(pattern, text, _replace)
         if hits:
             node.text = new_text
             counts[rule.pii_type.value] = counts.get(rule.pii_type.value, 0) + hits

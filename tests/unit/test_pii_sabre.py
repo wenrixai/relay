@@ -430,6 +430,101 @@ class TestQueueAccessUncovered:
         assert b"VHTHEO" in outcome.body  # record locators are operational, preserved verbatim
 
 
+class TestGetReservationHistoryAndContacts:
+    """Leak surfaces found in live GetReservationRS traffic: passenger names echoed in
+    payment blocks, history association elements, and accounting lines; contact email in
+    ``or114:PassengerContactEmail``; Sabre's ``¤``-obfuscated emails in remark lines; and
+    phone numbers inside CTC* special requests."""
+
+    def test_operation(self) -> None:
+        assert (
+            parse_operation(parse_bytes(_fixture("get_reservation_history_contacts_response.xml")))
+            == "GetReservationRS"
+        )
+
+    def test_payment_and_history_names_encrypted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture("get_reservation_history_contacts_response.xml"), baked_ruleset, pii_keyring)
+        # Payment-block PassengerName, history Passengers/Name, history Content, the
+        # accounting line, and the or114 comment must not carry the passenger's name.
+        assert b"CARTER JAMES" not in redacted
+        assert b"CARTER/JAMES" not in redacted
+        assert b"ALL/CARTER" not in redacted  # accounting-line name (boundary '/')
+        assert b"CONTACT CARTER" not in redacted  # or114 comment (boundary ' ')
+        # Non-PII operational text around the scrubbed spans survives.
+        assert b"A 000SFC/TRF/0.00/21.00/0.00/ALL/" in redacted
+        assert b"<stl19:HistoryAction>ANA</stl19:HistoryAction>" in redacted
+
+    def test_contact_email_and_obfuscated_email_encrypted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, counts = _redact(
+            _fixture("get_reservation_history_contacts_response.xml"), baked_ruleset, pii_keyring
+        )
+        # Structured contact email element.
+        assert b"JAMES.CARTER@EXAMPLECORP.COM" not in redacted
+        # Sabre's remark-encoded email uses ``¤`` instead of ``@`` — a fixed-literal
+        # reference match on the collected address can never hit it.
+        assert "CLIQUSER-1234567¤EXAMPLECORP.COM".encode() not in redacted
+        # History remark association carries the plain-@ variant.
+        assert b".CLIQUSER-1234567@EXAMPLECORP.COM" not in redacted
+        assert counts["email"] >= 3
+
+    def test_ctc_special_request_phone_encrypted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, counts = _redact(
+            _fixture("get_reservation_history_contacts_response.xml"), baked_ruleset, pii_keyring
+        )
+        # CTCM SSR free text, the agency fare remark, and ReceivedFrom all carry the number.
+        assert b"6125550100" not in redacted
+        assert counts["phone"] >= 3
+        # SSR structure (code, action code) survives; the ReceivedFrom tool prefix stays.
+        assert b"<stl19:Code>CTCM</stl19:Code>" in redacted
+        assert b"<stl19:ActionCode>HK</stl19:ActionCode>" in redacted
+        assert b"MYCWT/AA/" in redacted
+
+    def test_traveller_id_in_remark_encrypted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture("get_reservation_history_contacts_response.xml"), baked_ruleset, pii_keyring)
+        # Corporate booking-tool traveller ids are personal identifiers; the id digits are
+        # encrypted in place while the "OBT-GTC/ID-" marker survives.
+        assert b"7654321" not in redacted
+        assert b"OBT-GTC/ID-" in redacted
+
+    def test_word_boundary_bounds_name_redaction(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        """Names in remark free text are matched on word boundaries (per the referential-
+        redaction spec default). A name glued into an alphanumeric agency code with no
+        boundary (``*13-JCARTERJA``) is intentionally NOT scrubbed: substring matching there
+        would abut a token against trailing text and is a documented limitation, not a
+        regression. The bounded occurrences elsewhere are still covered."""
+        redacted, _ = _redact(_fixture("get_reservation_history_contacts_response.xml"), baked_ruleset, pii_keyring)
+        # Bounded name occurrences (payment block, history, accounting line) are gone.
+        assert b"CARTER JAMES" not in redacted
+        assert b"CARTER/JAMES" not in redacted
+        assert b"ALL/CARTER" not in redacted
+
+    def test_round_trip(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture("get_reservation_history_contacts_response.xml"), baked_ruleset, pii_keyring)
+        restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
+        assert b"CARTER JAMES" in restored
+        assert b"CARTER/JAMES" in restored
+        assert b"JAMES.CARTER@EXAMPLECORP.COM" in restored
+        assert b"6125550100" in restored
+
+    def test_history_phone_node_masked_whole_no_token_abutment(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+    ) -> None:
+        """A history phone element carries a value with a trailing "-W" suffix
+        ("MSP1-6125550100-W"). Extracting only the digit span would leave a token abutting the
+        "-W", and the greedy token scan on the way back upstream would re-consume it into a
+        corrupt token. Phones are masked one-way, and the whole node is masked as a unit — so
+        the number is gone, no ENC_ token is produced there, and the rest of the document still
+        de-anonymizes cleanly (no corruption)."""
+        body = _fixture("get_reservation_history_contacts_response.xml")
+        redacted, _ = _redact(body, baked_ruleset, pii_keyring)
+        assert b"6125550100" not in redacted
+        assert b"MSP1-6125550100-W" not in redacted
+        # The whole node is a single all-asterisks mask (no ENC_ token to abut "-W").
+        assert any(_MASKED_RE.fullmatch(text) for text in xml_texts(redacted, "HistoryAssociationElement"))
+        # The document still round-trips: every remaining ENC_ token decrypts cleanly.
+        deanonymize_request_body(redacted, keyring=pii_keyring)
+
+
 def test_ruleset_version_covers_sabre(baked_ruleset: RuleSet) -> None:
     assert any(rule.channel == "sabre" for rule in baked_ruleset.rules)
     assert "sabre" in baked_ruleset.rules_version
