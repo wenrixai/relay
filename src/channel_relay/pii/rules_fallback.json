@@ -22,7 +22,12 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "person",
-      "method": "encrypt"
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "^([A-Z][A-Z ]*?)(?: (?:MR|MRS|MS|DR|MSTR|MISS|INF|INFT|CHD|PROF))?$"
+        }
+      ]
     },
     {
       "id": "amadeus.pnr.enh_surname",
@@ -44,7 +49,12 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "person",
-      "method": "encrypt"
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "^([A-Z][A-Z ]*?)(?: (?:MR|MRS|MS|DR|MSTR|MISS|INF|INFT|CHD|PROF))?$"
+        }
+      ]
     },
     {
       "id": "amadeus.pnr.ff_number",
@@ -156,6 +166,73 @@
       ]
     },
     {
+      "id": "amadeus.pnr.remark_name_line",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='RM']/a:otherDataFreetext/a:longFreetext | //a:dataElementsIndiv/a:miscellaneousRemarks/a:remarks/a:freetext | //a:dataElementsIndiv/a:extendedRemark/a:structuredRemark/a:freetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "\\bNAME-([A-Z][A-Z/ ]{2,60})"
+        }
+      ]
+    },
+    {
+      "id": "amadeus.pnr.remark_arrival_contact_name",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='RM']/a:otherDataFreetext/a:longFreetext | //a:dataElementsIndiv/a:miscellaneousRemarks/a:remarks/a:freetext | //a:dataElementsIndiv/a:extendedRemark/a:structuredRemark/a:freetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "\\*ARR\\*([A-Z][A-Z ]*(?:/[A-Z][A-Z ]*)?)"
+        }
+      ]
+    },
+    {
+      "id": "amadeus.pnr.remark_emergency_contact_name",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='RM']/a:otherDataFreetext/a:longFreetext | //a:dataElementsIndiv/a:miscellaneousRemarks/a:remarks/a:freetext | //a:dataElementsIndiv/a:extendedRemark/a:structuredRemark/a:freetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "/N-([A-Z][A-Z ]{2,40})(?=/|$)"
+        }
+      ]
+    },
+    {
+      "id": "amadeus.pnr.remark_phone",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='RM']/a:otherDataFreetext/a:longFreetext | //a:dataElementsIndiv/a:miscellaneousRemarks/a:remarks/a:freetext | //a:dataElementsIndiv/a:extendedRemark/a:structuredRemark/a:freetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "phone",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "(\\+?\\d{1,4}[- ]\\d{6,12})\\b"
+        },
+        {
+          "pattern": "(?<=\\bMOB)\\d{7,15}"
+        }
+      ]
+    },
+    {
       "id": "amadeus.pnr.remarks_reference",
       "channel": "amadeus",
       "operation": "^PNR_Reply",
@@ -164,7 +241,12 @@
       "namespaces": {
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
-      "source_pii_types": ["person", "email", "phone", "frequent_flyer"],
+      "source_pii_types": [
+        "person",
+        "email",
+        "phone",
+        "frequent_flyer"
+      ],
       "pii_type": "person",
       "method": "encrypt"
     },
@@ -205,7 +287,7 @@
       "id": "sabre.res.ticket_passenger_name",
       "channel": "sabre",
       "operation": "^GetReservationRS$",
-      "path": "//s19:TicketDetails/s19:PassengerName",
+      "path": "//s19:PassengerName | //s19:Passengers/s19:Name",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
@@ -216,7 +298,7 @@
       "id": "sabre.res.email",
       "channel": "sabre",
       "operation": "^GetReservationRS$",
-      "path": "//s19:EmailAddress/s19:Address | //o14:Email/o14:Address",
+      "path": "//s19:EmailAddress/s19:Address | //o14:Email/o14:Address | //o14:PassengerContactEmail/o14:Email",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
         "o14": "http://services.sabre.com/res/or/v1_14"
@@ -228,7 +310,7 @@
       "id": "sabre.res.phone",
       "channel": "sabre",
       "operation": "^GetReservationRS$",
-      "path": "//s19:PhoneNumber/s19:Number",
+      "path": "//s19:PhoneNumber/s19:Number | //s19:AssociationChild[s19:Type='PhoneNumber']/s19:Content | //s19:HistoryAssociationElement[@Type='PHONE_NUMBER']",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
@@ -371,11 +453,110 @@
       ]
     },
     {
+      "id": "sabre.res.remark_obfuscated_email",
+      "channel": "sabre",
+      "operation": "^GetReservationRS$",
+      "path": "//s19:Text | //s19:Content | //s19:HistoryAssociationElement | //o14:Comment",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
+        "o14": "http://services.sabre.com/res/or/v1_14"
+      },
+      "pii_type": "email",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "([A-Za-z0-9._%+-]+(?:@|¤|//)[A-Za-z0-9_%¤-]+(?:[.¤][A-Za-z0-9-]{2,})+)"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.ctc_special_request_phone",
+      "channel": "sabre",
+      "operation": "^GetReservationRS$",
+      "path": "//s19:GenericSpecialRequest[starts-with(s19:Code,'CTC')]/s19:FreeText | //s19:GenericSpecialRequest[starts-with(s19:Code,'CTC')]/s19:FullText | //s19:GenericSpecialRequests[starts-with(s19:Code,'CTC')]/s19:FreeText | //s19:GenericSpecialRequests[starts-with(s19:Code,'CTC')]/s19:FullText",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "phone",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "(\\+?\\d[\\d ()/-]{5,}\\d)"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.ctc_service_request_email",
+      "channel": "sabre",
+      "operation": "^GetReservationRS$",
+      "path": "//s19:GenericSpecialRequest[starts-with(s19:Code,'CTC')]/s19:FreeText | //s19:GenericSpecialRequest[starts-with(s19:Code,'CTC')]/s19:FullText | //o14:ServiceRequest[@code='CTCE']/o14:FreeText | //o14:ServiceRequest[@code='CTCE']/o14:FullText",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
+        "o14": "http://services.sabre.com/res/or/v1_14"
+      },
+      "pii_type": "email",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "([A-Za-z0-9._%+-]+(?:@|¤|//)[A-Za-z0-9_%¤-]+(?:[.¤][A-Za-z0-9-]{2,})+)"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.remark_phone",
+      "channel": "sabre",
+      "operation": "^GetReservationRS$",
+      "path": "//s19:RemarkLine/s19:Text | //o14:PassengerContactMobilePhone/o14:PhoneNumber",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
+        "o14": "http://services.sabre.com/res/or/v1_14"
+      },
+      "pii_type": "phone",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "(\\+?\\d{1,4}[- ]\\d{6,12})\\b"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.remark_traveller_id",
+      "channel": "sabre",
+      "operation": "^GetReservationRS$",
+      "path": "//s19:RemarkLine/s19:Text | //s19:HistoryAssociationElement",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "(?<=\\bID-)\\d{5,12}\\b"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.received_from_phone",
+      "channel": "sabre",
+      "operation": "^GetReservationRS$",
+      "path": "//s19:ReceivedFrom/s19:Name",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "phone",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "(\\d{7,15})"
+        }
+      ]
+    },
+    {
       "id": "sabre.res.remarks_reference",
       "channel": "sabre",
       "operation": "^GetReservationRS$",
       "rule_type": "reference",
-      "path": "//s19:RemarkLine/s19:Text | //s19:GenericSpecialRequest/s19:FreeText | //s19:GenericSpecialRequest/s19:FullText | //s19:GenericSpecialRequests/s19:FreeText | //s19:GenericSpecialRequests/s19:FullText | //s19:ETicketNumber | //s19:OriginalTicketDetails",
+      "path": "//s19:Text | //s19:Content | //s19:HistoryAssociationElement | //s19:AccountingLineText | //s19:GenericSpecialRequest/s19:FreeText | //s19:GenericSpecialRequest/s19:FullText | //s19:GenericSpecialRequests/s19:FreeText | //s19:GenericSpecialRequests/s19:FullText | //s19:ETicketNumber | //s19:OriginalTicketDetails",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
@@ -393,7 +574,7 @@
       "channel": "sabre",
       "operation": "^GetReservationRS$",
       "rule_type": "reference",
-      "path": "//o14:ServiceRequest/o14:FreeText | //o14:ServiceRequest/o14:FullText",
+      "path": "//o14:ServiceRequest/o14:FreeText | //o14:ServiceRequest/o14:FullText | //o14:Comment",
       "namespaces": {
         "o14": "http://services.sabre.com/res/or/v1_14"
       },
@@ -1418,7 +1599,9 @@
       "namespaces": {
         "aug": "http://ndc.farelogix.com/aug"
       },
-      "source_pii_types": ["person"],
+      "source_pii_types": [
+        "person"
+      ],
       "pii_type": "person",
       "method": "encrypt"
     }

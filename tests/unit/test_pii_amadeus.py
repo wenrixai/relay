@@ -49,11 +49,17 @@ def test_names_and_ff_number_encrypt_and_round_trip(
     first = xml_texts(redacted, "firstName")[0]
     given = xml_texts(redacted, "givenName")[0]
     memberships = xml_texts(redacted, "membershipNumber")
-    for token in [*surnames, first, given, *memberships]:
+    for token in [*surnames, *memberships]:
         assert TOKEN_RE.fullmatch(token)
+    # Given-name fields keep the non-PII honorific in place; only the name is a token, so
+    # the bare given name lands in the reference bucket and matches remark free text.
+    first_token, first_title = first.split(" ")
+    given_token, given_title = given.split(" ")
+    assert first_title == given_title == "MR"
+    assert TOKEN_RE.fullmatch(first_token) and TOKEN_RE.fullmatch(given_token)
     assert decrypt(surnames[0], pii_keyring) == "PARK"
-    assert decrypt(first, pii_keyring) == "JANGBIN MR"
-    assert decrypt(given, pii_keyring) == "JANGBIN MR"
+    assert decrypt(first_token, pii_keyring) == "JANGBIN"
+    assert decrypt(given_token, pii_keyring) == "JANGBIN"
     assert all(decrypt(m, pii_keyring) == "4144402077" for m in memberships)
     # Round-trip: re-sending the encrypted body de-anonymizes every token (4 names + 2 FF +
     # 2 name occurrences the reference rule scrubbed from a general remark).
@@ -128,7 +134,9 @@ def test_name_in_general_remark_encrypted_via_reference(
     remark_tokens = [tok for tok in remark_text.replace("0112*", "").split() if TOKEN_RE.fullmatch(tok)]
     assert len(remark_tokens) == 2
     assert remark_tokens[0] == surnames[0]  # reference hit reuses the structured field's token
-    assert decrypt(remark_tokens[1], pii_keyring) == "JANGBIN MR"
+    assert decrypt(remark_tokens[1], pii_keyring) == "JANGBIN"
+    # The honorific is not PII and stays behind in the remark.
+    assert " MR RQ SEAT CHANGE" in remark_text
 
 
 def test_non_pii_preserved(response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
@@ -137,6 +145,61 @@ def test_non_pii_preserved(response_body: bytes, baked_ruleset: RuleSet, pii_key
     assert b"<controlNumber>DFMJER</controlNumber>" in redacted
     assert b"PAX 205-9297871591/ETNH" in redacted
     assert b"PAX 0000000000 TTP/ET OK ETICKET" in redacted
+
+
+CONTACT_REMARKS_FIXTURE = FIXTURES_DIR / "amadeus" / "pnr_retrieve_contact_remarks_response.xml"
+
+
+@pytest.fixture(name="contact_remarks_body")
+def contact_remarks_body_fixture() -> bytes:
+    return CONTACT_REMARKS_FIXTURE.read_bytes()
+
+
+class TestContactRemarks:
+    """PII that exists ONLY in RM free text (never in a structured field) must still be
+    scrubbed: agent-entered name lines, arrival-contact lines, and emergency-contact
+    (ECTC) entries carry third-party names and phone numbers the reference pass cannot
+    see because no field rule ever collected them."""
+
+    def test_remark_name_lines_encrypted(
+        self, contact_remarks_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        redacted, _ = redact_response_body(
+            contact_remarks_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+        )
+        # NAME- line: full name block (including the middle name HUGO that no structured
+        # field carries) is gone; the NAME- marker survives.
+        assert b"HUGO" not in redacted
+        assert b"NAME-" in redacted
+        # *ARR* contact line: the SURNAME/GIVEN block is gone; the *ARR* marker survives.
+        assert b"JOHNSON/PETER" not in redacted
+        assert b"*ARR*" in redacted
+
+    def test_emergency_contact_name_and_phones_encrypted(
+        self, contact_remarks_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        redacted, counts = redact_response_body(
+            contact_remarks_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+        )
+        # ECTC third-party contact: name and phone are gone from both the
+        # miscellaneousRemarks entry and its structuredRemark mirror.
+        assert b"SARAH" not in redacted
+        assert b"70001112" not in redacted
+        assert b"7000111222" not in redacted
+        assert counts["phone"] >= 3  # ECTC TEL x2 mirrors + *ARR* PH number
+        # Operational remark structure survives.
+        assert b"ECTC/TEL-" in redacted and b"/R-SISTER/C-EG" in redacted
+
+    def test_remark_tokens_round_trip(
+        self, contact_remarks_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        redacted, _ = redact_response_body(
+            contact_remarks_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+        )
+        restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
+        assert b"SARAH JOHNSON" in restored
+        assert b"PH44-7000111222" in restored
+        assert b"NAME-PETER/HUGO/JOHNSON" in restored
 
 
 def test_ruleset_version_covers_amadeus(baked_ruleset: RuleSet) -> None:

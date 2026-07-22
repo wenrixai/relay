@@ -474,6 +474,41 @@ class TestExtractPatternRedaction:
             redact_response_body(body, channel="mock", ruleset=_extract_ruleset(required=True), keyring=keyring)
 
 
+class TestTokenIntegrity:
+    """Rules must never rewrite the inside of an ``ENC_`` token another rule produced —
+    tokens use base64url, so digit runs, dashes, and even collected names can appear in
+    their randomized payloads, and a partial rewrite corrupts the ciphertext."""
+
+    def test_extract_pattern_skips_existing_tokens(self, keyring: Keyring) -> None:
+        # Token payload engineered to contain a digit run the phone-like pattern matches.
+        token = "ENC_AB12-3456789Zw"  # gitleaks:allow — synthetic ENC_ token, not a real secret
+        body = _doc("John Smith", f"CALLBACK {token} REF 12-3456789")
+        redacted, _ = redact_response_body(
+            body,
+            channel="mock",
+            ruleset=_extract_ruleset(method="encrypt", pattern=r"(\d{1,4}-\d{6,12})"),
+            keyring=keyring,
+        )
+        text = _remark_texts(redacted)[0]
+        # The pre-existing token is intact; the plaintext digit run is rewritten.
+        assert token in text
+        assert "REF 12-3456789" not in text
+
+    def test_reference_match_skips_existing_tokens(self, keyring: Keyring) -> None:
+        # Token payload containing the collected name; substring matching must not touch it.
+        token = "ENC_xJOHNSMITHxAb-c"  # gitleaks:allow — synthetic ENC_ token, not a real secret
+        body = _doc("JOHNSMITH", f"{token} SEE JOHNSMITH")
+        redacted, _ = redact_response_body(
+            body,
+            channel="mock",
+            ruleset=_ref_ruleset(word_boundary=False),
+            keyring=keyring,
+        )
+        text = _remark_texts(redacted)[0]
+        assert text.startswith(token + " SEE ")
+        assert not text.endswith("JOHNSMITH")
+
+
 class TestEmbeddedDeanonymization:
     def test_embedded_token_round_trips(self, keyring: Keyring) -> None:
         token = encrypt("JOHN SMITH", keyring)
