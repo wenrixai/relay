@@ -23,6 +23,11 @@ serviceAccount:
 # Secrets (PII keyring, TLS, basic auth) come from Kubernetes Secrets — never set them here.
 config:
   port: 8080
+  # Context path the relay serves all routes under, behind an LB routing rule
+  # (https://<lb>:443/<rootPath>/...). Empty = root-only serving (the default). The relay
+  # tolerates both LB behaviors (prefix forwarded or stripped), so k8s probes stay unprefixed
+  # (they hit the pod directly). Set the matching path rule on your LB listener.
+  rootPath: ""
   # Rendered into a ConfigMap and mounted at /etc/wenrix/relay.json. No secrets.
   channels:
     - name: mock

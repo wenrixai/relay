@@ -117,6 +117,7 @@ def diagnostics_snapshot(request: Request) -> dict[str, Any]:
         "settings": {
             "config_file": settings.config_file,
             "port": settings.port,
+            "root_path": settings.root_path,
             "tls_enabled": settings.tls_enabled,
             "tls_port": settings.tls_port,
             "mtls_enabled": settings.mtls_enabled,

@@ -116,6 +116,17 @@ variable "otlp_endpoint" {
   default     = ""
 }
 
+variable "context_path" {
+  description = "Context path the relay serves under (e.g. /relay), matched by an ALB listener rule and set as RELAY_ROOT_PATH. Empty = root-only serving."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.context_path == "" || can(regex("^/[^/].*[^/]$|^/[^/]+$", var.context_path))
+    error_message = "context_path must be empty or start with '/' and not end with '/' (e.g. /relay)."
+  }
+}
+
 variable "basic_auth_enabled" {
   description = "Enable relay basic auth."
   type        = bool

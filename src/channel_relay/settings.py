@@ -7,7 +7,7 @@ process-level scalars. Secrets are read from mounted files/env, never from the J
 
 from __future__ import annotations
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,6 +18,9 @@ class Settings(BaseSettings):
 
     config_file: str = "/etc/wenrix/relay.json"
     port: int = Field(default=8080, ge=1, le=65535)
+    # Context path the relay serves all routes under (e.g. behind an ALB routing rule). Empty
+    # means root-only serving (the default). See relay-configuration / transparent-relay specs.
+    root_path: str = ""
     tls_enabled: bool = False
     tls_port: int = Field(default=18443, ge=1, le=65535)
     mtls_enabled: bool = False
@@ -52,3 +55,10 @@ class Settings(BaseSettings):
     # enable in production. A startup warning is emitted whenever this is on (§11).
     debug_mode: bool = False
     debug_mode_max_body_bytes: int = Field(default=65_536, ge=0)
+
+    @field_validator("root_path")
+    @classmethod
+    def _normalize_root_path(cls, value: str) -> str:
+        """Empty stays empty; otherwise exactly one leading ``/`` and no trailing ``/``."""
+        trimmed = value.strip().strip("/")
+        return f"/{trimmed}" if trimmed else ""
