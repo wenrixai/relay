@@ -22,6 +22,10 @@ relay_config_json = "{\"channels\":[{\"name\":\"travelport\",\"type\":\"travelpo
 
 otlp_endpoint = "http://otel-collector.telemetry.internal:4317"
 
+# Context path the relay serves under, behind the ALB routing rule (https://<lb>:443/<context_path>).
+# Empty = root-only serving. Adds a listener path rule and sets RELAY_ROOT_PATH.
+# context_path = "/relay"
+
 desired_count = 2
 min_capacity  = 2
 max_capacity  = 10

@@ -37,6 +37,15 @@ Parameters:
     Type: String
     Description: OTLP/gRPC endpoint. Use http:// for a plaintext collector. Empty disables export.
     Default: ""
+  ContextPath:
+    Type: String
+    Description: >-
+      Context path the relay serves under, behind the ALB routing rule
+      (https://<lb>:443/<ContextPath>). Empty = root-only serving. When set (e.g. /relay) it adds a
+      listener path rule and sets RELAY_ROOT_PATH.
+    Default: ""
+    AllowedPattern: "^$|^/[^/].*[^/]$|^/[^/]+$"
+    ConstraintDescription: Must be empty or start with '/' and not end with '/' (e.g. /relay).
   ContainerPort:
     Type: Number
     Default: 8080
@@ -73,6 +82,7 @@ Rules:
 
 Conditions:
   IsBasicAuthEnabled: !Equals [!Ref BasicAuthEnabled, "true"]
+  HasContextPath: !Not [!Equals [!Ref ContextPath, ""]]
 
 Resources:
   # --- Networking ---
@@ -252,6 +262,26 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref TargetGroup
 
+  # When a context path is configured, route <ContextPath> and <ContextPath>/* to the relay target
+  # group. The default action already forwards everything; this makes the routing explicit and
+  # priority-ordered. The relay tolerates both a forwarded and a stripped prefix (context-path
+  # middleware).
+  ContextPathListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Condition: HasContextPath
+    Properties:
+      ListenerArn: !Ref HttpsListener
+      Priority: 100
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      Conditions:
+        - Field: path-pattern
+          PathPatternConfig:
+            Values:
+              - !Ref ContextPath
+              - !Sub "${ContextPath}/*"
+
   # --- Secret ---
   PiiKeyringSecret:
     Type: AWS::SecretsManager::Secret
@@ -351,6 +381,7 @@ Resources:
             - { Name: RELAY_PORT, Value: !Ref ContainerPort }
             - { Name: RELAY_BASIC_AUTH_ENABLED, Value: !Ref BasicAuthEnabled }
             - { Name: RELAY_OTLP_ENDPOINT, Value: !Ref OtlpEndpoint }
+            - { Name: RELAY_ROOT_PATH, Value: !Ref ContextPath }
           Secrets:
             - { Name: RELAY_PII_KEYRING, ValueFrom: !Ref PiiKeyringSecret }
             - !If

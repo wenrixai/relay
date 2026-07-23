@@ -92,6 +92,16 @@ Client (Wenrix)
 Redaction runs on the response path; de-anonymization on the request path. Credential swap and PII
 are no-ops unless configured for that channel.
 
+**Context path (`RELAY_ROOT_PATH`, default empty).** When set (e.g. `/relay`), the relay serves all
+its routes — data-plane, health, admin — under that prefix, for setups that route
+`https://<lb>:443/<context_path>/...` to the service. A prefix-stripping ASGI middleware makes the
+scope ASGI-correct whether the LB forwards the full path or strips the prefix, so the same root-mounted
+routes match either way and channel matching / upstream URL construction are unaffected. Empty
+`RELAY_ROOT_PATH` is byte-for-byte the current root-only behavior. Value is normalized to one leading
+`/` and no trailing `/`. K8s/ECS probes hit the pod directly and stay unprefixed (the middleware
+tolerates bare paths); the LB listener path rule (`<context_path>/*`) is the piece that routes the
+prefixed traffic to the relay.
+
 ### 3.2 Repository layout
 ```
 channel-relay/
@@ -395,6 +405,21 @@ redaction. A startup warning is emitted whenever the flag is on; there is no env
 operators are responsible for never enabling it in production. `RELAY_DEBUG_MODE_MAX_BODY_BYTES`
 (default 65536) trims each logged body; bodies over the cap are truncated with a `<truncated, N
 bytes total>` marker rather than dropped.
+
+### 11.0.2 Logs over OTLP (on by default when an endpoint is set)
+`RELAY_TELEMETRY_LOGS_ENABLED=true` (default **true**) exports the relay's structured logs over
+OTLP/gRPC to the **same** endpoint as metrics and traces (`RELAY_OTLP_ENDPOINT`), so all three
+signals land in one Collector. As with metrics/traces, the exporter attaches only when logs are
+enabled **and** an endpoint is configured — no endpoint means no exporter (nothing to retry against
+a dead collector; the test suite stays exporter-free). The logger provider is per-app (never global)
+and shut down with the lifespan. The bridge is a second Loguru sink (an OTel `LoggingHandler`) added
+alongside the **retained** stderr JSON sink — logs go to OTLP **and** stderr (dual sink), so the
+CloudWatch/k8s fallback and any pre-provider startup errors are never lost. The OTLP record carries
+the bare message as its body; severity, timestamp, and Loguru's structured `extra` fields
+(hostname/channel/latency_ms/trace id) travel as the record's own fields/attributes. Log records
+never carry bodies, PII, keys, or credentials (the `debug_mode` caveat in §11.0 still applies to
+both sinks). A down Collector never crashes or blocks the relay (batch processor swallows export
+errors).
 
 ### 11.0.1 Traces (opt-in, off by default)
 `RELAY_TELEMETRY_TRACES_ENABLED=true` (default **false**) turns on OTel traces, exported to the

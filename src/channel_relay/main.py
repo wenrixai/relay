@@ -19,6 +19,7 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.sdk._logs import LoggerProvider, LogRecordProcessor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import MetricReader
 from opentelemetry.sdk.trace import SpanProcessor, TracerProvider
@@ -33,7 +34,9 @@ from channel_relay.config.models import RelayConfig
 from channel_relay.health import readiness_reasons
 from channel_relay.middleware.access_log import log_access
 from channel_relay.middleware.auth import auth_active, verify_admin_basic_auth, verify_basic_auth
+from channel_relay.middleware.context_path import ContextPathMiddleware
 from channel_relay.observability.logging import configure_logging
+from channel_relay.observability.logs import build_logger_provider
 from channel_relay.observability.metrics import METER_NAME, RelayMetrics, build_meter_provider
 from channel_relay.observability.tracing import build_tracer_provider
 from channel_relay.pii.crypto import Keyring, load_keyring
@@ -219,29 +222,38 @@ class _Telemetry:
     meter_provider: MeterProvider
     metrics: RelayMetrics
     tracer_provider: TracerProvider | None
+    logger_provider: LoggerProvider | None
     instrument: bool
 
 
 def _build_telemetry(
-    settings: Settings, metric_reader: MetricReader | None, span_processor: SpanProcessor | None
+    settings: Settings,
+    metric_reader: MetricReader | None,
+    span_processor: SpanProcessor | None,
+    log_processor: LogRecordProcessor | None,
 ) -> _Telemetry:
-    """Build the per-app meter/tracer providers from settings and test-injection hooks.
+    """Build the per-app meter/tracer/logger providers from settings and test-injection hooks.
 
     Auto-instrumentation runs whenever any signal is collected — i.e. also when a test injects
     a ``metric_reader``/``span_processor`` without an OTLP endpoint; gate purely on the enable
     toggles. Traces are off by default (§11): with the flag off and no injected processor the
     tracer provider is never built, ``app.state.tracer_provider`` stays ``None``, and the
-    pipeline uses a no-op tracer.
+    pipeline uses a no-op tracer. Logs are on by default; the logger provider is built whenever
+    logs are enabled (or a processor is injected), and only attaches an OTLP exporter when an
+    endpoint is configured — otherwise ``app.state.logger_provider`` stays ``None``.
     """
     meter_provider = build_meter_provider(settings, reader=metric_reader)
     metrics = RelayMetrics(meter_provider.get_meter(METER_NAME))
     metrics_instrumentation = settings.telemetry_metrics_enabled or metric_reader is not None
     traces_instrumentation = settings.telemetry_traces_enabled or span_processor is not None
     tracer_provider = build_tracer_provider(settings, span_processor=span_processor) if traces_instrumentation else None
+    logs_enabled = settings.telemetry_logs_enabled or log_processor is not None
+    logger_provider = build_logger_provider(settings, log_processor=log_processor) if logs_enabled else None
     return _Telemetry(
         meter_provider=meter_provider,
         metrics=metrics,
         tracer_provider=tracer_provider,
+        logger_provider=logger_provider,
         instrument=metrics_instrumentation or traces_instrumentation,
     )
 
@@ -257,12 +269,15 @@ def _load_startup_config(settings: Settings) -> RelayConfig | None:
     return load_config(settings.config_file)
 
 
-def create_app(
+# The app factory is intentionally wide: alongside config/clients it takes one in-memory
+# test-injection hook per OTel signal (metrics/traces/logs) and wires the whole app in one place.
+def create_app(  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-statements
     config: RelayConfig | None = None,
     http_client: httpx.AsyncClient | None = None,
     insecure_http_client: httpx.AsyncClient | None = None,
     metric_reader: MetricReader | None = None,
     span_processor: SpanProcessor | None = None,
+    log_processor: LogRecordProcessor | None = None,
 ) -> FastAPI:
     """Build the FastAPI application.
 
@@ -278,19 +293,23 @@ def create_app(
             memory; production uses the OTLP periodic exporter.
         span_processor: an explicit span processor (used in tests) to collect spans in
             memory; production uses the OTLP batch exporter when tracing is enabled.
+        log_processor: an explicit log-record processor (used in tests) to collect log records
+            in memory; production uses the OTLP batch exporter when an endpoint is configured.
 
     ``server_header=False`` is enforced at the server level (uvicorn) per §9.1.
     """
     settings = Settings()
-    configure_logging(debug=settings.debug or settings.debug_mode)
+    # Build telemetry before logging so the OTel log sink can be wired into Loguru. The stderr
+    # sink is present regardless, so errors raised before this point still surface.
+    telemetry = _build_telemetry(settings, metric_reader, span_processor, log_processor)
+    metrics = telemetry.metrics
+
+    configure_logging(debug=settings.debug or settings.debug_mode, logger_provider=telemetry.logger_provider)
     if settings.debug_mode:
         logger.warning(
             "debug_mode is enabled: full (trimmed) request/response bodies will be logged at "
             "DEBUG level, including plaintext PII. Do not enable in production."
         )
-
-    telemetry = _build_telemetry(settings, metric_reader, span_processor)
-    metrics = telemetry.metrics
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
@@ -323,6 +342,8 @@ def create_app(
             telemetry.meter_provider.shutdown()
             if telemetry.tracer_provider is not None:
                 telemetry.tracer_provider.shutdown()
+            if telemetry.logger_provider is not None:
+                telemetry.logger_provider.shutdown()
 
     application = FastAPI(
         title="Wenrix Channel Relay",
@@ -332,6 +353,10 @@ def create_app(
         openapi_url=None,
         lifespan=lifespan,
     )
+    # Serve under a context path when configured; the middleware strips the prefix (if present) so
+    # the root-mounted routes match whether or not the LB forwards it (§ relay-configuration).
+    if settings.root_path:
+        application.add_middleware(ContextPathMiddleware, root_path=settings.root_path)
     application.state.settings = settings
     application.state.config = config
     application.state.client = http_client
@@ -340,6 +365,7 @@ def create_app(
     application.state.metrics = metrics
     application.state.meter_provider = telemetry.meter_provider
     application.state.tracer_provider = telemetry.tracer_provider
+    application.state.logger_provider = telemetry.logger_provider
     application.state.started_at = time.time()
     # Server-side RED (http.server.request.duration) and, when tracing is enabled, the server
     # span. Health probes are excluded so k8s liveness/readiness traffic doesn't drown the

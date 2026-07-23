@@ -7,6 +7,7 @@ locals {
     { name = "RELAY_PORT", value = tostring(var.container_port) },
     { name = "RELAY_BASIC_AUTH_ENABLED", value = tostring(var.basic_auth_enabled) },
     { name = "RELAY_OTLP_ENDPOINT", value = var.otlp_endpoint },
+    { name = "RELAY_ROOT_PATH", value = var.context_path },
   ]
 
   # T1: basic-auth credentials only injected when basic auth is enabled.
@@ -126,6 +127,27 @@ resource "aws_lb_listener" "https" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.this.arn
+  }
+}
+
+# When a context path is configured, add an explicit path rule so the LB routes
+# `<context_path>` and `<context_path>/*` to the relay target group. The default action already
+# forwards everything, so this rule is documentary/priority-explicit; the relay itself tolerates
+# both a forwarded and a stripped prefix (see the context-path middleware).
+resource "aws_lb_listener_rule" "context_path" {
+  count        = var.context_path == "" ? 0 : 1
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.this.arn
+  }
+
+  condition {
+    path_pattern {
+      values = [var.context_path, "${var.context_path}/*"]
+    }
   }
 }
 

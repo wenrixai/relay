@@ -80,6 +80,7 @@ def test_admin_flare_returns_redacted_diagnostics_snapshot() -> None:
     assert body["readiness"] == {"status": "ready", "reasons": []}
     assert body["settings"]["basic_auth"] == {"enabled": True, "configured": True}
     assert body["settings"]["otlp_endpoint_configured"] is True
+    assert body["settings"]["root_path"] == ""
     assert body["settings"]["pii_keyring_configured"] is True
     assert body["keyring"]["configured"] is True
 

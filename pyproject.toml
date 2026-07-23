@@ -91,6 +91,10 @@ filterwarnings = [
     "error",
     # Third-party deprecation we don't control (starlette TestClient on httpx).
     "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+    # The OTel SDK LoggingHandler is the canonical Loguru->OTLP log bridge; its suggested
+    # replacement (opentelemetry-instrumentation-logging) only injects trace context, it does
+    # not export logs. The logs SDK is still unstable upstream — revisit when it stabilizes.
+    "ignore:`LoggingHandler` in `opentelemetry-sdk` is deprecated:DeprecationWarning",
 ]
 markers = [
     "e2e: end-to-end tests against local mock channels (slower subset).",
