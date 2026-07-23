@@ -34,6 +34,8 @@ config:
     RELAY_DEFAULT_READ_TIMEOUT: "120"
     RELAY_MAX_INSPECT_BYTES: "8388608"
     RELAY_TELEMETRY_METRICS_ENABLED: "true"
+    # Traces are opt-in (off by default); when enabled they export to the same OTLP endpoint.
+    RELAY_TELEMETRY_TRACES_ENABLED: "false"
   # OTLP/gRPC telemetry endpoint. Use http:// for a plaintext collector.
   telemetry:
     otlpEndpoint: ""
