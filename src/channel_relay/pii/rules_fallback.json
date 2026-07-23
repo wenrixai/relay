@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-baseline-2026-07-19",
+  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-baseline-2026-07-22",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -132,6 +132,17 @@
       },
       "pii_type": "person",
       "method": "mask"
+    },
+    {
+      "id": "amadeus.pnr.ssr_special_service",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:ssr[a:type='AVML' or a:type='VGML' or a:type='VLML' or a:type='SFML' or a:type='MOML' or a:type='WCHR' or a:type='WCHS' or a:type='WCHC']/a:freeText",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "special_service",
+      "method": "encrypt"
     },
     {
       "id": "amadeus.pnr.remark_ssn",
@@ -326,7 +337,35 @@
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "address",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "sabre.res.meal_special_service",
+      "channel": "sabre",
+      "operation": "^GetReservationRS$",
+      "path": "//s19:RemarkLine/s19:Text | //s19:HistoryAssociationElement | //s19:AssociationParent/s19:Content | //s19:AssociationChild/s19:Content",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "special_service",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "(?:SPL MEAL-|MEAL RMKS-)([A-Z0-9]{2,})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.wheelchair_special_service",
+      "channel": "sabre",
+      "operation": "^GetReservationRS$",
+      "path": "//s19:GenericSpecialRequest[starts-with(s19:Code,'WC')]/s19:FreeText | //s19:GenericSpecialRequest[starts-with(s19:Code,'WC')]/s19:FullText | //s19:GenericSpecialRequests[starts-with(s19:Code,'WC')]/s19:FreeText | //s19:GenericSpecialRequests[starts-with(s19:Code,'WC')]/s19:FullText",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "special_service",
+      "method": "encrypt"
     },
     {
       "id": "sabre.res.docs_dob",

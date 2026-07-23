@@ -46,9 +46,19 @@ Use for remarks / special-service-request lines / e-ticket free text where PII i
 operational text you must preserve.
 
 `pii_type` scope (see `PiiType`): person, dob, gender, nationality, passport_id, visa, phone,
-email, address, payment, frequent_flyer. **Not PII** — do not redact: record locators, ticket
-and invoice numbers, amounts/currency, agent sign-in codes, pseudo-city codes, seats, segments,
-message-header routing identifiers.
+email, address, payment, frequent_flyer, ssn, special_service. **Not PII** — do not redact: record
+locators, ticket and invoice numbers, amounts/currency, agent sign-in codes, pseudo-city codes,
+seats, segments, message-header routing identifiers.
+
+`special_service` covers meal-preference and mobility SSRs (meal codes like `MOML`/`AVML`, dietary
+free text like `HALAL`, wheelchair codes `WCHR`/`WCHS`/`WCHC`). These are GDPR special-category
+signals (religion/health/disability), so they are redacted, not treated as operational — reversing
+the earlier "meal SSR is operational" stance. **Encrypt the free text, never the structured
+`Code`/`type` enum node:** an `ENC_` token (~40 chars) dropped into a 4-char IATA code element
+breaks any consumer that schema-validates the anonymized body. If the type exists only in a bare
+`Code`/`type` element with no free text, it is left intact (correct trade vs. corrupting an enum).
+For coded remarks that carry the type in free text (Sabre `SPL MEAL-MOML`), use `extract_patterns`
+to tokenize only the type span and preserve the operational prefix.
 
 ## 2. Action policy (mirror it for new channels)
 

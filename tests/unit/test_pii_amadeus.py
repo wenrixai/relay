@@ -37,7 +37,15 @@ def test_operation_is_pnr_reply(response_body: bytes) -> None:
 
 def test_counts_match_baseline(response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
     _, counts = redact_response_body(response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring)
-    assert counts == {"person": 7, "frequent_flyer": 3, "phone": 2, "email": 4, "passport_id": 1, "ssn": 1}
+    assert counts == {
+        "person": 7,
+        "frequent_flyer": 3,
+        "phone": 2,
+        "email": 4,
+        "passport_id": 1,
+        "ssn": 1,
+        "special_service": 2,
+    }
 
 
 def test_names_and_ff_number_encrypt_and_round_trip(
@@ -62,9 +70,9 @@ def test_names_and_ff_number_encrypt_and_round_trip(
     assert decrypt(given_token, pii_keyring) == "JANGBIN"
     assert all(decrypt(m, pii_keyring) == "4144402077" for m in memberships)
     # Round-trip: re-sending the encrypted body de-anonymizes every token (4 names + 2 FF +
-    # 2 name occurrences the reference rule scrubbed from a general remark).
+    # 2 name occurrences the reference rule scrubbed from a general remark + 2 special-service SSR).
     restored, decrypted = deanonymize_request_body(redacted, keyring=pii_keyring)
-    assert decrypted == 8
+    assert decrypted == 10
     assert b"PARK" in restored and b"JANGBIN MR" in restored and b"4144402077" in restored
 
 
@@ -82,11 +90,30 @@ def test_contact_passport_masked_one_way(
         b"NH4144402077",
     ]:
         assert gone not in redacted
-    # SSR free-text nodes (email/mobile/passport/FF/RESTRICTED) masked, not tokenized.
-    for node in xml_texts(redacted, "freeText"):
-        assert not node.startswith("ENC_")
-    ssr_texts = [t for t in xml_texts(redacted, "freeText") if _MASKED_RE.fullmatch(t)]
+    # Contact/identity SSR free-text nodes (email/mobile/passport/FF/RESTRICTED) are masked, not
+    # tokenized. Meal/wheelchair SSR free text is encrypted instead (see the special-service test),
+    # so exactly those two are the only ``ENC_`` free-text nodes.
+    free_texts = xml_texts(redacted, "freeText")
+    ssr_texts = [t for t in free_texts if _MASKED_RE.fullmatch(t)]
     assert len(ssr_texts) == 6  # 2 CTCE + CTCM + DOCS + FQTS + RESTRICTED
+    encrypted = [t for t in free_texts if t.startswith("ENC_")]
+    assert len(encrypted) == 2  # AVML meal + WCHR wheelchair
+
+
+def test_meal_and_wheelchair_ssr_encrypted_and_round_trip(
+    response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring
+) -> None:
+    # Meal/wheelchair SSR free text (special-category dietary/health signals) is encrypted; the
+    # structured <type> code is left intact so the anonymised PNR still validates upstream.
+    redacted, counts = redact_response_body(
+        response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+    )
+    for gone in (b"VEGETARIAN MEAL", b"WHEELCHAIR TO GATE"):
+        assert gone not in redacted
+    assert counts["special_service"] == 2
+    assert b"<type>AVML</type>" in redacted and b"<type>WCHR</type>" in redacted
+    restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
+    assert b"VEGETARIAN MEAL" in restored and b"WHEELCHAIR TO GATE" in restored
 
 
 def test_ssn_in_general_remark_masked_one_way(
