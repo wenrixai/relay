@@ -9,6 +9,7 @@ from __future__ import annotations
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from pathlib import Path
 
 import httpx
@@ -20,6 +21,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import MetricReader
+from opentelemetry.sdk.trace import SpanProcessor, TracerProvider
 from starlette.responses import Response
 
 from channel_relay import __version__
@@ -33,6 +35,7 @@ from channel_relay.middleware.access_log import log_access
 from channel_relay.middleware.auth import auth_active, verify_admin_basic_auth, verify_basic_auth
 from channel_relay.observability.logging import configure_logging
 from channel_relay.observability.metrics import METER_NAME, RelayMetrics, build_meter_provider
+from channel_relay.observability.tracing import build_tracer_provider
 from channel_relay.pii.crypto import Keyring, load_keyring
 from channel_relay.pii.rules_loader import load_rules
 from channel_relay.proxy.forwarder import find_channel, forward
@@ -185,13 +188,21 @@ def _build_upstream_clients(settings: Settings, application: FastAPI) -> tuple[b
     return owns_client, owns_insecure_client
 
 
-def _instrument_http_clients(application: FastAPI, meter_provider: MeterProvider) -> None:
-    """RED metrics via OTel auto-instrumentation, bound to this app's per-app meter provider
-    (never the global one, §11) so parallel app instances in tests don't cross-contaminate.
-    Per-client, not global, for the same isolation reason; uninstrumented on teardown."""
-    HTTPXClientInstrumentor.instrument_client(application.state.client, meter_provider=meter_provider)
+def _instrument_http_clients(
+    application: FastAPI, meter_provider: MeterProvider, tracer_provider: TracerProvider | None
+) -> None:
+    """RED metrics (and, when tracing is enabled, client spans) via OTel auto-instrumentation,
+    bound to this app's per-app providers (never the global ones, §11) so parallel app
+    instances in tests don't cross-contaminate. Per-client, not global, for the same isolation
+    reason; uninstrumented on teardown. A ``None`` tracer provider falls back to the global
+    (no-op) tracer, so no spans are recorded when tracing is disabled."""
+    HTTPXClientInstrumentor.instrument_client(
+        application.state.client, meter_provider=meter_provider, tracer_provider=tracer_provider
+    )
     if application.state.insecure_client is not None:
-        HTTPXClientInstrumentor.instrument_client(application.state.insecure_client, meter_provider=meter_provider)
+        HTTPXClientInstrumentor.instrument_client(
+            application.state.insecure_client, meter_provider=meter_provider, tracer_provider=tracer_provider
+        )
 
 
 def _uninstrument_http_clients(application: FastAPI) -> None:
@@ -199,6 +210,40 @@ def _uninstrument_http_clients(application: FastAPI) -> None:
         HTTPXClientInstrumentor.uninstrument_client(application.state.client)
     if application.state.insecure_client is not None:
         HTTPXClientInstrumentor.uninstrument_client(application.state.insecure_client)
+
+
+@dataclass(frozen=True)
+class _Telemetry:
+    """Per-app OTel providers and the single auto-instrumentation gate (built once per app)."""
+
+    meter_provider: MeterProvider
+    metrics: RelayMetrics
+    tracer_provider: TracerProvider | None
+    instrument: bool
+
+
+def _build_telemetry(
+    settings: Settings, metric_reader: MetricReader | None, span_processor: SpanProcessor | None
+) -> _Telemetry:
+    """Build the per-app meter/tracer providers from settings and test-injection hooks.
+
+    Auto-instrumentation runs whenever any signal is collected — i.e. also when a test injects
+    a ``metric_reader``/``span_processor`` without an OTLP endpoint; gate purely on the enable
+    toggles. Traces are off by default (§11): with the flag off and no injected processor the
+    tracer provider is never built, ``app.state.tracer_provider`` stays ``None``, and the
+    pipeline uses a no-op tracer.
+    """
+    meter_provider = build_meter_provider(settings, reader=metric_reader)
+    metrics = RelayMetrics(meter_provider.get_meter(METER_NAME))
+    metrics_instrumentation = settings.telemetry_metrics_enabled or metric_reader is not None
+    traces_instrumentation = settings.telemetry_traces_enabled or span_processor is not None
+    tracer_provider = build_tracer_provider(settings, span_processor=span_processor) if traces_instrumentation else None
+    return _Telemetry(
+        meter_provider=meter_provider,
+        metrics=metrics,
+        tracer_provider=tracer_provider,
+        instrument=metrics_instrumentation or traces_instrumentation,
+    )
 
 
 def _load_startup_config(settings: Settings) -> RelayConfig | None:
@@ -217,6 +262,7 @@ def create_app(
     http_client: httpx.AsyncClient | None = None,
     insecure_http_client: httpx.AsyncClient | None = None,
     metric_reader: MetricReader | None = None,
+    span_processor: SpanProcessor | None = None,
 ) -> FastAPI:
     """Build the FastAPI application.
 
@@ -230,6 +276,8 @@ def create_app(
             and owns one only if some configured channel needs it.
         metric_reader: an explicit metric reader (used in tests) to collect metrics in
             memory; production uses the OTLP periodic exporter.
+        span_processor: an explicit span processor (used in tests) to collect spans in
+            memory; production uses the OTLP batch exporter when tracing is enabled.
 
     ``server_header=False`` is enforced at the server level (uvicorn) per §9.1.
     """
@@ -241,11 +289,8 @@ def create_app(
             "DEBUG level, including plaintext PII. Do not enable in production."
         )
 
-    meter_provider = build_meter_provider(settings, reader=metric_reader)
-    metrics = RelayMetrics(meter_provider.get_meter(METER_NAME))
-    # Auto-instrumentation runs whenever metrics are collected — i.e. also when a test injects a
-    # ``metric_reader`` without an OTLP endpoint. Gate purely on the enable toggle.
-    metrics_instrumentation = settings.telemetry_metrics_enabled or metric_reader is not None
+    telemetry = _build_telemetry(settings, metric_reader, span_processor)
+    metrics = telemetry.metrics
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
@@ -255,8 +300,8 @@ def create_app(
         # PII keyring: invalid → abort; missing while PII enabled → abort (§8.3).
         application.state.keyring = build_keyring(settings, application.state.config)
         owns_client, owns_insecure_client = _build_upstream_clients(settings, application)
-        if metrics_instrumentation:
-            _instrument_http_clients(application, meter_provider)
+        if telemetry.instrument:
+            _instrument_http_clients(application, telemetry.meter_provider, telemetry.tracer_provider)
         # Rules: loaded once at startup from the baked bundle; no polling (§8.8, D7).
         pii_required = application.state.config is not None and any(
             channel.pii.enabled for channel in application.state.config.channels
@@ -267,15 +312,17 @@ def create_app(
         try:
             yield
         finally:
-            if metrics_instrumentation:
+            if telemetry.instrument:
                 _uninstrument_http_clients(application)
             if owns_client:
                 await application.state.client.aclose()
             if owns_insecure_client and application.state.insecure_client is not None:
                 await application.state.insecure_client.aclose()
-            if metrics_instrumentation:
+            if telemetry.instrument:
                 FastAPIInstrumentor.uninstrument_app(application)
-            meter_provider.shutdown()
+            telemetry.meter_provider.shutdown()
+            if telemetry.tracer_provider is not None:
+                telemetry.tracer_provider.shutdown()
 
     application = FastAPI(
         title="Wenrix Channel Relay",
@@ -291,15 +338,18 @@ def create_app(
     application.state.insecure_client = insecure_http_client
     application.state.rules = None
     application.state.metrics = metrics
-    application.state.meter_provider = meter_provider
+    application.state.meter_provider = telemetry.meter_provider
+    application.state.tracer_provider = telemetry.tracer_provider
     application.state.started_at = time.time()
-    # Server-side RED (http.server.request.duration). Health probes are excluded so k8s
-    # liveness/readiness traffic doesn't drown the request histogram. Bound to the per-app
-    # meter provider; uninstrumented on shutdown (see lifespan finally).
-    if metrics_instrumentation:
+    # Server-side RED (http.server.request.duration) and, when tracing is enabled, the server
+    # span. Health probes are excluded so k8s liveness/readiness traffic doesn't drown the
+    # request histogram or the trace stream. Bound to the per-app providers; uninstrumented on
+    # shutdown (see lifespan finally).
+    if telemetry.instrument:
         FastAPIInstrumentor.instrument_app(
             application,
-            meter_provider=meter_provider,
+            meter_provider=telemetry.meter_provider,
+            tracer_provider=telemetry.tracer_provider,
             excluded_urls="liveness,readiness",
         )
 

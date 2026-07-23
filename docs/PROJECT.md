@@ -396,6 +396,19 @@ operators are responsible for never enabling it in production. `RELAY_DEBUG_MODE
 (default 65536) trims each logged body; bodies over the cap are truncated with a `<truncated, N
 bytes total>` marker rather than dropped.
 
+### 11.0.1 Traces (opt-in, off by default)
+`RELAY_TELEMETRY_TRACES_ENABLED=true` (default **false**) turns on OTel traces, exported to the
+same OTLP/gRPC endpoint as metrics (`RELAY_OTLP_ENDPOINT`; no export without an endpoint). The
+tracer provider is per-app (never global), mirrors the metrics provider, and is shut down with
+the lifespan. Span model over the important path (§3.1): FastAPI server span (health probes
+excluded) → `relay.forward` (whole pipeline; attrs `wenrix.channel`, `wenrix.trace_id`,
+`http.response.status_code`) → child spans `relay.authorize` (attr `wenrix.operation`),
+`relay.request.credential_swap`, `relay.request.pii`, `relay.upstream` (httpx CLIENT span nests
+inside; status ERROR on timeout/upstream failure), `relay.response.credential_swap`,
+`relay.response.pii`. Span attributes carry only non-sensitive scalars — never bodies, headers,
+credentials, or PII. With the flag off the provider is not built and the pipeline uses a no-op
+tracer (no per-request overhead).
+
 ### 11.1 Custom metrics
 | Name | Type | Description | Tags |
 |---|---|---|---|

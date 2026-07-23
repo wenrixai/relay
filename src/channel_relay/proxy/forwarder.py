@@ -7,15 +7,20 @@ never resent. Header hygiene (§9.1) and the error contract (§10) are layered o
 stages.
 """
 
+# OTel's ``Tracer.start_as_current_span`` is a real context manager; pylint can't see through
+# the API's typing and flags every ``with`` on it as E1129 — a known false positive.
+# pylint: disable=not-context-manager
+
 from __future__ import annotations
 
 import gzip
 import zlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import httpx
 from fastapi import Request
 from loguru import logger
+from opentelemetry import trace as otel_trace
 from starlette.responses import Response
 
 from channel_relay.channels import get_handler
@@ -32,6 +37,7 @@ from channel_relay.middleware.header_hygiene import (
     clean_response_headers,
 )
 from channel_relay.observability.metrics import RelayMetrics
+from channel_relay.observability.tracing import tracer_from_provider
 from channel_relay.pii.crypto import Keyring
 from channel_relay.pii.engine import (
     DeanonymizationError,
@@ -64,6 +70,8 @@ class _StageContext:
     max_inspect_bytes: int
     trace_id: str | None
     metrics: RelayMetrics | None
+    # No-op by default so stage helpers can be exercised in isolation without a provider.
+    tracer: otel_trace.Tracer = field(default_factory=otel_trace.NoOpTracer)
 
 
 def _record_xml_error(metrics: RelayMetrics | None, channel: str, kind: str) -> None:
@@ -153,9 +161,19 @@ async def forward(
 
     Thin wrapper over :func:`_forward` so every terminal exit — success and each
     contract-defined error shape — funnels through a single ``requests_total`` record with
-    the friendly channel name (§11.1). Delegates all pipeline logic to :func:`_forward`.
+    the friendly channel name (§11.1) and one ``relay.forward`` span covering the whole
+    pipeline (§11; no-op when tracing is disabled). Delegates all pipeline logic to
+    :func:`_forward`.
     """
-    response = await _forward(client, channel, path, request, max_inspect_bytes)
+    tracer = tracer_from_provider(getattr(request.app.state, "tracer_provider", None))
+    with tracer.start_as_current_span("relay.forward") as span:
+        # Only non-sensitive scalars ever land on spans: never bodies, headers, or PII.
+        span.set_attribute("wenrix.channel", channel.name)
+        trace_id = request.headers.get(TRACE_ID_HEADER)
+        if trace_id:
+            span.set_attribute("wenrix.trace_id", trace_id)
+        response = await _forward(client, channel, path, request, max_inspect_bytes)
+        span.set_attribute("http.response.status_code", response.status_code)
     metrics: RelayMetrics | None = request.app.state.metrics
     if metrics is not None:
         metrics.record_request(channel.name, response.status_code)
@@ -180,7 +198,10 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
     """
     trace_id = request.headers.get(TRACE_ID_HEADER)
     metrics: RelayMetrics | None = request.app.state.metrics
-    ctx = _StageContext(channel=channel, max_inspect_bytes=max_inspect_bytes, trace_id=trace_id, metrics=metrics)
+    tracer = tracer_from_provider(getattr(request.app.state, "tracer_provider", None))
+    ctx = _StageContext(
+        channel=channel, max_inspect_bytes=max_inspect_bytes, trace_id=trace_id, metrics=metrics, tracer=tracer
+    )
     if channel.proxy_pass is None:
         logger.bind(channel=channel.name).error("Channel has no upstream base configured")
         return internal_error_response(ErrorReason.INTERNAL_ERROR, "channel has no upstream configured", trace_id)
@@ -203,7 +224,8 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
     # [6] Operation authorization: reject a disallowed operation before any credential injection
     # or upstream call, so a blocked operation never reaches the channel (§operation-authorization).
     if channel.operation_authorization_enabled:
-        auth_outcome = _authorization_stage(handler=handler, body=body, kind=kind, ctx=ctx)
+        with ctx.tracer.start_as_current_span("relay.authorize"):
+            auth_outcome = _authorization_stage(handler=handler, body=body, kind=kind, ctx=ctx)
         if auth_outcome is not None:
             return auth_outcome
 
@@ -221,7 +243,8 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
     # [8a] Credential header injection needs no body and runs for every credentialed channel;
     # header-only channels (NDC) forward the body byte-for-byte (§spec: body left unchanged).
     if channel.credential_swap_enabled:
-        header_outcome = _request_header_swap(handler, channel, headers, keyring, trace_id)
+        with ctx.tracer.start_as_current_span("relay.request.credential_swap"):
+            header_outcome = _request_header_swap(handler, channel, headers, keyring, trace_id)
         if header_outcome is not None:
             return header_outcome
 
@@ -246,15 +269,17 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
         # [7] De-anonymize: the channel must always receive plaintext (§8.6). Envelope-driven,
         # keyring-only; fail closed — an undecryptable token never reaches the channel.
         if need_deanon and keyring is not None:
-            pii_outcome = _request_pii_stage(keyring=keyring, body=working, ctx=ctx)
+            with ctx.tracer.start_as_current_span("relay.request.pii"):
+                pii_outcome = _request_pii_stage(keyring=keyring, body=working, ctx=ctx)
             if isinstance(pii_outcome, Response):
                 return pii_outcome
             working, decrypted = pii_outcome
             changed = decrypted > 0
         if need_cred_body:
-            swap_outcome = _request_credential_swap_stage(
-                handler=handler, body=working, headers=headers, keyring=keyring, ctx=ctx
-            )
+            with ctx.tracer.start_as_current_span("relay.request.credential_swap"):
+                swap_outcome = _request_credential_swap_stage(
+                    handler=handler, body=working, headers=headers, keyring=keyring, ctx=ctx
+                )
             if isinstance(swap_outcome, Response):
                 return swap_outcome
             working, cred_changed = swap_outcome
@@ -274,24 +299,28 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
             max_bytes=settings.debug_mode_max_body_bytes,
         )
 
-    try:
-        upstream = await client.request(
-            request.method,
-            url,
-            headers=headers,
-            content=body,
-            timeout=channel_timeout(channel),
-        )
-    except httpx.TimeoutException:
-        logger.bind(channel=channel.name).warning("Upstream timeout")
-        if metrics is not None:
-            metrics.record_upstream_timeout(channel.name)
-        return upstream_timeout_response()
-    except httpx.HTTPError:
-        logger.bind(channel=channel.name).error("Upstream request failed")
-        if metrics is not None:
-            metrics.record_upstream_error(channel.name)
-        return internal_error_response(ErrorReason.INTERNAL_ERROR, "upstream request failed", trace_id)
+    with ctx.tracer.start_as_current_span("relay.upstream") as upstream_span:
+        try:
+            upstream = await client.request(
+                request.method,
+                url,
+                headers=headers,
+                content=body,
+                timeout=channel_timeout(channel),
+            )
+        except httpx.TimeoutException:
+            logger.bind(channel=channel.name).warning("Upstream timeout")
+            upstream_span.set_status(otel_trace.StatusCode.ERROR, "upstream timeout")
+            if metrics is not None:
+                metrics.record_upstream_timeout(channel.name)
+            return upstream_timeout_response()
+        except httpx.HTTPError:
+            logger.bind(channel=channel.name).error("Upstream request failed")
+            upstream_span.set_status(otel_trace.StatusCode.ERROR, "upstream request failed")
+            if metrics is not None:
+                metrics.record_upstream_error(channel.name)
+            return internal_error_response(ErrorReason.INTERNAL_ERROR, "upstream request failed", trace_id)
+        upstream_span.set_attribute("http.response.status_code", upstream.status_code)
 
     content = upstream.content
     response_headers = _headers_to_dict(clean_response_headers(upstream.headers.items()))
@@ -308,9 +337,10 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
         return unsupported_content_response(upstream=True, trace_id=trace_id)
 
     if channel.credential_swap_enabled and content and response_kind is ContentKind.XML:
-        response_swap_outcome = _response_credential_swap_stage(
-            content=content, response_headers=response_headers, keyring=keyring, ctx=ctx
-        )
+        with ctx.tracer.start_as_current_span("relay.response.credential_swap"):
+            response_swap_outcome = _response_credential_swap_stage(
+                content=content, response_headers=response_headers, keyring=keyring, ctx=ctx
+            )
         if isinstance(response_swap_outcome, Response):
             return response_swap_outcome
         content, changed = response_swap_outcome
@@ -321,7 +351,8 @@ async def _forward(  # pylint: disable=too-many-locals,too-many-return-statement
     rules: RuleSet | None = request.app.state.rules
     redaction_ready = keyring is not None or channel.pii.force_redact
     if channel.pii.enabled and redaction_ready and rules is not None and content and response_kind is ContentKind.XML:
-        redaction_outcome = _response_pii_stage(keyring=keyring, rules=rules, content=content, ctx=ctx)
+        with ctx.tracer.start_as_current_span("relay.response.pii"):
+            redaction_outcome = _response_pii_stage(keyring=keyring, rules=rules, content=content, ctx=ctx)
         if isinstance(redaction_outcome, Response):
             return redaction_outcome
         content = redaction_outcome
@@ -370,6 +401,9 @@ def _authorization_stage(
         logger.bind(channel=channel.name).warning("Request XML rejected during operation authorization")
         return internal_error_response(ErrorReason.XML_PARSE_ERROR, "request body is not parseable XML", ctx.trace_id)
     operation = handler.parse_operation(root)
+    if operation:
+        # The operation *name* only (never body content) onto the enclosing relay.authorize span.
+        otel_trace.get_current_span().set_attribute("wenrix.operation", operation)
     if operation not in allowed:
         logger.bind(channel=channel.name, operation=operation).warning("Operation not allowed")
         return _deny_operation(ctx)

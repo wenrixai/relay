@@ -30,6 +30,18 @@ def test_otlp_endpoint_stays_permissive() -> None:
     assert Settings(otlp_endpoint="collector:4317").otlp_endpoint == "collector:4317"
 
 
+def test_telemetry_traces_disabled_by_default() -> None:
+    # Traces are opt-in, unlike logs/metrics (§11).
+    settings = Settings()
+    assert settings.telemetry_traces_enabled is False
+    assert settings.telemetry_metrics_enabled is True
+
+
+def test_telemetry_traces_env_toggle(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("RELAY_TELEMETRY_TRACES_ENABLED", "true")
+    assert Settings().telemetry_traces_enabled is True
+
+
 def test_debug_mode_defaults_off() -> None:
     settings = Settings()
     assert settings.debug_mode is False

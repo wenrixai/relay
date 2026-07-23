@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     upstream_connect_retries: int = Field(default=2, ge=0)
     telemetry_logs_enabled: bool = True
     telemetry_metrics_enabled: bool = True
+    # Traces are opt-in (unlike logs/metrics): spans add per-request overhead and need a
+    # collector; enable explicitly per environment (§11).
+    telemetry_traces_enabled: bool = False
     otlp_endpoint: str | None = None
     pii_keyring: str | None = None
     pii_keyring_file: str | None = None
