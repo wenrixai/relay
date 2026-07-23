@@ -47,6 +47,7 @@ class PiiType(StrEnum):
     PAYMENT = "payment"
     FREQUENT_FLYER = "frequent_flyer"
     SSN = "ssn"
+    SPECIAL_SERVICE = "special_service"
 
 
 class EncryptAction(BaseModel):

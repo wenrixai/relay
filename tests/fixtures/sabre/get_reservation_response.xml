@@ -416,6 +416,57 @@
                     <stl19:AirlineCode>1S</stl19:AirlineCode>
                     <stl19:FullText>OTHS 1S PSGR SSN 123-45-6789 ON FILE</stl19:FullText>
                 </stl19:GenericSpecialRequests>
+                <stl19:GenericSpecialRequest id="18" type="G" msgType="S">
+                    <stl19:Code>WCHR</stl19:Code>
+                    <stl19:FreeText>WCHR REQUESTED FULL LEG</stl19:FreeText>
+                    <stl19:ActionCode>HK</stl19:ActionCode>
+                    <stl19:AirlineCode>1S</stl19:AirlineCode>
+                    <stl19:FullText>WCHR 1S WCHR REQUESTED FULL LEG</stl19:FullText>
+                </stl19:GenericSpecialRequest>
+                <stl19:Remarks>
+                    <stl19:Remark index="114" id="138" type="CODED" code="A" elementId="pnr-138">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>SPL MEAL-MOML</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="119" id="143" type="CODED" code="A" elementId="pnr-143">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>MEAL RMKS-HALAL</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                </stl19:Remarks>
+                <stl19:AssociationHistory>
+                    <stl19:AssociationId>138</stl19:AssociationId>
+                    <stl19:HistoryAction>ANA</stl19:HistoryAction>
+                    <stl19:HistoryAssociationElement Type="REMARK">A!SPL MEAL-MOML</stl19:HistoryAssociationElement>
+                    <stl19:AssociationParent>
+                        <stl19:Type>Remark</stl19:Type>
+                        <stl19:Content>A!SPL MEAL-MOML</stl19:Content>
+                    </stl19:AssociationParent>
+                    <stl19:AssociationChild>
+                        <stl19:Type>Remark</stl19:Type>
+                        <stl19:Content>A!SPL MEAL-MOML</stl19:Content>
+                    </stl19:AssociationChild>
+                </stl19:AssociationHistory>
+                <stl19:Addresses>
+                    <stl19:Address>
+                        <stl19:AddressLines>
+                            <stl19:AddressLine id="53" type="O">
+                                <stl19:Text>1 TEST ST STE 100</stl19:Text>
+                            </stl19:AddressLine>
+                            <stl19:AddressLine id="54" type="O">
+                                <stl19:Text>TEST CITY MN 00000</stl19:Text>
+                            </stl19:AddressLine>
+                            <stl19:AddressLine id="55" type="O">
+                                <stl19:Text>US</stl19:Text>
+                            </stl19:AddressLine>
+                        </stl19:AddressLines>
+                    </stl19:Address>
+                </stl19:Addresses>
                 <stl19:OpenReservationElements>
                     <or114:OpenReservationElement id="16" type="SRVC" elementId="pnr-16">
                         <or114:ServiceRequest airlineCode="1S" code="OTHS" serviceType="SSR" ssrType="AFX">

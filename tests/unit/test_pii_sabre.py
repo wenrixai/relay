@@ -44,6 +44,13 @@ def _attrs(body: bytes, attr_name: str) -> list[str]:
     return [str(value) for value in result]
 
 
+def _address_line_texts(body: bytes) -> list[str]:
+    root = parse_bytes(body)
+    nodes = root.xpath("//*[local-name()='AddressLine']/*[local-name()='Text']")
+    assert isinstance(nodes, list)
+    return [node.text or "" for node in nodes]
+
+
 class TestGetPriceQuote:
     """GetPriceQuoteRS: names live in attributes; payment data in the PQR variant."""
 
@@ -160,6 +167,41 @@ class TestGetReservation:
         assert counts["ssn"] >= 1
         assert b"PSGR SSN" in redacted and b"ON FILE" in redacted  # surrounding text preserved
 
+    def test_meal_ssr_type_encrypted_and_round_trip(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        # Meal preference (a GDPR special-category dietary/religion signal) lives in a coded remark
+        # and is mirrored in the history/association elements. The type is encrypted in every copy;
+        # the operational prefix survives so the line stays recognisable.
+        redacted, counts = _redact(_fixture("get_reservation_response.xml"), baked_ruleset, pii_keyring)
+        for gone in (b"MOML", b"HALAL"):
+            assert gone not in redacted
+        for kept in (b"SPL MEAL-", b"MEAL RMKS-", b"A!SPL MEAL-"):
+            assert kept in redacted
+        # 5 meal copies (MOML remark + 3 mirrors, HALAL remark) + 2 wheelchair free-text nodes.
+        assert counts["special_service"] == 7
+        restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
+        assert b"SPL MEAL-MOML" in restored and b"MEAL RMKS-HALAL" in restored
+        assert b"A!SPL MEAL-MOML" in restored
+
+    def test_wheelchair_ssr_free_text_encrypted_and_round_trip(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        redacted, _ = _redact(_fixture("get_reservation_response.xml"), baked_ruleset, pii_keyring)
+        # Free text carrying the request is encrypted; the structured <Code> is left intact so the
+        # anonymised body still validates against the supplier schema.
+        assert b"WCHR REQUESTED FULL LEG" not in redacted
+        assert b"<stl19:Code>WCHR</stl19:Code>" in redacted
+        restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
+        assert b"WCHR REQUESTED FULL LEG" in restored
+
+    def test_address_replaced_with_redacted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, counts = _redact(_fixture("get_reservation_response.xml"), baked_ruleset, pii_keyring)
+        for gone in (b"1 TEST ST STE 100", b"TEST CITY MN 00000"):
+            assert gone not in redacted
+        assert counts["address"] == 3
+        # Fixed literal (not a variable-length ``*`` mask) to avoid client schema-validation issues.
+        address_lines = _address_line_texts(redacted)
+        assert address_lines and all(text == "REDACTED" for text in address_lines)
+
     def test_history_fixture_full_coverage(
         self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
     ) -> None:
@@ -196,6 +238,9 @@ class TestGetReservation:
         dobs = [t for t in xml_texts(redacted, "DateOfBirth") if t]
         assert dobs and all(v == "1901-01-01" for v in dobs)
         assert counts["visa"] >= 3  # DOCO entry + or114 DOCO/DOCS free-text lines
+        # Address lines are replaced with a fixed ``REDACTED`` literal, not a ``*`` mask.
+        address_lines = _address_line_texts(redacted)
+        assert address_lines and all(text == "REDACTED" for text in address_lines)
 
     def test_name_echo_in_ticket_free_text_referenced(
         self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
@@ -382,7 +427,9 @@ class TestTravelItineraryHistory:
 
     def test_non_pii_preserved(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
         redacted, _ = _redact(_fixture("travel_itinerary_history_response.xml"), baked_ruleset, pii_keyring)
-        assert b"KSML" in redacted  # meal SSR is operational, not PII
+        # Meal-type redaction is currently scoped to GetReservationRS (and Amadeus PNR_Reply); the
+        # TravelItineraryRead history operation has no special-service rule yet, so KSML survives here.
+        assert b"KSML" in redacted
 
 
 class TestTripSearchPastDatePnr:
