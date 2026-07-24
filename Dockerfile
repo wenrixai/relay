@@ -25,9 +25,12 @@ FROM python:3.14-alpine@sha256:26730869004e2b9c4b9ad09cab8625e81d256d1ce97e72df5
 # Drop to a non-root user.
 RUN addgroup -g 101 -S relay && adduser -u 100 -S -G relay relay
 WORKDIR /app
+# Release workflow passes the git-tag version via --build-arg APP_VERSION.
+ARG APP_VERSION=0.0.0+unknown
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    RELAY_VERSION=${APP_VERSION}
 COPY --from=builder --chown=relay:relay /app/.venv /app/.venv
 USER 100:101
 EXPOSE 8080
