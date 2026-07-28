@@ -28,7 +28,7 @@ channel-relay = "channel_relay.main:cli"
 
 [dependency-groups]
 dev = [
-    "ruff>=0.15.22",
+    "ruff>=0.16.0",
     "mypy>=2.3.0",
     "pylint>=3.3",
     "pytest>=8.3",
