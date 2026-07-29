@@ -78,8 +78,13 @@
                                 </stl19:GenericSpecialRequest>
                                 <stl19:APISRequest>
                                     <stl19:DOCSEntry id="23" type="G">
+                                        <stl19:DocumentType>PP</stl19:DocumentType>
+                                        <stl19:CountryOfIssue>PH</stl19:CountryOfIssue>
+                                        <stl19:DocumentNumber>TT00TEST0</stl19:DocumentNumber>
+                                        <stl19:DocumentNationalityCountry>PH</stl19:DocumentNationalityCountry>
                                         <stl19:DateOfBirth>1990-01-01</stl19:DateOfBirth>
                                         <stl19:Gender>M</stl19:Gender>
+                                        <stl19:DocumentExpirationDate>2033-04-04</stl19:DocumentExpirationDate>
                                         <stl19:Surname>MR</stl19:Surname>
                                         <stl19:Forename>MR</stl19:Forename>
                                         <stl19:MiddleName/>
@@ -589,11 +594,16 @@
                             <or114:FullText>DOCS DL HK1/DB/01JAN1990/M/MR/MR</or114:FullText>
                             <or114:TravelDocument>
                                 <or114:Type>DB</or114:Type>
+                                <or114:DocumentIssueCountry>PH</or114:DocumentIssueCountry>
+                                <or114:DocumentNumber>TT00TEST0</or114:DocumentNumber>
+                                <or114:DocumentNationalityCountry>PH</or114:DocumentNationalityCountry>
+                                <or114:DocumentExpirationDate>04APR2033</or114:DocumentExpirationDate>
                                 <or114:DateOfBirth>01JAN1990</or114:DateOfBirth>
                                 <or114:Gender>M</or114:Gender>
                                 <or114:LastName>MR</or114:LastName>
                                 <or114:FirstName>MR</or114:FirstName>
                                 <or114:Infant>false</or114:Infant>
+                                <or114:PrimaryDocHolderInd>false</or114:PrimaryDocHolderInd>
                                 <or114:HasDocumentData>false</or114:HasDocumentData>
                             </or114:TravelDocument>
                         </or114:ServiceRequest>
