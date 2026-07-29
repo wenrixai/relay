@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-baseline-2026-07-22",
+  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-baseline-2026-07-29",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -57,6 +57,22 @@
       ]
     },
     {
+      "id": "amadeus.pnr.name_title",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:travellerInformation/a:passenger/a:firstName | //a:otherPaxNamesDetails/a:givenName",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "gender",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "(?<= )(MSTR|MISS|PROF|INFT|MRS|CHD|INF|MR|MS|DR)$"
+        }
+      ]
+    },
+    {
       "id": "amadeus.pnr.ff_number",
       "channel": "amadeus",
       "operation": "^PNR_Reply",
@@ -109,6 +125,17 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "passport_id",
+      "method": "mask"
+    },
+    {
+      "id": "amadeus.pnr.ssr_doco",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:ssr[a:type='DOCO' or a:type='DOCA']/a:freeText",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "visa",
       "method": "mask"
     },
     {
@@ -371,14 +398,25 @@
       "id": "sabre.res.docs_dob",
       "channel": "sabre",
       "operation": "^GetReservationRS$",
-      "path": "//s19:DOCSEntry/s19:DateOfBirth | //o14:TravelDocument/o14:DateOfBirth",
+      "path": "//s19:DOCSEntry/s19:DateOfBirth",
       "namespaces": {
-        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
-        "o14": "http://services.sabre.com/res/or/v1_14"
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "dob",
       "method": "replace",
       "replacement": "1901-01-01"
+    },
+    {
+      "id": "sabre.res.docs_dob_history",
+      "channel": "sabre",
+      "operation": "^GetReservationRS$",
+      "path": "//o14:TravelDocument/o14:DateOfBirth",
+      "namespaces": {
+        "o14": "http://services.sabre.com/res/or/v1_14"
+      },
+      "pii_type": "dob",
+      "method": "replace",
+      "replacement": "01JAN1901"
     },
     {
       "id": "sabre.res.docs_gender",
@@ -421,12 +459,50 @@
       "id": "sabre.res.travel_document_number",
       "channel": "sabre",
       "operation": "^GetReservationRS$",
-      "path": "//o14:OtherSupplementaryInformation/o14:DocumentNumber",
+      "path": "//o14:OtherSupplementaryInformation/o14:DocumentNumber | //s19:DOCSEntry/s19:DocumentNumber | //o14:TravelDocument/o14:DocumentNumber",
       "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
         "o14": "http://services.sabre.com/res/or/v1_14"
       },
       "pii_type": "passport_id",
       "method": "mask"
+    },
+    {
+      "id": "sabre.res.docs_expiry",
+      "channel": "sabre",
+      "operation": "^GetReservationRS$",
+      "path": "//s19:DOCSEntry/s19:DocumentExpirationDate",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "passport_id",
+      "method": "replace",
+      "replacement": "2099-12-31"
+    },
+    {
+      "id": "sabre.res.docs_expiry_history",
+      "channel": "sabre",
+      "operation": "^GetReservationRS$",
+      "path": "//o14:TravelDocument/o14:DocumentExpirationDate",
+      "namespaces": {
+        "o14": "http://services.sabre.com/res/or/v1_14"
+      },
+      "pii_type": "passport_id",
+      "method": "replace",
+      "replacement": "31DEC2099"
+    },
+    {
+      "id": "sabre.res.docs_nationality",
+      "channel": "sabre",
+      "operation": "^GetReservationRS$",
+      "path": "//s19:DOCSEntry/s19:CountryOfIssue | //s19:DOCSEntry/s19:DocumentNationalityCountry | //o14:TravelDocument/o14:DocumentIssueCountry | //o14:TravelDocument/o14:DocumentNationalityCountry",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
+        "o14": "http://services.sabre.com/res/or/v1_14"
+      },
+      "pii_type": "nationality",
+      "method": "replace",
+      "replacement": "ZZ"
     },
     {
       "id": "sabre.res.frequent_flyer",

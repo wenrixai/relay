@@ -43,6 +43,8 @@ def test_counts_match_baseline(response_body: bytes, baked_ruleset: RuleSet, pii
         "phone": 2,
         "email": 4,
         "passport_id": 1,
+        "visa": 1,
+        "gender": 2,
         "ssn": 1,
         "special_service": 2,
     }
@@ -59,20 +61,23 @@ def test_names_and_ff_number_encrypt_and_round_trip(
     memberships = xml_texts(redacted, "membershipNumber")
     for token in [*surnames, *memberships]:
         assert TOKEN_RE.fullmatch(token)
-    # Given-name fields keep the non-PII honorific in place; only the name is a token, so
-    # the bare given name lands in the reference bucket and matches remark free text.
+    # Given-name fields hold a name plus an honorific. Each is tokenized independently: the name
+    # span stays the value collected into the ``person`` bucket (so the reference pass still finds
+    # the bare name in remark free text), while the title is redacted by its own ``gender`` rule.
     first_token, first_title = first.split(" ")
     given_token, given_title = given.split(" ")
-    assert first_title == given_title == "MR"
-    assert TOKEN_RE.fullmatch(first_token) and TOKEN_RE.fullmatch(given_token)
+    for token in (first_token, first_title, given_token, given_title):
+        assert TOKEN_RE.fullmatch(token)
     assert decrypt(surnames[0], pii_keyring) == "PARK"
     assert decrypt(first_token, pii_keyring) == "JANGBIN"
     assert decrypt(given_token, pii_keyring) == "JANGBIN"
+    assert decrypt(first_title, pii_keyring) == decrypt(given_title, pii_keyring) == "MR"
     assert all(decrypt(m, pii_keyring) == "4144402077" for m in memberships)
-    # Round-trip: re-sending the encrypted body de-anonymizes every token (4 names + 2 FF +
-    # 2 name occurrences the reference rule scrubbed from a general remark + 2 special-service SSR).
+    # Round-trip: re-sending the encrypted body de-anonymizes every token (4 names + 2 honorifics +
+    # 2 FF + 2 name occurrences the reference rule scrubbed from a general remark + 2
+    # special-service SSR).
     restored, decrypted = deanonymize_request_body(redacted, keyring=pii_keyring)
-    assert decrypted == 10
+    assert decrypted == 12
     assert b"PARK" in restored and b"JANGBIN MR" in restored and b"4144402077" in restored
 
 
@@ -87,17 +92,50 @@ def test_contact_passport_masked_one_way(
         b"SEAFLY314//LIVE.COM/EN",
         b"8201049063141",
         b"M037B6058",
+        b"189200313",
         b"NH4144402077",
     ]:
         assert gone not in redacted
-    # Contact/identity SSR free-text nodes (email/mobile/passport/FF/RESTRICTED) are masked, not
-    # tokenized. Meal/wheelchair SSR free text is encrypted instead (see the special-service test),
-    # so exactly those two are the only ``ENC_`` free-text nodes.
+    # Contact/identity SSR free-text nodes (email/mobile/passport/visa/FF/RESTRICTED) are masked,
+    # not tokenized. Meal/wheelchair SSR free text is encrypted instead (see the special-service
+    # test), so exactly those two are the only ``ENC_`` free-text nodes.
     free_texts = xml_texts(redacted, "freeText")
     ssr_texts = [t for t in free_texts if _MASKED_RE.fullmatch(t)]
-    assert len(ssr_texts) == 6  # 2 CTCE + CTCM + DOCS + FQTS + RESTRICTED
+    assert len(ssr_texts) == 7  # 2 CTCE + CTCM + DOCS + DOCO + FQTS + RESTRICTED
     encrypted = [t for t in free_texts if t.startswith("ENC_")]
     assert len(encrypted) == 2  # AVML meal + WCHR wheelchair
+
+
+def test_doco_visa_free_text_masked_one_way(response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+    """DOCO carries visa data (number, place/date of issue, destination). It is masked like the
+    DOCS passport line — covering only ``type='DOCS'`` left the visa number in the clear."""
+    redacted, counts = redact_response_body(
+        response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+    )
+    assert b"PHL PH/V/189200313/PH//USA//05JUN29" not in redacted
+    assert counts["visa"] == 1
+    # The structured type code is left intact so the anonymised PNR still validates upstream.
+    assert b"<type>DOCO</type>" in redacted
+
+
+def test_given_name_honorific_redacted_and_round_trips(
+    response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+) -> None:
+    """A title discloses gender (and marital status for MRS/MISS), so it is redacted rather than
+    treated as operational text — reversing the earlier honorific-preserving stance."""
+    redacted, counts = redact_response_body(
+        response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+    )
+    assert counts["gender"] == 2  # firstName + givenName
+    # Nothing but tokens is left in either given-name field: name and title are separate spans,
+    # so no plaintext fragment survives. (A substring check would be unsound here — base64url
+    # token payloads can contain the letters of a title.)
+    for local in ("firstName", "givenName"):
+        for value in xml_texts(redacted, local):
+            assert value.split(" ") and all(TOKEN_RE.fullmatch(part) for part in value.split(" ")), (local, value)
+    # It is encrypted, not dropped, so the upstream channel still receives the real title.
+    restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
+    assert b"<firstName>JANGBIN MR</firstName>" in restored
 
 
 def test_meal_and_wheelchair_ssr_encrypted_and_round_trip(
@@ -162,7 +200,9 @@ def test_name_in_general_remark_encrypted_via_reference(
     assert len(remark_tokens) == 2
     assert remark_tokens[0] == surnames[0]  # reference hit reuses the structured field's token
     assert decrypt(remark_tokens[1], pii_keyring) == "JANGBIN"
-    # The honorific is not PII and stays behind in the remark.
+    # The honorific rule is anchored to the structured given-name fields, and the title is typed
+    # ``gender`` so it never enters the ``person`` reference bucket — a two-letter title searched
+    # for across every remark would redact unrelated operational text. It therefore survives here.
     assert " MR RQ SEAT CHANGE" in remark_text
 
 

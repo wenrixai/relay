@@ -758,6 +758,31 @@
                     <elementManagementData>
                         <reference>
                             <qualifier>OT</qualifier>
+                            <number>49</number>
+                        </reference>
+                        <segmentName>SSR</segmentName>
+                        <lineNumber>12</lineNumber>
+                    </elementManagementData>
+                    <serviceRequest>
+                        <ssr>
+                            <type>DOCO</type>
+                            <status>HK</status>
+                            <quantity>1</quantity>
+                            <companyId>NH</companyId>
+                            <freeText>PHL PH/V/189200313/PH//USA//05JUN29</freeText>
+                        </ssr>
+                    </serviceRequest>
+                    <referenceForDataElement>
+                        <reference>
+                            <qualifier>PT</qualifier>
+                            <number>2</number>
+                        </reference>
+                    </referenceForDataElement>
+                </dataElementsIndiv>
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
                             <number>48</number>
                         </reference>
                         <segmentName>SSR</segmentName>

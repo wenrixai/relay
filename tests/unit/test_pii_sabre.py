@@ -51,6 +51,19 @@ def _address_line_texts(body: bytes) -> list[str]:
     return [node.text or "" for node in nodes]
 
 
+# Sabre mirrors passenger data in a parallel history namespace whose date fields use a different
+# format, so document assertions have to be namespace-aware rather than by local-name.
+S19 = "http://webservices.sabre.com/pnrbuilder/v1_19"
+O14 = "http://services.sabre.com/res/or/v1_14"
+
+
+def _ns_texts(body: bytes, path: str) -> list[str]:
+    root = parse_bytes(body)
+    nodes = root.xpath(path, namespaces={"s19": S19, "o14": O14})
+    assert isinstance(nodes, list)
+    return [node.text or "" for node in nodes]
+
+
 class TestGetPriceQuote:
     """GetPriceQuoteRS: names live in attributes; payment data in the PQR variant."""
 
@@ -216,6 +229,8 @@ class TestGetReservation:
             b"1990-01-01",
             b"01JAN1990",
             b"TT00TEST0",
+            b"2033-04-04",
+            b"04APR2033",
             b"800-555-0100",
             b"5555550100",
             b"1234 MAIN TEST RD",
@@ -233,14 +248,60 @@ class TestGetReservation:
         for masked_local in ("CardNumber", "DocumentNumber"):
             values = [t for t in xml_texts(redacted, masked_local) if t]
             assert values and all(_MASKED_RE.fullmatch(v) for v in values), masked_local
-        # DateOfBirth is a typed field: one-way replaced with a schema-valid ISO sentinel
-        # (never a ``*`` mask that would crash the caller's date parser).
-        dobs = [t for t in xml_texts(redacted, "DateOfBirth") if t]
-        assert dobs and all(v == "1901-01-01" for v in dobs)
+        # DateOfBirth is a typed field: one-way replaced with a schema-valid sentinel (never a ``*``
+        # mask that would crash the caller's date parser) in the format its own namespace uses.
+        assert _ns_texts(redacted, "//s19:DOCSEntry/s19:DateOfBirth") == ["1901-01-01"]
+        assert _ns_texts(redacted, "//o14:TravelDocument/o14:DateOfBirth") == ["01JAN1901"]
         assert counts["visa"] >= 3  # DOCO entry + or114 DOCO/DOCS free-text lines
         # Address lines are replaced with a fixed ``REDACTED`` literal, not a ``*`` mask.
         address_lines = _address_line_texts(redacted)
         assert address_lines and all(text == "REDACTED" for text in address_lines)
+
+    def test_travel_document_number_masked_in_every_location(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        # The passport number is carried by the structured DOCS entry, by the or114 history
+        # mirror, AND by the supplementary-information block. Covering only one of the three
+        # leaves the number in the clear (the CERT defect on PNR TORIWF).
+        redacted, _ = _redact(_fixture("get_reservation_pq_history_response.xml"), baked_ruleset, pii_keyring)
+        assert b"TT00TEST0" not in redacted
+        for path in (
+            "//s19:DOCSEntry/s19:DocumentNumber",
+            "//o14:TravelDocument/o14:DocumentNumber",
+            "//o14:OtherSupplementaryInformation/o14:DocumentNumber",
+        ):
+            values = _ns_texts(redacted, path)
+            assert values and all(_MASKED_RE.fullmatch(v) for v in values), path
+
+    def test_document_expiry_replaced_per_namespace_format(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        # Expiry is a typed date the caller parses, so it is replaced with a sentinel rather than
+        # masked — in the format its own namespace emits (ISO for s19, DDMMMYYYY for the mirror).
+        redacted, _ = _redact(_fixture("get_reservation_pq_history_response.xml"), baked_ruleset, pii_keyring)
+        assert b"2033-04-04" not in redacted and b"04APR2033" not in redacted
+        assert _ns_texts(redacted, "//s19:DOCSEntry/s19:DocumentExpirationDate") == ["2099-12-31"]
+        assert _ns_texts(redacted, "//o14:TravelDocument/o14:DocumentExpirationDate") == ["31DEC2099"]
+
+    def test_document_nationality_replaced_with_valid_code(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        # Country of issue and nationality identify the passenger; they are replaced with the
+        # ISO 3166-1 user-assigned code so the anonymised body still validates upstream.
+        redacted, counts = _redact(_fixture("get_reservation_pq_history_response.xml"), baked_ruleset, pii_keyring)
+        for path in (
+            "//s19:DOCSEntry/s19:CountryOfIssue",
+            "//s19:DOCSEntry/s19:DocumentNationalityCountry",
+            "//o14:TravelDocument/o14:DocumentIssueCountry",
+            "//o14:TravelDocument/o14:DocumentNationalityCountry",
+        ):
+            assert _ns_texts(redacted, path) == ["ZZ"], path
+        assert counts["nationality"] == 4
+
+    def test_document_kind_and_flags_preserved(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        # The document kind describes the document, not the passenger, and operational flags are
+        # not PII (§7) — redacting them would break APIS consumers for no privacy gain.
+        redacted, _ = _redact(_fixture("get_reservation_pq_history_response.xml"), baked_ruleset, pii_keyring)
+        assert _ns_texts(redacted, "//s19:DOCSEntry/s19:DocumentType") == ["PP"]
+        assert _ns_texts(redacted, "//o14:TravelDocument/o14:Type") == ["DB"]
+        for kept in (b"<stl19:ActionCode>HK</stl19:ActionCode>", b"<stl19:NumberInParty>1</stl19:NumberInParty>"):
+            assert kept in redacted
 
     def test_name_echo_in_ticket_free_text_referenced(
         self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
