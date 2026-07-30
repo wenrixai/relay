@@ -230,6 +230,11 @@ The most common `RELAY_*` settings are:
 When `RELAY_BASIC_AUTH_ENABLED` is true, both `RELAY_BASIC_AUTH_USER` and
 `RELAY_BASIC_AUTH_PASS` must be configured or the relay refuses to start.
 
+Upstream TLS server certificates are always verified and there is no setting that changes that: no
+per-channel field (a channel `tls` block is rejected as an unknown field) and no `RELAY_*` variable.
+If an upstream presents a certificate the relay cannot verify, fix it on the certificate side — obtain
+a certificate the relay's trust store accepts, or add the upstream's private CA to that trust store.
+
 ## Kubernetes Helm Deployment
 
 Use the Helm chart when deploying into Kubernetes.

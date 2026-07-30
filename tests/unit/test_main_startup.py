@@ -6,6 +6,7 @@ serving the data-plane routes open. Mirrors the keyring fail-fast in ``test_pii_
 
 from __future__ import annotations
 
+import inspect
 import io
 from typing import Any
 
@@ -20,7 +21,6 @@ from channel_relay.main import (
     cli,
     create_app,
     validate_auth_config,
-    warn_insecure_tls_config,
     warn_unenforced_config,
 )
 from channel_relay.settings import Settings
@@ -80,37 +80,6 @@ def test_no_warning_without_external_authorization() -> None:
     config = RelayConfig.model_validate({"channels": [{"name": "tf", "type": "travelfusion"}]})
     assert _capture_warnings(config) == ""
     assert _capture_warnings(None) == ""
-
-
-def test_insecure_tls_channel_warns_at_startup() -> None:
-    config = RelayConfig.model_validate(
-        {
-            "channels": [
-                {"name": "tp", "type": "travelport", "tls": {"insecure_skip_verify": True}},
-            ]
-        }
-    )
-    sink = io.StringIO()
-    sink_id = logger.add(sink, level="WARNING")
-    try:
-        warn_insecure_tls_config(config)
-    finally:
-        logger.remove(sink_id)
-    output = sink.getvalue()
-    assert "tp" in output
-    assert "TLS" in output
-
-
-def test_no_warning_without_insecure_tls_channel() -> None:
-    config = RelayConfig.model_validate({"channels": [{"name": "tf", "type": "travelfusion"}]})
-    sink = io.StringIO()
-    sink_id = logger.add(sink, level="WARNING")
-    try:
-        warn_insecure_tls_config(config)
-        warn_insecure_tls_config(None)
-    finally:
-        logger.remove(sink_id)
-    assert sink.getvalue() == ""
 
 
 def test_debug_mode_warns_at_app_creation(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
@@ -205,7 +174,7 @@ async def test_build_http_client_connect_retries_configurable(monkeypatch: pytes
         await client.aclose()
 
 
-async def test_build_http_client_defaults_to_verifying_tls() -> None:
+async def test_build_http_client_always_verifies_tls() -> None:
     client = build_http_client(Settings())
     try:
         assert (
@@ -216,12 +185,6 @@ async def test_build_http_client_defaults_to_verifying_tls() -> None:
         await client.aclose()
 
 
-async def test_build_http_client_verify_false_disables_tls_verification() -> None:
-    client = build_http_client(Settings(), verify=False)
-    try:
-        assert (
-            client._transport_for_url(httpx.URL("https://example.test"))._pool._ssl_context.verify_mode.name
-            == "CERT_NONE"
-        )  # noqa: SLF001
-    finally:
-        await client.aclose()
+def test_build_http_client_takes_no_verify_argument() -> None:
+    """No opt-out at any level: the non-verifying path must not be one keyword away."""
+    assert "verify" not in inspect.signature(build_http_client).parameters

@@ -146,8 +146,8 @@ channel-relay/
 Only `name` and `type` are required; `host` defaults per type. Credential swap runs only when
 `credentials.enabled: true`; otherwise the request passes through untouched even if credential
 fields are present. PII is off unless `pii.enabled: true`. Upstream TLS server certificate
-verification is on unless `tls.insecure_skip_verify: true` for that channel (default `false`;
-startup warns loudly per opted-out channel). Full reference in
+verification is mandatory and not configurable — there is no per-channel field and no `RELAY_*`
+setting that disables it, and a channel `tls` block is rejected as an unknown field. Full reference in
 `openspec/specs/relay-configuration/spec.md`.
 
 ### 5.2 Credential swap table (opt-in)

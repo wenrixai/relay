@@ -210,10 +210,12 @@ Source: `src/channel_relay/proxy/errors.py`; contract in `docs/PROJECT.md` §10.
 - **No periodic polling.** PII redaction rules load **once at startup** (fetched from the Wenrix rules
   API if configured, otherwise a baked fallback bundle in the image); incompatible `schema_version` is
   rejected. `rules_loader.py`.
-- **Upstream TLS:** verifying by default. A per-channel `tls.insecure_skip_verify` opt-out exists; when
-  set it uses a *separate* non-verifying httpx client only for that channel, and every such channel is
-  **logged loudly with a warning at startup**. Default channels always verify. `main.py`,
-  `forwarder.py`.
+- **Upstream TLS:** **always verifying, with no opt-out at any level.** One upstream pool, one policy:
+  no per-channel field (a channel `tls` block is rejected as an unknown field) and no `RELAY_*` setting
+  disables or relaxes certificate verification, so `build_http_client` cannot construct a
+  non-verifying client. An upstream whose certificate does not verify is fixed on the certificate side
+  — a certificate the relay's trust store accepts, or its private CA added to that trust store.
+  `main.py`.
 - **Body inspection cap:** `RELAY_MAX_INSPECT_BYTES` = 8 MiB; oversize bodies requiring inspection →
   413.
 - **Per-channel timeouts:** default connect 30s / read 120s, configurable per channel.

@@ -92,25 +92,25 @@ the model but is NOT enforced by the request pipeline in this version.
 - **THEN** startup logs a WARNING naming the channel and stating external authorization is not
   enforced
 
-### Requirement: Per-channel TLS server verification opt-out
-The relay SHALL support a per-channel `tls.insecure_skip_verify` boolean (default `false`). When
-`false` (the default, or when the `tls` block is omitted), upstream calls for that channel SHALL
-verify the upstream's TLS server certificate as normal. When `true`, upstream calls for that channel
-only SHALL skip TLS server certificate verification; every other channel configured in the same relay
-process SHALL continue to verify its own upstream's certificate, unaffected by this setting on
-another channel.
+### Requirement: Upstream TLS verification is mandatory
+The relay SHALL verify the upstream's TLS server certificate for every channel on every request, and
+SHALL NOT expose any configuration — per-channel field or `RELAY_*` setting — that disables or relaxes
+that verification. The relay SHALL use exactly one upstream connection pool and SHALL NOT select a
+pool per channel. Channel configuration SHALL NOT provide any TLS verification field; a channel `tls`
+block SHALL be rejected as an unknown field.
 
-#### Scenario: Default verifies TLS
-- **WHEN** a channel config omits the `tls` block
-- **THEN** upstream requests for that channel verify the upstream TLS server certificate
+#### Scenario: Upstream certificates are always verified
+- **WHEN** the relay forwards a request for any configured channel over HTTPS
+- **THEN** the upstream's TLS server certificate is verified
 
-#### Scenario: Explicit opt-out skips verification for that channel only
-- **WHEN** a channel config sets `tls.insecure_skip_verify: true`
-- **THEN** upstream requests for that channel do not verify the upstream TLS server certificate
-- **AND** upstream requests for every other configured channel still verify their own certificates
+#### Scenario: No opt-out setting exists
+- **WHEN** configuration is inspected for a way to skip upstream certificate verification
+- **THEN** no per-channel field and no `RELAY_*` setting provides one
 
-#### Scenario: Startup warns on insecure TLS channels
-- **WHEN** one or more channels set `tls.insecure_skip_verify: true`
-- **THEN** startup logs a WARNING naming each such channel and stating that TLS server
-  verification is disabled for it
-- **AND** startup does not abort because of this setting alone
+#### Scenario: Single upstream client
+- **WHEN** the relay forwards a request for any channel
+- **THEN** it uses the one shared upstream client and no per-channel client selection occurs
+
+#### Scenario: Channel TLS block rejected
+- **WHEN** a channel config contains a `tls` block (e.g. `tls.insecure_skip_verify`)
+- **THEN** config validation fails as an unknown field and startup aborts
