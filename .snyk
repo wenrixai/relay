@@ -1,0 +1,30 @@
+# Snyk policy file — https://docs.snyk.io/manage-risk/policies/the-.snyk-file
+# Honoured by the Snyk CLI and by SCM (GitHub) integrations.
+version: v1.25.0
+
+# Snyk Code path exclusions.
+#
+# Every "Use of Hardcoded Passwords" (CWE-798 / CWE-259) finding in this repo comes from
+# synthetic credentials inside the test suite. The relay never embeds credentials in code:
+# channel credentials come from `relay.json` (mounted config) and the PII master key comes
+# from the mounted Kubernetes Secret / `RELAY_*` env vars (see SECURITY.md).
+#
+# The strings below are fixed test vectors — e.g. `_PASSWORD = "S3cret!"` is the input of the
+# published Amadeus WSSE password-digest vector, and `assigned-pass` / `relay-pass` assert that
+# the credential-swap stage rewrote a SOAP node. They are not usable secrets anywhere.
+#
+# Files are listed individually rather than excluding `tests/**`, so newly added test files are
+# still scanned.
+exclude:
+  code:
+    - tests/unit/test_wsse.py
+    - tests/unit/test_channel_credential_swap.py
+    - tests/unit/test_config.py
+    - tests/unit/test_pii_codec.py
+    - tests/unit/test_pii_engine.py
+    - tests/integration/test_amadeus_wsse_dynamic.py
+    - tests/integration/test_credential_config_validation.py
+    - tests/integration/test_credential_swap_forwarder.py
+    - tests/deployment/test_helm_chart.py
+    - tests/e2e/test_transparency.py
+    - tests/fixtures/**

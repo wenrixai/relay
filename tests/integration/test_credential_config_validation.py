@@ -1,6 +1,9 @@
 """Config-load validation: a swap-enabled SOAP channel must have configured credentials.
 
 The relay fails fast at startup rather than forwarding placeholder credentials on the first request.
+
+The `assigned-pass`-style literals are validation inputs, not secrets — they exist to prove the
+config layer accepts or rejects a shape. Snyk Code CWE-798 exclusion: see `.snyk`.
 """
 
 from __future__ import annotations

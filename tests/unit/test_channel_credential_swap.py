@@ -1,4 +1,10 @@
-"""Channel operation parsing and credential swap tests (Slice 3)."""
+"""Channel operation parsing and credential swap tests (Slice 3).
+
+Every credential literal below (`relay-pass`, `assigned-pass`, `la-key`, ...) is a synthetic
+marker string whose only purpose is to assert that the swap stage rewrote the right SOAP node or
+header. None is a real or reusable secret; real credentials come from `relay.json` at runtime.
+Snyk Code flags these as CWE-798 "hardcoded password" — see the `exclude: code:` block in `.snyk`.
+"""
 
 from __future__ import annotations
 
