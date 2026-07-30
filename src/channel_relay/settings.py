@@ -41,10 +41,6 @@ class Settings(BaseSettings):
     # any request bytes are sent, so a retry here can never duplicate an upstream side effect).
     # No retry ever happens once bytes have been written to the socket (§10.5, D12).
     upstream_connect_retries: int = Field(default=2, ge=0)
-    # The relay's single upstream TLS policy: verifying by default, and all-or-nothing — setting
-    # this false disables server-certificate verification for *every* channel this process serves.
-    # There is no per-channel opt-out; never set false in production.
-    upstream_tls_verify: bool = True
     telemetry_logs_enabled: bool = True
     telemetry_metrics_enabled: bool = True
     # Traces are opt-in (unlike logs/metrics): spans add per-request overhead and need a

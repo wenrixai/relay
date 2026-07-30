@@ -64,15 +64,14 @@ def build_http_client(settings: Settings) -> httpx.AsyncClient:
     upstream operation. The relay still does not retry at the request level — that policy
     stays with the calling client.
 
-    TLS verification comes from ``RELAY_UPSTREAM_TLS_VERIFY`` and is read here rather than passed
-    in, so a call site cannot diverge from the process-wide policy. It is one pool for every
-    channel: channels cannot opt out individually.
+    Upstream TLS server certificates are always verified: there is deliberately no ``verify``
+    parameter and no setting that relaxes it, so the only client the relay can build is a verifying
+    one (httpx's own default carries the behavior). An upstream whose certificate does not verify is
+    fixed on the certificate side — a certificate this trust store accepts, or its private CA added
+    to the trust store.
     """
-    verify = settings.upstream_tls_verify
-    transport = httpx.AsyncHTTPTransport(
-        retries=settings.upstream_connect_retries, limits=client_limits(settings), verify=verify
-    )
-    return httpx.AsyncClient(transport=transport, verify=verify)
+    transport = httpx.AsyncHTTPTransport(retries=settings.upstream_connect_retries, limits=client_limits(settings))
+    return httpx.AsyncClient(transport=transport)
 
 
 def build_keyring(settings: Settings, config: RelayConfig | None) -> Keyring | None:
@@ -142,20 +141,6 @@ def warn_unenforced_config(config: RelayConfig | None) -> None:
             )
 
 
-def warn_insecure_tls_config(settings: Settings) -> None:
-    """Warn loudly when the relay-wide upstream TLS verification switch is off.
-
-    `RELAY_UPSTREAM_TLS_VERIFY` is an explicit operator opt-out (default true), so startup does
-    not abort because of it — but the blast radius is the whole process, and every boot must say
-    so. Matches `warn_unenforced_config`'s shape for `authorization.external`.
-    """
-    if not settings.upstream_tls_verify:
-        logger.warning(
-            "RELAY_UPSTREAM_TLS_VERIFY is false: upstream TLS server certificate verification "
-            "is DISABLED for all channels served by this relay process"
-        )
-
-
 def _load_and_validate_startup_config(settings: Settings, application: FastAPI, metrics: RelayMetrics) -> None:
     """Load config once, then run its fail-closed checks and accepted-but-notable warnings.
 
@@ -168,7 +153,6 @@ def _load_and_validate_startup_config(settings: Settings, application: FastAPI, 
         metrics.set_channels_configured(len(application.state.config.channels))
         validate_credential_config(application.state.config)
     warn_unenforced_config(application.state.config)
-    warn_insecure_tls_config(settings)
 
 
 def _build_upstream_client(settings: Settings, application: FastAPI) -> bool:
@@ -270,7 +254,7 @@ def create_app(  # pylint: disable=too-many-arguments,too-many-positional-argume
         config: an explicit config (used in tests). When omitted, the lifespan loads it
             from ``Settings.config_file``.
         http_client: an explicit httpx client (used in tests). When omitted, the lifespan
-            creates and owns one, honouring ``RELAY_UPSTREAM_TLS_VERIFY``.
+            creates and owns one.
         metric_reader: an explicit metric reader (used in tests) to collect metrics in
             memory; production uses the OTLP periodic exporter.
         span_processor: an explicit span processor (used in tests) to collect spans in

@@ -42,16 +42,6 @@ def test_telemetry_traces_env_toggle(monkeypatch: pytest.MonkeyPatch) -> None:
     assert Settings().telemetry_traces_enabled is True
 
 
-def test_upstream_tls_verify_defaults_on() -> None:
-    # Verifying by default: the insecure path must always be an explicit operator override.
-    assert Settings().upstream_tls_verify is True
-
-
-def test_upstream_tls_verify_env_toggle(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("RELAY_UPSTREAM_TLS_VERIFY", "false")
-    assert Settings().upstream_tls_verify is False
-
-
 def test_debug_mode_defaults_off() -> None:
     settings = Settings()
     assert settings.debug_mode is False

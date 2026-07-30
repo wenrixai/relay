@@ -124,7 +124,7 @@ def test_operation_authorization_must_be_explicitly_enabled() -> None:
 
 
 def test_channel_tls_block_rejected() -> None:
-    # TLS verification is a process-wide setting (RELAY_UPSTREAM_TLS_VERIFY); a channel
+    # Upstream TLS verification is mandatory and has no configuration surface; a channel
     # document must not be able to weaken transport security.
     with pytest.raises(ValidationError):
         ChannelConfig(

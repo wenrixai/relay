@@ -1,7 +1,7 @@
-"""Relay-wide upstream TLS verification (`RELAY_UPSTREAM_TLS_VERIFY`).
+"""Mandatory upstream TLS verification.
 
-One process, one upstream pool, one TLS policy: there is no per-channel client selection and
-no channel-level way to weaken transport security.
+One process, one upstream pool, always verifying: there is no per-channel client selection and no
+configuration — channel field or `RELAY_*` setting — that can weaken transport security.
 """
 
 from __future__ import annotations
@@ -61,17 +61,9 @@ def test_every_channel_forwards_via_the_shared_client() -> None:
     assert any("staging.test" in url for url in calls)
 
 
-def test_shared_client_verifies_tls_by_default() -> None:
-    app = create_app(config=_config())
-    with TestClient(app) as client:
-        assert client.get("/liveness").status_code == 200
-        assert _ssl_verify_mode(app.state.client, "https://staging.test") != "CERT_NONE"
-
-
-def test_relay_wide_toggle_disables_verification_for_every_channel(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("RELAY_UPSTREAM_TLS_VERIFY", "false")
+def test_shared_client_verifies_tls_for_every_channel() -> None:
     app = create_app(config=_config())
     with TestClient(app) as client:
         assert client.get("/liveness").status_code == 200
         for url in ("https://tf.test", "https://staging.test"):
-            assert _ssl_verify_mode(app.state.client, url) == "CERT_NONE"
+            assert _ssl_verify_mode(app.state.client, url) != "CERT_NONE"

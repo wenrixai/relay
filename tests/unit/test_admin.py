@@ -82,8 +82,6 @@ def test_admin_flare_returns_redacted_diagnostics_snapshot() -> None:
     assert body["settings"]["otlp_endpoint_configured"] is True
     assert body["settings"]["root_path"] == ""
     assert body["settings"]["pii_keyring_configured"] is True
-    # Upstream TLS posture must be inspectable without shelling into the pod.
-    assert body["settings"]["upstream_tls_verify"] is True
     assert body["keyring"]["configured"] is True
 
     rules = body["rules"]

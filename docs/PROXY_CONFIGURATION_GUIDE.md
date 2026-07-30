@@ -221,7 +221,6 @@ The most common `RELAY_*` settings are:
 | `RELAY_DEFAULT_CONNECT_TIMEOUT` | `30` | Default upstream connect timeout in seconds. |
 | `RELAY_DEFAULT_READ_TIMEOUT` | `120` | Default upstream read timeout in seconds. |
 | `RELAY_MAX_INSPECT_BYTES` | `8388608` | Maximum body size inspected for XML/PII/authorization processing. |
-| `RELAY_UPSTREAM_TLS_VERIFY` | `true` | Verify upstream TLS server certificates. Setting `false` disables verification for **every** channel this process serves (a startup WARNING is logged). There is no per-channel opt-out; a channel `tls` block is rejected as an unknown field. |
 | `RELAY_OTLP_ENDPOINT` | unset | Optional OTLP/gRPC endpoint for metrics and traces. URL form (`http://host:4317`) is recommended; a bare `host:port` is also accepted. |
 | `RELAY_TELEMETRY_TRACES_ENABLED` | `false` | Opt-in OpenTelemetry traces over the forward pipeline. Requires `RELAY_OTLP_ENDPOINT` for export. |
 | `RELAY_PII_KEYRING` | unset | Inline keyring JSON. Prefer mounted files or managed secrets where available. |
@@ -231,11 +230,10 @@ The most common `RELAY_*` settings are:
 When `RELAY_BASIC_AUTH_ENABLED` is true, both `RELAY_BASIC_AUTH_USER` and
 `RELAY_BASIC_AUTH_PASS` must be configured or the relay refuses to start.
 
-Upstream TLS verification is a process-wide policy, not a per-channel one: one relay process uses one
-upstream connection pool with one TLS policy. If a single upstream presents a certificate you cannot
-verify, fix the certificate or move that channel into its own relay deployment with
-`RELAY_UPSTREAM_TLS_VERIFY=false` — never disable verification on a process that also serves channels
-you want verified.
+Upstream TLS server certificates are always verified and there is no setting that changes that: no
+per-channel field (a channel `tls` block is rejected as an unknown field) and no `RELAY_*` variable.
+If an upstream presents a certificate the relay cannot verify, fix it on the certificate side — obtain
+a certificate the relay's trust store accepts, or add the upstream's private CA to that trust store.
 
 ## Kubernetes Helm Deployment
 

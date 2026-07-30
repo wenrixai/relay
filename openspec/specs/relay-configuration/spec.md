@@ -92,27 +92,20 @@ the model but is NOT enforced by the request pipeline in this version.
 - **THEN** startup logs a WARNING naming the channel and stating external authorization is not
   enforced
 
-### Requirement: Relay-wide upstream TLS verification
-The relay SHALL support `RELAY_UPSTREAM_TLS_VERIFY` (`Settings.upstream_tls_verify`, default `true`)
-as the single process-wide upstream TLS policy. When `true`, upstream calls for every channel SHALL
-verify the upstream's TLS server certificate. When `false`, upstream calls for every channel SHALL
-skip TLS server certificate verification. The relay SHALL use exactly one upstream connection pool,
-built from this setting, and SHALL NOT select a pool per channel. Channel configuration SHALL NOT
-provide any TLS verification field; a channel `tls` block SHALL be rejected as an unknown field.
+### Requirement: Upstream TLS verification is mandatory
+The relay SHALL verify the upstream's TLS server certificate for every channel on every request, and
+SHALL NOT expose any configuration — per-channel field or `RELAY_*` setting — that disables or relaxes
+that verification. The relay SHALL use exactly one upstream connection pool and SHALL NOT select a
+pool per channel. Channel configuration SHALL NOT provide any TLS verification field; a channel `tls`
+block SHALL be rejected as an unknown field.
 
-#### Scenario: Default verifies TLS
-- **WHEN** `RELAY_UPSTREAM_TLS_VERIFY` is unset
-- **THEN** upstream requests for every channel verify the upstream TLS server certificate
+#### Scenario: Upstream certificates are always verified
+- **WHEN** the relay forwards a request for any configured channel over HTTPS
+- **THEN** the upstream's TLS server certificate is verified
 
-#### Scenario: Disabled applies to all channels
-- **WHEN** `RELAY_UPSTREAM_TLS_VERIFY` is `false`
-- **THEN** upstream requests for every configured channel skip TLS server certificate verification
-
-#### Scenario: Startup warns when verification is disabled
-- **WHEN** `RELAY_UPSTREAM_TLS_VERIFY` is `false`
-- **THEN** startup logs a WARNING stating that upstream TLS server certificate verification is
-  disabled for all channels
-- **AND** startup does not abort because of this setting alone
+#### Scenario: No opt-out setting exists
+- **WHEN** configuration is inspected for a way to skip upstream certificate verification
+- **THEN** no per-channel field and no `RELAY_*` setting provides one
 
 #### Scenario: Single upstream client
 - **WHEN** the relay forwards a request for any channel

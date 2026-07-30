@@ -129,7 +129,6 @@ def diagnostics_snapshot(request: Request) -> dict[str, Any]:
             "default_connect_timeout": settings.default_connect_timeout,
             "default_read_timeout": settings.default_read_timeout,
             "max_inspect_bytes": settings.max_inspect_bytes,
-            "upstream_tls_verify": settings.upstream_tls_verify,
             "telemetry_logs_enabled": settings.telemetry_logs_enabled,
             "telemetry_metrics_enabled": settings.telemetry_metrics_enabled,
             "otlp_endpoint_configured": settings.otlp_endpoint is not None,
