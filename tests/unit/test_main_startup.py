@@ -82,32 +82,25 @@ def test_no_warning_without_external_authorization() -> None:
     assert _capture_warnings(None) == ""
 
 
-def test_insecure_tls_channel_warns_at_startup() -> None:
-    config = RelayConfig.model_validate(
-        {
-            "channels": [
-                {"name": "tp", "type": "travelport", "tls": {"insecure_skip_verify": True}},
-            ]
-        }
-    )
+def test_disabled_upstream_tls_verification_warns_at_startup() -> None:
     sink = io.StringIO()
     sink_id = logger.add(sink, level="WARNING")
     try:
-        warn_insecure_tls_config(config)
+        warn_insecure_tls_config(Settings(upstream_tls_verify=False))
     finally:
         logger.remove(sink_id)
     output = sink.getvalue()
-    assert "tp" in output
     assert "TLS" in output
+    # The blast radius is the whole process, not one channel — the warning must say so.
+    assert "all channels" in output.lower()
+    assert "RELAY_UPSTREAM_TLS_VERIFY" in output
 
 
-def test_no_warning_without_insecure_tls_channel() -> None:
-    config = RelayConfig.model_validate({"channels": [{"name": "tf", "type": "travelfusion"}]})
+def test_no_warning_when_upstream_tls_verification_enabled() -> None:
     sink = io.StringIO()
     sink_id = logger.add(sink, level="WARNING")
     try:
-        warn_insecure_tls_config(config)
-        warn_insecure_tls_config(None)
+        warn_insecure_tls_config(Settings())
     finally:
         logger.remove(sink_id)
     assert sink.getvalue() == ""
@@ -216,8 +209,8 @@ async def test_build_http_client_defaults_to_verifying_tls() -> None:
         await client.aclose()
 
 
-async def test_build_http_client_verify_false_disables_tls_verification() -> None:
-    client = build_http_client(Settings(), verify=False)
+async def test_build_http_client_relay_wide_toggle_disables_tls_verification() -> None:
+    client = build_http_client(Settings(upstream_tls_verify=False))
     try:
         assert (
             client._transport_for_url(httpx.URL("https://example.test"))._pool._ssl_context.verify_mode.name
