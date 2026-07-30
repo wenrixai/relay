@@ -18,6 +18,8 @@ from channel_relay.config.models import ChannelConfig, ChannelType, RelayConfig
 from channel_relay.main import create_app
 from channel_relay.pii.xml_ops import parse_bytes
 
+# Synthetic test vector, not a credential: the assertion recomputes the emitted digest from the
+# emitted Nonce/Created, so it needs the plaintext input. Snyk Code CWE-798 exclusion: see `.snyk`.
 _PASSWORD = "S3cret!"
 _REQUEST = (
     b'<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"'

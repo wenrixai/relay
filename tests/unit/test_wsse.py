@@ -1,4 +1,9 @@
-"""WS-Security UsernameToken builder (fix #4)."""
+"""WS-Security UsernameToken builder (fix #4).
+
+`_PASSWORD` is the input half of a fixed password-digest test vector, not a credential — the test
+asserts `password_digest()` reproduces `_EXPECTED_DIGEST` for a known nonce/created pair. Snyk Code
+flags it as CWE-798; the justification and exclusion live in `.snyk`.
+"""
 
 from __future__ import annotations
 
