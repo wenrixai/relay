@@ -18,6 +18,11 @@ output "log_group" {
   value       = aws_cloudwatch_log_group.this.name
 }
 
+output "kms_key_arn" {
+  description = "KMS key encrypting the relay's secrets and log group. Null when the AWS-managed keys are in use."
+  value       = local.kms_key_arn
+}
+
 output "pii_keyring_secret_arn" {
   description = "Secrets Manager ARN holding the PII keyring."
   value       = aws_secretsmanager_secret.pii_keyring.arn

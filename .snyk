@@ -1,4 +1,4 @@
-# Snyk policy file — https://docs.snyk.io/manage-risk/policies/the-.snyk-file
+# Snyk policy file — https://docs.snyk.io/manage-risk/policies
 # Honoured by the Snyk CLI and by SCM (GitHub) integrations.
 version: v1.25.0
 
@@ -28,3 +28,55 @@ exclude:
     - tests/deployment/test_helm_chart.py
     - tests/e2e/test_transparency.py
     - tests/fixtures/**
+
+# Snyk IaC ignores for the two self-hosting deployment templates.
+#
+# Every other IaC finding on these templates was fixed rather than suppressed (customer-managed
+# KMS key for the secrets and log group, MapPublicIpOnLaunch disabled, ALB egress narrowed to the
+# task security group). The two below are deliberate properties of the relay's topology.
+#
+# Paths are scoped per file rather than to an exact resource path: the exact-path syntax is
+# brittle across template edits, and these two files are the only IaC in the repo. Re-check both
+# ignores if another load balancer or security group is ever added to either template.
+ignore:
+  # The relay is reached by the Wenrix client from outside the operator's VPC, so the ALB is
+  # internet-facing by default. Exposure is bounded at the security group: ingress is restricted
+  # to WenrixIngressCidr / wenrix_ingress_cidrs, the listener is HTTPS-only on TLS 1.2+, and the
+  # relay itself requires basic auth. Operators fronting the relay with a VPN, Direct Connect, or
+  # PrivateLink can set LoadBalancerScheme=internal / internal_lb=true instead.
+  SNYK-CC-00291:
+    - 'deployment/cloudformation/wenrix-relay.yaml > *':
+        reason: >-
+          Internet-facing is the intended default; the relay is called by an external Wenrix
+          client. Ingress is restricted to WenrixIngressCidr and the LoadBalancerScheme parameter
+          exists for private-fronted deployments.
+        created: 2026-07-30T00:00:00.000Z
+        expires: 2027-07-30T00:00:00.000Z
+    - 'deployment/terraform/main.tf > *':
+        reason: >-
+          Internet-facing is the intended default; the relay is called by an external Wenrix
+          client. Ingress is restricted to wenrix_ingress_cidrs and the internal_lb variable
+          exists for private-fronted deployments.
+        created: 2026-07-30T00:00:00.000Z
+        expires: 2027-07-30T00:00:00.000Z
+
+  # Only the task security group still has open egress. The relay dials supplier channels
+  # (Sabre, Amadeus, Travelport, Travelfusion, Farelogix, BA/LA NDC) whose endpoints are
+  # operator-configured in relay.json and therefore unknowable at deploy time, plus an optional
+  # OTLP collector and DNS. The tasks are unreachable from outside: private subnets, no public
+  # IP, and ingress restricted to the ALB security group.
+  SNYK-CC-00262:
+    - 'deployment/cloudformation/wenrix-relay.yaml > *':
+        reason: >-
+          Relay tasks egress to operator-configured supplier channels that are not knowable at
+          deploy time. Tasks run in private subnets with no public IP and accept ingress only
+          from the ALB security group.
+        created: 2026-07-30T00:00:00.000Z
+        expires: 2027-07-30T00:00:00.000Z
+    - 'deployment/terraform/main.tf > *':
+        reason: >-
+          Relay tasks egress to operator-configured supplier channels that are not knowable at
+          deploy time. Tasks run in private subnets with assign_public_ip = false and accept
+          ingress only from the ALB security group.
+        created: 2026-07-30T00:00:00.000Z
+        expires: 2027-07-30T00:00:00.000Z
