@@ -46,15 +46,21 @@ resource "aws_security_group" "alb" {
     cidr_blocks = var.wenrix_ingress_cidrs
   }
 
-  egress {
-    description = "To relay tasks"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # Egress is declared as a standalone rule below so it can reference the task security
+  # group without creating a dependency cycle between the two SG resources. Omitting the
+  # block here makes Terraform revoke the AWS default allow-all egress rule.
 
   tags = { Name = "${var.name}-alb" }
+}
+
+# The ALB only ever talks to the relay tasks, so scope its egress to exactly that.
+resource "aws_vpc_security_group_egress_rule" "alb_to_task" {
+  description                  = "To relay tasks"
+  security_group_id            = aws_security_group.alb.id
+  referenced_security_group_id = aws_security_group.task.id
+  ip_protocol                  = "tcp"
+  from_port                    = var.container_port
+  to_port                      = var.container_port
 }
 
 resource "aws_security_group" "task" {
@@ -70,6 +76,12 @@ resource "aws_security_group" "task" {
     security_groups = [aws_security_group.alb.id]
   }
 
+  # Deliberately open egress (suppressed in /.snyk): the relay dials supplier channels
+  # (Sabre, Amadeus, Travelport, Travelfusion, Farelogix, BA/LA NDC) whose endpoints are
+  # operator-configured in relay.json and unknowable at deploy time, plus the OTLP
+  # collector and DNS. Narrow this to your channels' egress CIDRs if you know them.
+  # Tasks are unreachable from outside: private subnets, assign_public_ip = false, and
+  # ingress restricted to the ALB security group.
   egress {
     description = "Upstream channels, telemetry, DNS"
     from_port   = 0
@@ -83,10 +95,14 @@ resource "aws_security_group" "task" {
 
 # --- Load balancer ----------------------------------------------------------
 
+# Internet-facing by default (suppressed in /.snyk): the relay is reached by the Wenrix
+# client from outside the operator's VPC. Ingress is restricted to wenrix_ingress_cidrs on
+# the ALB security group. Set internal_lb = true for VPN/Direct Connect/PrivateLink-fronted
+# deployments and pass private subnet IDs in public_subnet_ids.
 resource "aws_lb" "this" {
   name               = var.name
   load_balancer_type = "application"
-  internal           = false
+  internal           = var.internal_lb
   security_groups    = [aws_security_group.alb.id]
   subnets            = var.public_subnet_ids
 
@@ -151,12 +167,88 @@ resource "aws_lb_listener_rule" "context_path" {
   }
 }
 
+# --- Encryption -------------------------------------------------------------
+
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+# The log group ARN is built as a string rather than referenced from the resource: the log
+# group depends on the key, so referencing it back inside the key policy would be a cycle.
+locals {
+  log_group_name = "/ecs/${var.name}"
+  log_group_arn  = "arn:${data.aws_partition.current.partition}:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:${local.log_group_name}"
+
+  create_kms_key = var.create_kms_key && var.kms_key_arn == ""
+  # null (not "") so the argument is omitted entirely and AWS falls back to its managed key.
+  kms_key_arn = var.kms_key_arn != "" ? var.kms_key_arn : (local.create_kms_key ? aws_kms_key.this[0].arn : null)
+}
+
+data "aws_iam_policy_document" "kms" {
+  count = local.create_kms_key ? 1 : 0
+
+  # Without this the key is unmanageable: IAM policies in the account cannot grant access
+  # to a key whose own policy does not delegate to the account root.
+  statement {
+    sid       = "AllowAccountAdministration"
+    actions   = ["kms:*"]
+    resources = ["*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+
+  # CloudWatch Logs encrypts on the service's own behalf, so it needs a direct grant.
+  # Scoped by encryption context to this relay's log group only.
+  statement {
+    sid = "AllowCloudWatchLogs"
+    actions = [
+      "kms:Encrypt*",
+      "kms:Decrypt*",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:Describe*",
+    ]
+    resources = ["*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["logs.${var.region}.amazonaws.com"]
+    }
+
+    condition {
+      test     = "ArnEquals"
+      variable = "kms:EncryptionContext:aws:logs:arn"
+      values   = [local.log_group_arn]
+    }
+  }
+}
+
+resource "aws_kms_key" "this" {
+  count = local.create_kms_key ? 1 : 0
+
+  description             = "Encrypts the Wenrix relay's Secrets Manager secrets and CloudWatch logs."
+  enable_key_rotation     = true
+  deletion_window_in_days = 30
+  policy                  = data.aws_iam_policy_document.kms[0].json
+}
+
+resource "aws_kms_alias" "this" {
+  count = local.create_kms_key ? 1 : 0
+
+  name          = "alias/${var.name}"
+  target_key_id = aws_kms_key.this[0].key_id
+}
+
 # --- Secrets ----------------------------------------------------------------
 
 resource "aws_secretsmanager_secret" "pii_keyring" {
   name                    = "${var.name}/pii-keyring"
   description             = "PII master keyring for the Wenrix relay. Never regenerate while tokens are outstanding."
   recovery_window_in_days = 30
+  kms_key_id              = local.kms_key_arn
 }
 
 resource "aws_secretsmanager_secret_version" "pii_keyring" {
@@ -170,6 +262,7 @@ resource "aws_secretsmanager_secret" "basic_auth" {
   name                    = "${var.name}/basic-auth"
   description             = "Relay basic-auth credentials. Never regenerate while clients depend on the current password."
   recovery_window_in_days = 30
+  kms_key_id              = local.kms_key_arn
 }
 
 resource "aws_secretsmanager_secret_version" "basic_auth" {
@@ -184,8 +277,9 @@ resource "aws_secretsmanager_secret_version" "basic_auth" {
 # --- Logging ----------------------------------------------------------------
 
 resource "aws_cloudwatch_log_group" "this" {
-  name              = "/ecs/${var.name}"
+  name              = local.log_group_name
   retention_in_days = var.log_retention_days
+  kms_key_id        = local.kms_key_arn
 }
 
 # --- IAM --------------------------------------------------------------------
@@ -220,6 +314,23 @@ data "aws_iam_policy_document" "secret_read" {
       var.basic_auth_enabled ? [aws_secretsmanager_secret.basic_auth[0].arn] : [],
       var.ghcr_credentials_secret_arn != "" ? [var.ghcr_credentials_secret_arn] : [],
     )
+  }
+
+  # Secrets encrypted with a CMK are unreadable without decrypt permission on the key
+  # itself. Omitted when the AWS-managed key is in use, which needs no explicit grant.
+  dynamic "statement" {
+    for_each = local.kms_key_arn == null ? [] : [local.kms_key_arn]
+
+    content {
+      actions   = ["kms:Decrypt"]
+      resources = [statement.value]
+
+      condition {
+        test     = "StringEquals"
+        variable = "kms:ViaService"
+        values   = ["secretsmanager.${var.region}.amazonaws.com"]
+      }
+    }
   }
 }
 

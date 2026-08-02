@@ -51,6 +51,24 @@ repos:
     hooks:
       - id: hadolint
 
+  # CloudFormation template linting. Pure Python, so pre-commit installs it into its own
+  # environment — no AWS credentials and no local binary needed.
+  - repo: https://github.com/aws-cloudformation/cfn-lint
+    rev: v1.53.3
+    hooks:
+      - id: cfn-lint
+        files: ^deployment/cloudformation/.*\.(yaml|yml|json)$
+
+  # Terraform module formatting and validation. Both hooks shell out to the `terraform`
+  # binary, so they need it on PATH. `validate` is run with -backend=false (see args) to stay
+  # offline — no remote state and no AWS credentials.
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.108.1
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_validate
+        args: [--init-args=-backend=false]
+
   # mypy and pylint run against the local synced environment so they see deps.
   - repo: local
     hooks:

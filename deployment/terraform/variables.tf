@@ -96,6 +96,24 @@ variable "certificate_arn" {
   type        = string
 }
 
+variable "internal_lb" {
+  description = "Place the ALB on an internal (VPC-only) scheme instead of internet-facing. Use for deployments fronted by a VPN, Direct Connect, or PrivateLink. When true, pass private subnet IDs in public_subnet_ids."
+  type        = bool
+  default     = false
+}
+
+variable "create_kms_key" {
+  description = "Create a customer-managed KMS key for the relay's Secrets Manager secrets and CloudWatch log group. Ignored when kms_key_arn is set. Set both to false/empty to fall back to the AWS-managed keys. A CMK costs roughly $1/month."
+  type        = bool
+  default     = true
+}
+
+variable "kms_key_arn" {
+  description = "ARN of an existing customer-managed KMS key to encrypt the relay's secrets and log group. When set, no key is created. The key policy must allow logs.<region>.amazonaws.com to encrypt log data."
+  type        = string
+  default     = ""
+}
+
 variable "relay_config_json" {
   description = "Channel configuration JSON (no secrets), written to the config file at startup."
   type        = string

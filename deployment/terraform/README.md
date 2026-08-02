@@ -30,9 +30,37 @@ terraform apply
 - Tasks run in **private subnets** (egress via NAT), non-root (`user = "100"`) with a **read-only
   root filesystem** (writable `/tmp` volume only).
 - ALB ingress is limited to `wenrix_ingress_cidrs`; the task security group accepts traffic **only
-  from the ALB** security group.
+  from the ALB** security group, and the ALB egresses **only to the task security group** on
+  `container_port`.
 - PII keyring lives in **Secrets Manager**; the ECS execution role can read **only that secret**.
 - HTTPS listener uses a TLS 1.3 policy; ALB drops invalid header fields.
+- Secrets and the log group are encrypted with a **customer-managed KMS key** (see below).
+
+### Encryption at rest
+
+By default the module creates a customer-managed KMS key (`alias/<name>`) with automatic rotation
+enabled, and uses it for both Secrets Manager secrets and the CloudWatch log group. The key policy
+delegates administration to the account root and grants `logs.<region>.amazonaws.com` encrypt
+access scoped by encryption context to this relay's log group only. The execution role gets
+`kms:Decrypt` restricted to `kms:ViaService = secretsmanager.<region>.amazonaws.com`.
+
+- `kms_key_arn` — reuse an existing key instead. Its policy must grant CloudWatch Logs the same
+  access, or the log group will fail to create.
+- `create_kms_key = false` (with an empty `kms_key_arn`) — fall back to the AWS-managed keys.
+
+A customer-managed key costs roughly $1/month plus request charges.
+
+### Load balancer exposure
+
+The ALB is **internet-facing by default** (`internal_lb = false`): the Wenrix client calls it from
+outside the operator's VPC. Exposure is bounded by the security group (`wenrix_ingress_cidrs`), the
+HTTPS-only listener, and the relay's own basic auth. Set `internal_lb = true` for deployments
+fronted by a VPN, Direct Connect, or PrivateLink, and pass private subnet IDs in
+`public_subnet_ids`.
+
+The **task** security group keeps open egress: the relay dials supplier channels whose endpoints
+are operator-configured in `relay.json` and unknowable at deploy time. Narrow it to your channels'
+CIDRs if you know them. Both of these are recorded as scanner ignores in the repo's `/.snyk`.
 
 ## Channel config & secrets
 

@@ -53,6 +53,35 @@ aws secretsmanager put-secret-value \
   via ECS `Secrets` (never a plaintext environment variable).
 - The execution role's `read-relay-secrets` inline policy grants `secretsmanager:GetSecretValue` on
   only the PII keyring secret, plus the basic-auth secret when `BasicAuthEnabled=true`.
+- Public subnets do **not** auto-assign public IPs; only the ALB and NAT gateway live there.
+- The ALB SG egresses **only to the task SG** on `ContainerPort`.
+
+### Encryption at rest
+
+By default the stack creates a customer-managed KMS key (`alias/<stack-name>`) with rotation
+enabled and uses it for both Secrets Manager secrets and the CloudWatch log group. Like the PII
+keyring secret, the key is `Retain`-on-delete — deleting the stack must never leave the keyring
+undecryptable. The key policy delegates administration to the account root and grants
+`logs.<region>.amazonaws.com` encrypt access scoped by encryption context to this stack's log group.
+The execution role gets a separate `decrypt-relay-secrets` policy with `kms:Decrypt` restricted to
+`kms:ViaService = secretsmanager.<region>.amazonaws.com`.
+
+- `KmsKeyArn` — reuse an existing key instead. Its policy must grant CloudWatch Logs the same
+  access, or the log group will fail to create.
+- `CreateKmsKey=false` (with an empty `KmsKeyArn`) — fall back to the AWS-managed keys.
+
+A customer-managed key costs roughly $1/month plus request charges.
+
+### Load balancer exposure
+
+`LoadBalancerScheme` defaults to `internet-facing`: the Wenrix client calls the relay from outside
+this VPC. Exposure is bounded by `WenrixIngressCidr`, the HTTPS-only listener, and the relay's own
+basic auth. Set it to `internal` for deployments fronted by a VPN, Direct Connect, or PrivateLink —
+the ALB then moves to the private subnets automatically.
+
+The **task** security group keeps open egress: the relay dials supplier channels whose endpoints are
+operator-configured in `RelayConfigJson` and unknowable at deploy time. Narrow it to your channels'
+CIDRs if you know them. Both of these are recorded as scanner ignores in the repo's `/.snyk`.
 
 ## Single-NAT caveat
 
@@ -83,4 +112,7 @@ aws cloudformation validate-template --template-body file://deployment/cloudform
 
 Parameters mirror the Terraform variables (`ImageUri`, `WenrixIngressCidr`, `CertificateArn`,
 `RelayConfigJson`, `BasicAuthEnabled`, `BasicAuthUser`, `BasicAuthPass`,
-`DesiredCount`, `Min/MaxCapacity`, `VpcCidr`, …).
+`DesiredCount`, `Min/MaxCapacity`, `VpcCidr`, `LoadBalancerScheme`, `CreateKmsKey`, `KmsKeyArn`, …).
+
+`tests/deployment/test_iac_templates.py` asserts the hardened defaults of both this template and
+the Terraform module; it needs no AWS credentials and runs in the normal suite.

@@ -10,6 +10,18 @@ private_subnet_ids  = ["subnet-0ccc3333", "subnet-0ddd4444"]
 # Restrict ALB ingress to the Wenrix client source — never 0.0.0.0/0.
 wenrix_ingress_cidrs = ["203.0.113.0/24"]
 
+# ALB scheme. Default (false) is internet-facing, for a Wenrix client outside this VPC. Set true
+# only when the relay is fronted by a VPN / Direct Connect / PrivateLink — and then pass private
+# subnet IDs in public_subnet_ids above.
+# internal_lb = false
+
+# Encryption of the relay's Secrets Manager secrets and CloudWatch log group. By default the
+# module creates a customer-managed KMS key with rotation enabled (~$1/month). Point kms_key_arn
+# at an existing key to reuse it, or set create_kms_key = false with an empty kms_key_arn to fall
+# back to the AWS-managed keys.
+# create_kms_key = true
+# kms_key_arn    = "arn:aws:kms:eu-west-1:111122223333:key/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
 # ACM certificate for the HTTPS listener (must be in var.region).
 certificate_arn = "arn:aws:acm:eu-west-1:111122223333:certificate/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
