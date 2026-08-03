@@ -34,6 +34,14 @@ only), `PassengerDetailsRS` (status-only acknowledgment — passenger data is in
 - **WHEN** a `RefundRS`, `eTicketCouponRS`, or `Trip_SearchRS` response carries passenger names
 - **THEN** those names are redacted per the rule's action and no plaintext name is forwarded
 
+#### Scenario: Travel-document rules span every operation embedding the reservation
+- **WHEN** a `Trip_SearchRS` embeds a whole `stl19:GetReservationRS` element, so its APIS
+  travel-document block is the same shape `GetReservationRS` carries
+- **THEN** the travel-document rules (number, expiry, nationality / country of issue, DOCS name
+  fields, date of birth, gender, DOCS/DOCO free text, in both the `stl19` entry and the `or114`
+  history mirror) select on an operation alternation covering both operations rather than being
+  duplicated per operation — a thinner per-operation copy drifts and leaks the fields it omits
+
 #### Scenario: Uncovered operation forwarded with coverage metric
 - **WHEN** a Sabre response carries an operation with no baseline rules
 - **THEN** the relay forwards the body unchanged and emits `pii_uncovered_operation_total{channel,
@@ -66,15 +74,19 @@ For `GetReservationRS` the baseline SHALL redact: email addresses
 (`stl19:PhoneNumber/stl19:Number`, mask), postal address lines
 (`stl19:AddressLine/stl19:Text`, mask), APIS DOCS entries (`stl19:DOCSEntry` children:
 `Surname`, `Forename`, `MiddleName` — mask, pii type `person`; `DateOfBirth` — `replace` with the
-fixed schema-valid sentinel date `1901-01-01`, pii type `dob`; `Gender` — `replace` with the fixed
+fixed schema-valid sentinel date `1900-01-01`, pii type `dob`; `Gender` — `replace` with the fixed
 valid code `M`, pii type `gender`), DOCO free text (`stl19:DOCOEntry/stl19:FreeText`, mask, pii type
 `visa`), and frequent-flyer numbers (`stl19:FrequentFlyer/stl19:Number`, encrypt). `DateOfBirth` and
 `Gender` are typed fields the caller parses (ISO date / enum code), so their redacted output SHALL
 remain schema-valid rather than a `*`-masked string that breaks parsing.
 
+The date-of-birth sentinel SHALL be `1900-01-01` (`01JAN1900` in the `or114` history mirror, whose
+native format is `DDMMMYYYY`), and SHALL read as unmistakably synthetic: a plausible human date of
+birth is reported as an unredacted leak by reviewers even when the real value is gone.
+
 #### Scenario: DOB replaced with a valid sentinel date
 - **WHEN** a `DOCSEntry` carries `DateOfBirth` `1994-07-01`
-- **THEN** the value is replaced with `1901-01-01` (no `ENC_` token; not reversible) and parses as an
+- **THEN** the value is replaced with `1900-01-01` (no `ENC_` token; not reversible) and parses as an
   ISO date
 
 #### Scenario: Gender replaced with a valid code

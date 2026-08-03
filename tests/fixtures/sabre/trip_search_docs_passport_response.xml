@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+<soap-env:Header>
+    <eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0" soap-env:mustUnderstand="1">
+        <eb:From>
+            <eb:PartyId eb:type="URI">123123</eb:PartyId>
+        </eb:From>
+        <eb:To>
+            <eb:PartyId eb:type="URI">999999</eb:PartyId>
+        </eb:To>
+        <eb:CPAId>J9JF</eb:CPAId>
+        <eb:Service>Trip_SearchRQ</eb:Service>
+        <eb:Action>Trip_SearchRQ</eb:Action>
+        <eb:MessageData>
+            <eb:MessageId>3738045286322200391</eb:MessageId>
+            <eb:Timestamp>2024-05-15T07:57:12</eb:Timestamp>
+        </eb:MessageData>
+    </eb:MessageHeader>
+</soap-env:Header>
+<soap-env:Body>
+    <Trip_SearchRS xmlns="http://webservices.sabre.com/triprecord" TimeStamp="2024-05-15T02:57:12" Target="Production" Version="4.5.0">
+        <Success>Success</Success>
+        <ReservationsList NumberResults="1" NumberPages="1" TotalResults="1">
+            <Reservations>
+                <Reservation Locator="TSTDOC" PastDate="false">
+                    <stl19:GetReservationRS xmlns:stl19="http://webservices.sabre.com/pnrbuilder/v1_19" xmlns:or114="http://services.sabre.com/res/or/v1_14" Version="1.19.0">
+                        <stl19:Reservation NumberInSegment="1" numberInParty="1" numberOfInfants="0">
+                            <stl19:BookingDetails>
+                                <stl19:RecordLocator>TSTDOC</stl19:RecordLocator>
+                                <stl19:CreationTimestamp>2023-06-20T00:50:00</stl19:CreationTimestamp>
+                            </stl19:BookingDetails>
+                            <stl19:PassengerReservation>
+                                <stl19:Passengers>
+                                    <stl19:Passenger elementId="pnr-3.1" id="3" nameId="01.01" nameType="S" passengerType="ADT">
+                                        <stl19:LastName>TESTER</stl19:LastName>
+                                        <stl19:FirstName>ANNA</stl19:FirstName>
+                                        <stl19:SpecialRequests>
+                                            <stl19:APISRequest>
+                                                <stl19:DOCSEntry id="56" type="G">
+                                                    <stl19:DocumentType>PP</stl19:DocumentType>
+                                                    <stl19:CountryOfIssue>PH</stl19:CountryOfIssue>
+                                                    <stl19:DocumentNumber>TT00TEST1</stl19:DocumentNumber>
+                                                    <stl19:DocumentNationalityCountry>PH</stl19:DocumentNationalityCountry>
+                                                    <stl19:DateOfBirth>1988-03-14</stl19:DateOfBirth>
+                                                    <stl19:Gender>F</stl19:Gender>
+                                                    <stl19:DocumentExpirationDate>2033-04-04</stl19:DocumentExpirationDate>
+                                                    <stl19:Surname>TESTER</stl19:Surname>
+                                                    <stl19:Forename>ANNA</stl19:Forename>
+                                                    <stl19:MiddleName/>
+                                                    <stl19:PrimaryHolder>false</stl19:PrimaryHolder>
+                                                    <stl19:FreeText/>
+                                                    <stl19:ActionCode>HK</stl19:ActionCode>
+                                                    <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                    <stl19:VendorCode>EK</stl19:VendorCode>
+                                                </stl19:DOCSEntry>
+                                            </stl19:APISRequest>
+                                            <stl19:APISRequest>
+                                                <stl19:DOCOEntry id="57" type="G">
+                                                    <stl19:FreeText>DOCO EK HK1//V/TT00TEST1/PH/14MAR1988/PH</stl19:FreeText>
+                                                    <stl19:ActionCode>HK</stl19:ActionCode>
+                                                    <stl19:NumberInParty>1</stl19:NumberInParty>
+                                                </stl19:DOCOEntry>
+                                            </stl19:APISRequest>
+                                        </stl19:SpecialRequests>
+                                    </stl19:Passenger>
+                                </stl19:Passengers>
+                            </stl19:PassengerReservation>
+                            <stl19:History>
+                                <or114:ServiceRequest actionCode="HK" airlineCode="EK" code="DOCS" serviceCount="1" serviceType="SSR" ssrType="GFX">
+                                    <or114:FreeText>DOCS EK HK1/P/PH/TT00TEST1/PH/14MAR1988/F/04APR2033/TESTER/ANNA</or114:FreeText>
+                                    <or114:FullText>SSR DOCS EK HK1/P/PH/TT00TEST1/PH/14MAR1988/F/04APR2033/TESTER/ANNA</or114:FullText>
+                                    <or114:TravelDocument>
+                                        <or114:Type>PP</or114:Type>
+                                        <or114:DocumentIssueCountry>PH</or114:DocumentIssueCountry>
+                                        <or114:DocumentNumber>TT00TEST1</or114:DocumentNumber>
+                                        <or114:DocumentNationalityCountry>PH</or114:DocumentNationalityCountry>
+                                        <or114:DocumentExpirationDate>04APR2033</or114:DocumentExpirationDate>
+                                        <or114:DateOfBirth>14MAR1988</or114:DateOfBirth>
+                                        <or114:Gender>F</or114:Gender>
+                                        <or114:LastName>TESTER</or114:LastName>
+                                        <or114:FirstName>ANNA</or114:FirstName>
+                                        <or114:Infant>false</or114:Infant>
+                                        <or114:PrimaryDocHolderInd>false</or114:PrimaryDocHolderInd>
+                                        <or114:HasDocumentData>true</or114:HasDocumentData>
+                                    </or114:TravelDocument>
+                                </or114:ServiceRequest>
+                                <or114:OtherSupplementaryInformation>
+                                    <or114:DocumentNumber>TT00TEST1</or114:DocumentNumber>
+                                </or114:OtherSupplementaryInformation>
+                            </stl19:History>
+                        </stl19:Reservation>
+                    </stl19:GetReservationRS>
+                </Reservation>
+            </Reservations>
+        </ReservationsList>
+    </Trip_SearchRS>
+</soap-env:Body>
+</soap-env:Envelope>

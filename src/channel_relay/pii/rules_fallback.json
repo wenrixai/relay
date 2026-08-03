@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-baseline-2026-07-29",
+  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-baseline-2026-08-03",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -397,31 +397,31 @@
     {
       "id": "sabre.res.docs_dob",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|Trip_SearchRS)$",
       "path": "//s19:DOCSEntry/s19:DateOfBirth",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "dob",
       "method": "replace",
-      "replacement": "1901-01-01"
+      "replacement": "1900-01-01"
     },
     {
       "id": "sabre.res.docs_dob_history",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|Trip_SearchRS)$",
       "path": "//o14:TravelDocument/o14:DateOfBirth",
       "namespaces": {
         "o14": "http://services.sabre.com/res/or/v1_14"
       },
       "pii_type": "dob",
       "method": "replace",
-      "replacement": "01JAN1901"
+      "replacement": "01JAN1900"
     },
     {
       "id": "sabre.res.docs_gender",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|Trip_SearchRS)$",
       "path": "//s19:DOCSEntry/s19:Gender | //o14:TravelDocument/o14:Gender",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -434,7 +434,7 @@
     {
       "id": "sabre.res.docs_name",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|Trip_SearchRS)$",
       "path": "//s19:DOCSEntry/s19:Surname | //s19:DOCSEntry/s19:Forename | //s19:DOCSEntry/s19:MiddleName | //o14:TravelDocument/o14:LastName | //o14:TravelDocument/o14:FirstName",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -446,7 +446,7 @@
     {
       "id": "sabre.res.doc_freetext",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|Trip_SearchRS)$",
       "path": "//s19:DOCOEntry/s19:FreeText | //s19:DOCSEntry/s19:FreeText | //o14:ServiceRequest[@code='DOCS' or @code='DOCO' or @code='DOCA']/o14:FreeText | //o14:ServiceRequest[@code='DOCS' or @code='DOCO' or @code='DOCA']/o14:FullText",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -458,7 +458,7 @@
     {
       "id": "sabre.res.travel_document_number",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|Trip_SearchRS)$",
       "path": "//o14:OtherSupplementaryInformation/o14:DocumentNumber | //s19:DOCSEntry/s19:DocumentNumber | //o14:TravelDocument/o14:DocumentNumber",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -470,7 +470,7 @@
     {
       "id": "sabre.res.docs_expiry",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|Trip_SearchRS)$",
       "path": "//s19:DOCSEntry/s19:DocumentExpirationDate",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -482,7 +482,7 @@
     {
       "id": "sabre.res.docs_expiry_history",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|Trip_SearchRS)$",
       "path": "//o14:TravelDocument/o14:DocumentExpirationDate",
       "namespaces": {
         "o14": "http://services.sabre.com/res/or/v1_14"
@@ -494,7 +494,7 @@
     {
       "id": "sabre.res.docs_nationality",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|Trip_SearchRS)$",
       "path": "//s19:DOCSEntry/s19:CountryOfIssue | //s19:DOCSEntry/s19:DocumentNationalityCountry | //o14:TravelDocument/o14:DocumentIssueCountry | //o14:TravelDocument/o14:DocumentNationalityCountry",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -580,7 +580,7 @@
       "method": "encrypt",
       "extract_patterns": [
         {
-          "pattern": "([A-Za-z0-9._%+-]+(?:@|¤|//)[A-Za-z0-9_%¤-]+(?:[.¤][A-Za-z0-9-]{2,})+)"
+          "pattern": "([A-Za-z0-9._%+-]+(?:@|\u00a4|//)[A-Za-z0-9_%\u00a4-]+(?:[.\u00a4][A-Za-z0-9-]{2,})+)"
         }
       ]
     },
@@ -613,7 +613,7 @@
       "method": "encrypt",
       "extract_patterns": [
         {
-          "pattern": "([A-Za-z0-9._%+-]+(?:@|¤|//)[A-Za-z0-9_%¤-]+(?:[.¤][A-Za-z0-9-]{2,})+)"
+          "pattern": "([A-Za-z0-9._%+-]+(?:@|\u00a4|//)[A-Za-z0-9_%\u00a4-]+(?:[.\u00a4][A-Za-z0-9-]{2,})+)"
         }
       ]
     },
@@ -1223,41 +1223,6 @@
       "method": "encrypt"
     },
     {
-      "id": "sabre.trip.docs_name",
-      "channel": "sabre",
-      "operation": "^Trip_SearchRS$",
-      "path": "//stl19:DOCSEntry/stl19:Surname | //stl19:DOCSEntry/stl19:Forename | //stl19:DOCSEntry/stl19:MiddleName",
-      "namespaces": {
-        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
-      },
-      "pii_type": "person",
-      "method": "mask"
-    },
-    {
-      "id": "sabre.trip.docs_dob",
-      "channel": "sabre",
-      "operation": "^Trip_SearchRS$",
-      "path": "//stl19:DOCSEntry/stl19:DateOfBirth",
-      "namespaces": {
-        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
-      },
-      "pii_type": "dob",
-      "method": "replace",
-      "replacement": "1901-01-01"
-    },
-    {
-      "id": "sabre.trip.docs_gender",
-      "channel": "sabre",
-      "operation": "^Trip_SearchRS$",
-      "path": "//stl19:DOCSEntry/stl19:Gender",
-      "namespaces": {
-        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
-      },
-      "pii_type": "gender",
-      "method": "replace",
-      "replacement": "M"
-    },
-    {
       "id": "sabre.trip.phone",
       "channel": "sabre",
       "operation": "^Trip_SearchRS$",
@@ -1439,7 +1404,8 @@
       "operation": ".*Rsp$",
       "path": "//*[local-name()='BookingTraveler']/@Gender",
       "pii_type": "gender",
-      "method": "remove"
+      "method": "replace",
+      "replacement": "M"
     },
     {
       "id": "travelport.core.frequent_flyer",
@@ -1635,7 +1601,8 @@
       "operation": "^XXTransactionResponse$",
       "path": "//Individual/Gender",
       "pii_type": "gender",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "M"
     },
     {
       "id": "farelogix.pax.dob",
@@ -1644,7 +1611,7 @@
       "path": "//Passenger/Birthdate | //Individual/Birthdate",
       "pii_type": "dob",
       "method": "replace",
-      "replacement": "1901-01-01"
+      "replacement": "1900-01-01"
     },
     {
       "id": "farelogix.doc.number",

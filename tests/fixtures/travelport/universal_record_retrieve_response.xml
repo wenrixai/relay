@@ -5,7 +5,7 @@
   <soap:Body>
     <universal:UniversalRecordRetrieveRsp TraceId="TEST-TRACE-0001" TransactionId="TEST-TRANSACTION-0001">
       <universal:UniversalRecord LocatorCode="TESTAA" Version="1" Status="Active">
-        <common:BookingTraveler Key="TEST-KEY-0001" NameNumber="1.1" TravelerType="ADT" DOB="1980-01-15" Gender="M">
+        <common:BookingTraveler Key="TEST-KEY-0001" NameNumber="1.1" TravelerType="ADT" DOB="1980-01-15" Gender="F">
           <common:BookingTravelerName First="JOHN" Last="SMITH"/>
           <common:PhoneNumber Key="TEST-KEY-0002" Type="None" Number="14155550100">
             <common:ProviderReservationInfoRef Key="TEST-KEY-0003"/>

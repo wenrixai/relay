@@ -43,8 +43,8 @@ out-of-format sentinel reads to a reviewer as unredacted live data.
 
 #### Scenario: History-mirror date of birth keeps its native format
 - **WHEN** `or114:TravelDocument/DateOfBirth` carries `01JAN1990`
-- **THEN** the value is replaced with `01JAN1901`, not with an ISO date
+- **THEN** the value is replaced with `01JAN1900`, not with an ISO date
 
 #### Scenario: Structured date of birth stays ISO
 - **WHEN** `stl19:DOCSEntry/DateOfBirth` carries `1990-01-01`
-- **THEN** the value is replaced with `1901-01-01`
+- **THEN** the value is replaced with `1900-01-01`

@@ -67,7 +67,7 @@ def test_universal_record_redacts_every_pii_surface(baked_ruleset: RuleSet, pii_
         b"************1234",
         b"2030-12",
         b"1980-01-15",
-        b'Gender="M"',
+        b'Gender="F"',
         b"1/US/123456789/US/15JAN80/M/01JAN30/SMITH/JOHN",
         b"1/123456789/US/15JAN80/M",
         b"USHK1/NI123456789-001.01",
@@ -111,7 +111,9 @@ def test_dob_and_gender_are_type_valid_after_redaction(baked_ruleset: RuleSet, p
     redacted, _ = _redact(_fixture("universal_record_retrieve_response.xml"), baked_ruleset, pii_keyring)
 
     assert b'DOB="1900-01-01"' in redacted
-    assert b"Gender=" not in redacted
+    # Gender is replaced with the fixed valid code rather than dropped, so the attribute stays
+    # present and schema-valid for the caller — one convention across every channel.
+    assert b'Gender="M"' in redacted
 
 
 def test_credit_card_masked_not_tokenized(baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
