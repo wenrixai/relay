@@ -105,10 +105,10 @@ def test_names_encrypt_and_round_trip(baked_ruleset: RuleSet, pii_keyring: Keyri
 def test_masked_and_replaced_fields(baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts) -> None:
     redacted, _ = _redact(_fixture("order_view_response.xml"), baked_ruleset, pii_keyring)
     # dob replaced with a fixed sentinel (kept a valid date so downstream parsers survive).
-    assert set(xml_texts(redacted, "Birthdate")) == {"1901-01-01"}
-    # gender masked, not encrypted.
-    for value in xml_texts(redacted, "Gender"):
-        assert set(value) == {"*"}
+    assert set(xml_texts(redacted, "Birthdate")) == {"1900-01-01"}
+    # gender replaced with the fixed valid code, not `*`-masked: it is a typed enum the caller
+    # parses, and `*` is not a gender code (same contract Sabre locks in test_pii_sabre_typed_fields).
+    assert set(xml_texts(redacted, "Gender")) == {"M"}
     # identity document number masked.
     assert all(set(v) == {"*"} for v in xml_texts(redacted, "IdentityDocumentNumber"))
 

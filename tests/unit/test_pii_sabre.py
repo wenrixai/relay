@@ -250,8 +250,8 @@ class TestGetReservation:
             assert values and all(_MASKED_RE.fullmatch(v) for v in values), masked_local
         # DateOfBirth is a typed field: one-way replaced with a schema-valid sentinel (never a ``*``
         # mask that would crash the caller's date parser) in the format its own namespace uses.
-        assert _ns_texts(redacted, "//s19:DOCSEntry/s19:DateOfBirth") == ["1901-01-01"]
-        assert _ns_texts(redacted, "//o14:TravelDocument/o14:DateOfBirth") == ["01JAN1901"]
+        assert _ns_texts(redacted, "//s19:DOCSEntry/s19:DateOfBirth") == ["1900-01-01"]
+        assert _ns_texts(redacted, "//o14:TravelDocument/o14:DateOfBirth") == ["01JAN1900"]
         assert counts["visa"] >= 3  # DOCO entry + or114 DOCO/DOCS free-text lines
         # Address lines are replaced with a fixed ``REDACTED`` literal, not a ``*`` mask.
         address_lines = _address_line_texts(redacted)
@@ -521,6 +521,76 @@ class TestTripSearchPastDatePnr:
         redacted, counts = _redact(_fixture("trip_search_past_date_pnr_response.xml"), baked_ruleset, pii_keyring)
         assert b"123-45-6789" not in redacted
         assert counts["ssn"] >= 1
+
+
+class TestTripSearchPassportDocuments:
+    """Trip_SearchRS embeds a whole ``stl19:GetReservationRS``, so its APIS block is the same shape
+    the ``sabre.res.docs_*`` rules cover. A thinner ``sabre.trip.docs_*`` copy left the passport
+    number, expiry, and nationality in the clear on this operation while the same PNR came back
+    fully redacted through GetReservationRS (the CERT split on PNR TORIWF)."""
+
+    FIXTURE = "trip_search_docs_passport_response.xml"
+
+    def test_operation(self) -> None:
+        assert parse_operation(parse_bytes(_fixture(self.FIXTURE))) == "Trip_SearchRS"
+
+    def test_passport_number_masked_in_every_location(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        assert b"TT00TEST1" not in redacted
+        for path in (
+            "//s19:DOCSEntry/s19:DocumentNumber",
+            "//o14:TravelDocument/o14:DocumentNumber",
+            "//o14:OtherSupplementaryInformation/o14:DocumentNumber",
+        ):
+            values = _ns_texts(redacted, path)
+            assert values and all(_MASKED_RE.fullmatch(v) for v in values), path
+
+    def test_expiry_replaced_per_namespace_format(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        assert _ns_texts(redacted, "//s19:DOCSEntry/s19:DocumentExpirationDate") == ["2099-12-31"]
+        assert _ns_texts(redacted, "//o14:TravelDocument/o14:DocumentExpirationDate") == ["31DEC2099"]
+
+    def test_nationality_replaced_with_valid_code(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, counts = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        for path in (
+            "//s19:DOCSEntry/s19:CountryOfIssue",
+            "//s19:DOCSEntry/s19:DocumentNationalityCountry",
+            "//o14:TravelDocument/o14:DocumentIssueCountry",
+            "//o14:TravelDocument/o14:DocumentNationalityCountry",
+        ):
+            assert _ns_texts(redacted, path) == ["ZZ"], path
+        assert counts["nationality"] == 4
+
+    def test_dob_replaced_with_synthetic_sentinel(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        # 1900-01-01 rather than a plausible human date: CERT read the old 1901-01-01 sentinel as
+        # live unredacted data. The history mirror keeps its native DDMMMYYYY format.
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        assert b"1988-03-14" not in redacted and b"14MAR1988" not in redacted
+        assert _ns_texts(redacted, "//s19:DOCSEntry/s19:DateOfBirth") == ["1900-01-01"]
+        assert _ns_texts(redacted, "//o14:TravelDocument/o14:DateOfBirth") == ["01JAN1900"]
+
+    def test_gender_always_replaced_with_male(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        # The fixture is female, so an unrewritten node is visible here — a rule that never fired
+        # would leave "F" behind rather than blending into the sentinel.
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        assert _ns_texts(redacted, "//s19:DOCSEntry/s19:Gender") == ["M"]
+        assert _ns_texts(redacted, "//o14:TravelDocument/o14:Gender") == ["M"]
+
+    def test_document_names_and_free_text_redacted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        # The DOCS/DOCO lines mirror the whole document in free text; the history mirror repeats
+        # the names. Both survive if only the stl19 structured entry is covered.
+        assert b"TESTER" not in redacted and b"ANNA" not in redacted
+        for path in ("//o14:TravelDocument/o14:LastName", "//o14:TravelDocument/o14:FirstName"):
+            values = _ns_texts(redacted, path)
+            assert values and all(_MASKED_RE.fullmatch(v) for v in values), path
+
+    def test_operational_data_preserved(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        assert _ns_texts(redacted, "//s19:DOCSEntry/s19:DocumentType") == ["PP"]
+        assert _ns_texts(redacted, "//o14:TravelDocument/o14:Type") == ["PP"]
+        assert b"TSTDOC" in redacted  # record locator is operational
+        assert b"<stl19:ActionCode>HK</stl19:ActionCode>" in redacted
 
 
 class TestQueueAccessUncovered:
