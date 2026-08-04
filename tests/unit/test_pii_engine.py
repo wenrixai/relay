@@ -541,3 +541,32 @@ class TestEmbeddedDeanonymization:
         body = b"<r><Name>ENC_dG9vc2hvcnQ</Name></r>"
         with pytest.raises(DeanonymizationError):
             deanonymize_request_body(body, keyring=keyring)
+
+
+class TestExsltRegexPredicate:
+    """Rules may bind the EXSLT regular-expressions namespace and use ``re:test()`` in an
+    XPath predicate to match a whole code family (e.g. IATA meal/wheelchair SSR codes)
+    instead of maintaining a brittle per-code allow-list."""
+
+    def test_re_test_predicate_selects_matching_nodes_only(self, keyring: Keyring) -> None:
+        rule = {
+            "id": "r.exslt",
+            "channel": "mock",
+            "operation": "^PNR_Retrieve",
+            "path": "//m:Ssr[re:test(m:Type, '^([A-Z]{2}ML|WC[A-Z]{2})$')]/m:Type",
+            "namespaces": {"m": NS, "re": "http://exslt.org/regular-expressions"},
+            "pii_type": "special_service",
+            "method": "replace",
+            "replacement": "OTHS",
+        }
+        ruleset = RuleSet.model_validate({"schema_version": "1.0", "rules_version": "t", "rules": [rule]})
+        body = (
+            f'<PNR_Retrieve xmlns="{NS}">'
+            "<Ssr><Type>VOML</Type></Ssr><Ssr><Type>WCMP</Type></Ssr><Ssr><Type>DOCS</Type></Ssr>"
+            "</PNR_Retrieve>"
+        ).encode()
+        redacted, counts = redact_response_body(body, channel="mock", ruleset=ruleset, keyring=keyring)
+        assert counts["special_service"] == 2
+        assert b"VOML" not in redacted and b"WCMP" not in redacted
+        assert redacted.count(b"<Type>OTHS</Type>") == 2
+        assert b"<Type>DOCS</Type>" in redacted
