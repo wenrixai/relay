@@ -23,7 +23,7 @@ from channel_relay.pii.xml_ops import parse_bytes
 from tests.conftest import FIXTURES_DIR, XmlTexts
 
 FIXTURE = FIXTURES_DIR / "amadeus" / "pnr_retrieve_response.xml"
-_MASKED_RE = re.compile(r"^\*+$")
+_MASKED_RE = re.compile(r"^REDACTED$")
 
 
 @pytest.fixture(name="response_body")
@@ -85,7 +85,7 @@ def test_contact_passport_masked_one_way(
     response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
 ) -> None:
     redacted, _ = redact_response_body(response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring)
-    # Every masked plaintext is gone and its node is now all-asterisks (one-way, no ENC_).
+    # Every masked plaintext is gone and its node is now the REDACTED sentinel (one-way, no ENC_).
     for gone in [
         b"00852-62374313",
         b"SEAFLY314//ICLOUD.COM",

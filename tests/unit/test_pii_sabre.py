@@ -26,7 +26,7 @@ from channel_relay.pii.xml_ops import parse_bytes
 from tests.conftest import FIXTURES_DIR, XmlTexts
 
 SABRE_FIXTURES = FIXTURES_DIR / "sabre"
-_MASKED_RE = re.compile(r"^\*+$")
+_MASKED_RE = re.compile(r"^REDACTED$")
 
 
 def _fixture(name: str) -> bytes:
@@ -697,7 +697,7 @@ class TestGetReservationHistoryAndContacts:
         redacted, _ = _redact(body, baked_ruleset, pii_keyring)
         assert b"6125550100" not in redacted
         assert b"MSP1-6125550100-W" not in redacted
-        # The whole node is a single all-asterisks mask (no ENC_ token to abut "-W").
+        # The whole node is a single REDACTED sentinel (no ENC_ token to abut "-W").
         assert any(_MASKED_RE.fullmatch(text) for text in xml_texts(redacted, "HistoryAssociationElement"))
         # The document still round-trips: every remaining ENC_ token decrypts cleanly.
         deanonymize_request_body(redacted, keyring=pii_keyring)
