@@ -423,6 +423,28 @@
                     <stl19:AirlineCode>1S</stl19:AirlineCode>
                     <stl19:FullText>WCHR 1S WCHR REQUESTED FULL LEG</stl19:FullText>
                 </stl19:GenericSpecialRequest>
+                <stl19:SpecialMealRequest id="41" type="G">
+                    <stl19:MealType>AVML</stl19:MealType>
+                    <stl19:FlightNumber>0860</stl19:FlightNumber>
+                    <stl19:VendorCode>AA</stl19:VendorCode>
+                    <stl19:FlightDate>2026-11-12</stl19:FlightDate>
+                    <stl19:BoardCity>JFK</stl19:BoardCity>
+                    <stl19:OffCity>DFW</stl19:OffCity>
+                    <stl19:ActionCode>UN</stl19:ActionCode>
+                    <stl19:NumberInParty>1</stl19:NumberInParty>
+                    <stl19:ClassOfService>O</stl19:ClassOfService>
+                </stl19:SpecialMealRequest>
+                <stl19:WheelchairRequest id="43" type="G">
+                    <stl19:WheelchairCode>WCMP</stl19:WheelchairCode>
+                    <stl19:FlightNumber>0860</stl19:FlightNumber>
+                    <stl19:VendorCode>AA</stl19:VendorCode>
+                    <stl19:FlightDate>2026-11-12</stl19:FlightDate>
+                    <stl19:BoardCity>JFK</stl19:BoardCity>
+                    <stl19:OffCity>DFW</stl19:OffCity>
+                    <stl19:ActionCode>NN</stl19:ActionCode>
+                    <stl19:NumberInParty>1</stl19:NumberInParty>
+                    <stl19:ClassOfService>O</stl19:ClassOfService>
+                </stl19:WheelchairRequest>
                 <stl19:Remarks>
                     <stl19:Remark index="114" id="138" type="CODED" code="A" elementId="pnr-138">
                         <stl19:RemarkLines>

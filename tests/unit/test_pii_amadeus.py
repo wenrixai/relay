@@ -46,7 +46,7 @@ def test_counts_match_baseline(response_body: bytes, baked_ruleset: RuleSet, pii
         "visa": 1,
         "gender": 2,
         "ssn": 1,
-        "special_service": 2,
+        "special_service": 6,
     }
 
 
@@ -141,17 +141,35 @@ def test_given_name_honorific_redacted_and_round_trips(
 def test_meal_and_wheelchair_ssr_encrypted_and_round_trip(
     response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring
 ) -> None:
-    # Meal/wheelchair SSR free text (special-category dietary/health signals) is encrypted; the
-    # structured <type> code is left intact so the anonymised PNR still validates upstream.
+    # Meal/wheelchair SSR free text (special-category dietary/health signals) is encrypted and
+    # round-trips; the structured <type> code is replaced one-way with the generic OTHS sentinel
+    # (see test_bare_meal_and_wheelchair_ssr_type_replaced) so the PNR still validates upstream.
     redacted, counts = redact_response_body(
         response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
     )
     for gone in (b"VEGETARIAN MEAL", b"WHEELCHAIR TO GATE"):
         assert gone not in redacted
-    assert counts["special_service"] == 2
-    assert b"<type>AVML</type>" in redacted and b"<type>WCHR</type>" in redacted
+    assert counts["special_service"] == 6  # 2 freeText encrypts + 4 <type> sentinels
     restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
     assert b"VEGETARIAN MEAL" in restored and b"WHEELCHAIR TO GATE" in restored
+
+
+def test_bare_meal_and_wheelchair_ssr_type_replaced(
+    response_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring
+) -> None:
+    """A meal/wheelchair SSR may carry no free text at all — the <type> code itself is then the
+    only special-category signal (the CERT WCMP/VOML leak on PNR 87TB9I). The code family is
+    matched with an EXSLT ``re:test`` predicate (not a per-code allow-list) and the enum node is
+    replaced with the generic ``OTHS`` sentinel: schema-valid, and — unlike a category-preserving
+    sentinel — it hides even the fact that a meal or wheelchair was requested."""
+    redacted, _ = redact_response_body(response_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring)
+    for gone in (b"<type>AVML</type>", b"<type>WCHR</type>", b"<type>WCMP</type>", b"<type>VOML</type>"):
+        assert gone not in redacted
+    assert redacted.count(b"<type>OTHS</type>") == 4
+    # Non-special-service SSR types keep their codes (DOCO asserted in the visa test too).
+    assert b"<type>DOCS</type>" in redacted and b"<type>FQTV</type>" in redacted
+    # Operational SSR structure survives.
+    assert b"<status>HN</status>" in redacted
 
 
 def test_ssn_in_general_remark_masked_one_way(

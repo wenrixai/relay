@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-baseline-2026-08-03",
+  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-baseline-2026-08-04",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -164,12 +164,26 @@
       "id": "amadeus.pnr.ssr_special_service",
       "channel": "amadeus",
       "operation": "^PNR_Reply",
-      "path": "//a:ssr[a:type='AVML' or a:type='VGML' or a:type='VLML' or a:type='SFML' or a:type='MOML' or a:type='WCHR' or a:type='WCHS' or a:type='WCHC']/a:freeText",
+      "path": "//a:ssr[re:test(a:type, '^([A-Z]{2}ML|WC[A-Z]{2}|BLND|DEAF|DPNA|MEDA|OXYG|STCR)$')]/a:freeText",
       "namespaces": {
-        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A",
+        "re": "http://exslt.org/regular-expressions"
       },
       "pii_type": "special_service",
       "method": "encrypt"
+    },
+    {
+      "id": "amadeus.pnr.ssr_special_service_type",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:ssr[re:test(a:type, '^([A-Z]{2}ML|WC[A-Z]{2}|BLND|DEAF|DPNA|MEDA|OXYG|STCR)$')]/a:type",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A",
+        "re": "http://exslt.org/regular-expressions"
+      },
+      "pii_type": "special_service",
+      "method": "replace",
+      "replacement": "OTHS"
     },
     {
       "id": "amadeus.pnr.remark_ssn",
@@ -370,7 +384,7 @@
     {
       "id": "sabre.res.meal_special_service",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|Trip_SearchRS)$",
       "path": "//s19:RemarkLine/s19:Text | //s19:HistoryAssociationElement | //s19:AssociationParent/s19:Content | //s19:AssociationChild/s19:Content",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -386,13 +400,37 @@
     {
       "id": "sabre.res.wheelchair_special_service",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|Trip_SearchRS)$",
       "path": "//s19:GenericSpecialRequest[starts-with(s19:Code,'WC')]/s19:FreeText | //s19:GenericSpecialRequest[starts-with(s19:Code,'WC')]/s19:FullText | //s19:GenericSpecialRequests[starts-with(s19:Code,'WC')]/s19:FreeText | //s19:GenericSpecialRequests[starts-with(s19:Code,'WC')]/s19:FullText",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "special_service",
       "method": "encrypt"
+    },
+    {
+      "id": "sabre.res.meal_type_code",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "path": "//s19:SpecialMealRequest/s19:MealType",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "special_service",
+      "method": "replace",
+      "replacement": "SPML"
+    },
+    {
+      "id": "sabre.res.wheelchair_type_code",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "path": "//s19:WheelchairRequest/s19:WheelchairCode",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "special_service",
+      "method": "replace",
+      "replacement": "WCHR"
     },
     {
       "id": "sabre.res.docs_dob",

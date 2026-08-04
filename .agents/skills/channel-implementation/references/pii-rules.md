@@ -51,14 +51,21 @@ locators, ticket and invoice numbers, amounts/currency, agent sign-in codes, pse
 seats, segments, message-header routing identifiers.
 
 `special_service` covers meal-preference and mobility SSRs (meal codes like `MOML`/`AVML`, dietary
-free text like `HALAL`, wheelchair codes `WCHR`/`WCHS`/`WCHC`). These are GDPR special-category
+free text like `HALAL`, wheelchair codes `WCHR`/`WCMP`/`WCHS`). These are GDPR special-category
 signals (religion/health/disability), so they are redacted, not treated as operational — reversing
-the earlier "meal SSR is operational" stance. **Encrypt the free text, never the structured
-`Code`/`type` enum node:** an `ENC_` token (~40 chars) dropped into a 4-char IATA code element
-breaks any consumer that schema-validates the anonymized body. If the type exists only in a bare
-`Code`/`type` element with no free text, it is left intact (correct trade vs. corrupting an enum).
-For coded remarks that carry the type in free text (Sabre `SPL MEAL-MOML`), use `extract_patterns`
-to tokenize only the type span and preserve the operational prefix.
+the earlier "meal SSR is operational" stance. **Encrypt the free text; never put an `ENC_` token in
+the structured `Code`/`type` enum node:** a ~40-char token dropped into a 4-char IATA code element
+breaks any consumer that schema-validates the anonymized body. When the code itself is the leak —
+a bare `Code`/`type`/`MealType` element with no free text (the CERT WCMP/VOML defect) — `replace`
+it with a **schema-valid sentinel** instead (the DOB/gender precedent): Sabre `MealType`→`SPML`,
+`WheelchairCode`→`WCHR`, Amadeus `ssr/type`→`OTHS` (generic parent, so `OTHS` hides even the
+meal/wheelchair category). Match code *families*, not per-code allow-lists — bind
+`"re": "http://exslt.org/regular-expressions"` in the rule's `namespaces` and use an XPath
+predicate like `re:test(a:type, '^([A-Z]{2}ML|WC[A-Z]{2}|BLND|DEAF|DPNA|MEDA|OXYG|STCR)$')`
+(an allow-list gap is exactly how WCMP/VOML leaked). Order matters: the sentinel rule must come
+*after* any rule whose predicate keys on the original code value, because rules mutate the tree
+in list order. For coded remarks that carry the type in free text (Sabre `SPL MEAL-MOML`), use
+`extract_patterns` to tokenize only the type span and preserve the operational prefix.
 
 ## 2. Action policy (mirror it for new channels)
 

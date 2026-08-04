@@ -833,6 +833,54 @@
                     <elementManagementData>
                         <reference>
                             <qualifier>OT</qualifier>
+                            <number>96</number>
+                        </reference>
+                        <segmentName>SSR</segmentName>
+                        <lineNumber>21</lineNumber>
+                    </elementManagementData>
+                    <serviceRequest>
+                        <ssr>
+                            <type>WCMP</type>
+                            <status>HN</status>
+                            <quantity>1</quantity>
+                            <companyId>AA</companyId>
+                        </ssr>
+                    </serviceRequest>
+                    <referenceForDataElement>
+                        <reference>
+                            <qualifier>PT</qualifier>
+                            <number>2</number>
+                        </reference>
+                    </referenceForDataElement>
+                </dataElementsIndiv>
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>97</number>
+                        </reference>
+                        <segmentName>SSR</segmentName>
+                        <lineNumber>22</lineNumber>
+                    </elementManagementData>
+                    <serviceRequest>
+                        <ssr>
+                            <type>VOML</type>
+                            <status>HN</status>
+                            <quantity>1</quantity>
+                            <companyId>AA</companyId>
+                        </ssr>
+                    </serviceRequest>
+                    <referenceForDataElement>
+                        <reference>
+                            <qualifier>PT</qualifier>
+                            <number>2</number>
+                        </reference>
+                    </referenceForDataElement>
+                </dataElementsIndiv>
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
                             <number>50</number>
                         </reference>
                         <segmentName>SSR</segmentName>

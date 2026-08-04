@@ -189,8 +189,9 @@ class TestGetReservation:
             assert gone not in redacted
         for kept in (b"SPL MEAL-", b"MEAL RMKS-", b"A!SPL MEAL-"):
             assert kept in redacted
-        # 5 meal copies (MOML remark + 3 mirrors, HALAL remark) + 2 wheelchair free-text nodes.
-        assert counts["special_service"] == 7
+        # 5 meal copies (MOML remark + 3 mirrors, HALAL remark) + 2 wheelchair free-text nodes
+        # + the structured MealType and WheelchairCode sentinels.
+        assert counts["special_service"] == 9
         restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
         assert b"SPL MEAL-MOML" in restored and b"MEAL RMKS-HALAL" in restored
         assert b"A!SPL MEAL-MOML" in restored
@@ -205,6 +206,22 @@ class TestGetReservation:
         assert b"<stl19:Code>WCHR</stl19:Code>" in redacted
         restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
         assert b"WCHR REQUESTED FULL LEG" in restored
+
+    def test_structured_meal_and_wheelchair_codes_replaced_with_sentinels(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        # SpecialMealRequest/WheelchairRequest carry the code in a typed element with no free
+        # text, so an ENC_ token would corrupt the 4-char IATA enum. The code is replaced with
+        # a schema-valid generic sentinel instead (the DOB/gender precedent): the specific
+        # dietary/mobility detail (religion/health signal) is gone one-way.
+        redacted, _ = _redact(_fixture("get_reservation_response.xml"), baked_ruleset, pii_keyring)
+        assert b"AVML" not in redacted and b"WCMP" not in redacted
+        assert _ns_texts(redacted, "//s19:SpecialMealRequest/s19:MealType") == ["SPML"]
+        assert _ns_texts(redacted, "//s19:WheelchairRequest/s19:WheelchairCode") == ["WCHR"]
+        # Operational siblings survive verbatim.
+        assert _ns_texts(redacted, "//s19:SpecialMealRequest/s19:BoardCity") == ["JFK"]
+        assert _ns_texts(redacted, "//s19:WheelchairRequest/s19:FlightNumber") == ["0860"]
+        assert _ns_texts(redacted, "//s19:WheelchairRequest/s19:ActionCode") == ["NN"]
 
     def test_address_replaced_with_redacted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
         redacted, counts = _redact(_fixture("get_reservation_response.xml"), baked_ruleset, pii_keyring)
@@ -584,6 +601,18 @@ class TestTripSearchPassportDocuments:
         for path in ("//o14:TravelDocument/o14:LastName", "//o14:TravelDocument/o14:FirstName"):
             values = _ns_texts(redacted, path)
             assert values and all(_MASKED_RE.fullmatch(v) for v in values), path
+
+    def test_meal_and_wheelchair_codes_replaced_with_sentinels(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        # The same SpecialMealRequest/WheelchairRequest shape appears in the embedded
+        # reservation; scoping the sentinel rules to GetReservationRS alone would reopen
+        # the Trip_SearchRS split fixed for the DOCS block.
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        assert b"AVML" not in redacted and b"WCMP" not in redacted
+        assert _ns_texts(redacted, "//s19:SpecialMealRequest/s19:MealType") == ["SPML"]
+        assert _ns_texts(redacted, "//s19:WheelchairRequest/s19:WheelchairCode") == ["WCHR"]
+        assert _ns_texts(redacted, "//s19:SpecialMealRequest/s19:OffCity") == ["DFW"]
 
     def test_operational_data_preserved(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
         redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
