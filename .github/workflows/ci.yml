@@ -56,7 +56,7 @@ jobs:
       # The terraform_fmt / terraform_validate hooks shell out to this binary. It happens to be
       # present on ubuntu-latest, but pin it rather than depend on the runner image.
       - name: Install Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.15.8"
           terraform_wrapper: false
