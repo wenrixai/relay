@@ -119,7 +119,7 @@ def test_dob_and_gender_are_type_valid_after_redaction(baked_ruleset: RuleSet, p
 def test_credit_card_masked_not_tokenized(baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
     redacted, _ = _redact(_fixture("universal_record_retrieve_response.xml"), baked_ruleset, pii_keyring)
 
-    assert b'Number="****************"' in redacted
+    assert b'Number="REDACTED"' in redacted
     assert b'ExpDate="0000000"' in redacted
     assert b"ENC_" not in redacted.split(b"CreditCard")[1].split(b"/>")[0]
 

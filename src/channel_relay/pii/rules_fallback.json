@@ -92,7 +92,8 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "phone",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "amadeus.pnr.ssr_email",
@@ -103,7 +104,8 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "email",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "amadeus.pnr.ssr_ctcm",
@@ -114,7 +116,8 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "phone",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "amadeus.pnr.ssr_docs",
@@ -125,7 +128,8 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "passport_id",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "amadeus.pnr.ssr_doco",
@@ -136,7 +140,8 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "visa",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "amadeus.pnr.ssr_fqts",
@@ -147,7 +152,8 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "frequent_flyer",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "amadeus.pnr.ssr_restricted",
@@ -158,7 +164,8 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "person",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "amadeus.pnr.ssr_special_service",
@@ -194,7 +201,8 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "ssn",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "(\\d{3}-\\d{2}-\\d{4})"
@@ -210,7 +218,8 @@
         "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
       },
       "pii_type": "email",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})"
@@ -367,7 +376,8 @@
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "phone",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.res.address_line",
@@ -479,7 +489,8 @@
         "o14": "http://services.sabre.com/res/or/v1_14"
       },
       "pii_type": "person",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.res.doc_freetext",
@@ -491,7 +502,8 @@
         "o14": "http://services.sabre.com/res/or/v1_14"
       },
       "pii_type": "visa",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.res.travel_document_number",
@@ -503,7 +515,8 @@
         "o14": "http://services.sabre.com/res/or/v1_14"
       },
       "pii_type": "passport_id",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.res.docs_expiry",
@@ -563,7 +576,8 @@
         "o14": "http://services.sabre.com/res/or/v1_14"
       },
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.res.card_expiry",
@@ -586,7 +600,8 @@
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.res.remarks_ssn",
@@ -598,7 +613,8 @@
         "o14": "http://services.sabre.com/res/or/v1_14"
       },
       "pii_type": "ssn",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "(\\d{3}-\\d{2}-\\d{4})"
@@ -760,7 +776,8 @@
         "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
       },
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.pq.bank_identification_number",
@@ -771,7 +788,8 @@
         "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
       },
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.pq.bin_in_description",
@@ -782,7 +800,8 @@
         "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
       },
       "pii_type": "payment",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "BEGINS WITH (\\d{6})"
@@ -951,7 +970,8 @@
         "e": "http://webservices.sabre.com/sabreXML/2011/10"
       },
       "pii_type": "person",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.etkt.payment_text",
@@ -962,7 +982,8 @@
         "e": "http://webservices.sabre.com/sabreXML/2011/10"
       },
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.etkt.payment_reference",
@@ -973,7 +994,8 @@
         "e": "http://webservices.sabre.com/sabreXML/2011/10"
       },
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.etkt.payment_expiry",
@@ -1035,7 +1057,8 @@
         "d": "http://www.sabre.com/ns/Ticketing/EDoc"
       },
       "pii_type": "passport_id",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.edoc.endorsements",
@@ -1046,7 +1069,8 @@
         "d": "http://www.sabre.com/ns/Ticketing/EDoc"
       },
       "pii_type": "passport_id",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.edoc.payment_details",
@@ -1057,7 +1081,8 @@
         "d": "http://www.sabre.com/ns/Ticketing/EDoc"
       },
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.edoc.fare_calc_reference",
@@ -1095,7 +1120,8 @@
         "dc": "http://www.sabre.com/ns/Ticketing/DC"
       },
       "pii_type": "dob",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.tktdoc.endorsements",
@@ -1106,7 +1132,8 @@
         "dc": "http://www.sabre.com/ns/Ticketing/DC"
       },
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.tktdoc.payment_remarks",
@@ -1117,7 +1144,8 @@
         "dc": "http://www.sabre.com/ns/Ticketing/DC"
       },
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.tktdoc.fare_calc_reference",
@@ -1163,7 +1191,8 @@
         "sx": "http://webservices.sabre.com/sabreXML/2011/10"
       },
       "pii_type": "dob",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "(\\d{2}[A-Z]{3}\\d{4})"
@@ -1179,7 +1208,8 @@
         "sx": "http://webservices.sabre.com/sabreXML/2011/10"
       },
       "pii_type": "passport_id",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.itinhist.email",
@@ -1209,7 +1239,8 @@
         "sx": "http://webservices.sabre.com/sabreXML/2011/10"
       },
       "pii_type": "phone",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "(\\d{2,4}-\\d{6,10})"
@@ -1225,7 +1256,8 @@
         "sx": "http://webservices.sabre.com/sabreXML/2011/10"
       },
       "pii_type": "address",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.trip.passenger_name",
@@ -1269,7 +1301,8 @@
         "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "phone",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.trip.card_number",
@@ -1280,7 +1313,8 @@
         "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.trip.fop_remark",
@@ -1291,7 +1325,8 @@
         "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.trip.accounting_history",
@@ -1302,7 +1337,8 @@
         "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.trip.card_fragment_remark",
@@ -1313,7 +1349,8 @@
         "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "payment",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "(\\d{0,6}X{4,}\\d{2,})"
@@ -1351,7 +1388,8 @@
         "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "phone",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "(\\d{7,})"
@@ -1367,7 +1405,8 @@
         "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "visa",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "sabre.trip.remarks_ssn",
@@ -1378,7 +1417,8 @@
         "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "ssn",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "(\\d{3}-\\d{2}-\\d{4})"
@@ -1425,7 +1465,8 @@
       "operation": ".*Rsp$",
       "path": "//*[local-name()='PhoneNumber']/@Number",
       "pii_type": "phone",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "travelport.core.dob",
@@ -1459,7 +1500,8 @@
       "operation": ".*Rsp$",
       "path": "//*[local-name()='Address' or local-name()='ShippingAddress']/*[local-name()='Street'] | //*[local-name()='Address' or local-name()='ShippingAddress']/*[local-name()='City'] | //*[local-name()='Address' or local-name()='ShippingAddress']/*[local-name()='PostalCode']",
       "pii_type": "address",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "travelport.core.card_number",
@@ -1467,7 +1509,8 @@
       "operation": ".*Rsp$",
       "path": "//*[local-name()='CreditCard']/@Number",
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "travelport.core.card_expiry",
@@ -1484,7 +1527,8 @@
       "operation": ".*Rsp$",
       "path": "//*[local-name()='SSR'][@Type='DOCS' or @Type='DOCO' or @Type='DOCA' or @Type='PSPT' or @Type='FOID' or @Type='INFT']/@FreeText",
       "pii_type": "visa",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "travelport.core.ctce_freetext",
@@ -1492,7 +1536,8 @@
       "operation": ".*Rsp$",
       "path": "//*[local-name()='SSR'][@Type='CTCE']/@FreeText",
       "pii_type": "email",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "travelport.core.ctcm_freetext",
@@ -1500,7 +1545,8 @@
       "operation": ".*Rsp$",
       "path": "//*[local-name()='SSR'][@Type='CTCM']/@FreeText",
       "pii_type": "phone",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "travelport.core.ctcr_freetext",
@@ -1508,7 +1554,8 @@
       "operation": ".*Rsp$",
       "path": "//*[local-name()='SSR'][@Type='CTCR']/@FreeText",
       "pii_type": "person",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "travelport.core.osi_phone",
@@ -1516,7 +1563,8 @@
       "operation": ".*Rsp$",
       "path": "//*[local-name()='OSI']/@Text",
       "pii_type": "phone",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "(\\d{7,})"
@@ -1529,7 +1577,8 @@
       "operation": ".*Rsp$",
       "path": "//*[local-name()='OSI']/@Text",
       "pii_type": "dob",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "DOB\\s+(\\d{2}[A-Z]{3}\\d{2})"
@@ -1542,7 +1591,8 @@
       "operation": ".*Rsp$",
       "path": "//*[local-name()='OSI']/@Text",
       "pii_type": "person",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "([A-Z]+/[A-Z]+)\\s+(?:MR|MRS|MISS|MSTR|MS)\\s+DOB"
@@ -1570,7 +1620,8 @@
       "operation": "^(TerminalRsp|BookingTerminalRsp)$",
       "path": "//*[local-name()='Text']",
       "pii_type": "person",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "NAME\\s*:\\s*([A-Z][A-Z .]*/[A-Z][A-Z .]*)"
@@ -1583,7 +1634,8 @@
       "operation": "^(TerminalRsp|BookingTerminalRsp)$",
       "path": "//*[local-name()='Text']",
       "pii_type": "person",
-      "method": "mask",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "(?:^|\\s)(\\d+\\.\\d*[A-Z]+/[A-Z]+(?:MR|MRS|MS|MSTR|MISS|DR)?)"
@@ -1657,7 +1709,8 @@
       "operation": "^XXTransactionResponse$",
       "path": "//IdentityDocument/IdentityDocumentNumber",
       "pii_type": "passport_id",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "farelogix.doc.visa_number",
@@ -1665,7 +1718,8 @@
       "operation": "^XXTransactionResponse$",
       "path": "//IdentityDocument/Visa/VisaNumber",
       "pii_type": "visa",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "farelogix.contact.phone",
@@ -1673,7 +1727,8 @@
       "operation": "^XXTransactionResponse$",
       "path": "//Phone/PhoneNumber",
       "pii_type": "phone",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "farelogix.contact.address",
@@ -1681,7 +1736,8 @@
       "operation": "^XXTransactionResponse$",
       "path": "//PostalAddress/Street | //PostalAddress/PostalCode | //PostalAddress/CityName | //PostalAddress/CountrySubdivisionName",
       "pii_type": "address",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "farelogix.payment.card",
@@ -1689,7 +1745,8 @@
       "operation": "^XXTransactionResponse$",
       "path": "//PaymentCardMethod/MaskedCardNumber | //PaymentCardMethod/CardNumber | //PaymentCardMethod/SeriesCode | //PaymentCardMethod/EffectiveExpireDate/Expiration",
       "pii_type": "payment",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "farelogix.payment.holder_address",
@@ -1697,7 +1754,8 @@
       "operation": "^XXTransactionResponse$",
       "path": "//CardholderAddress/StructuredAddress/Street | //CardholderAddress/StructuredAddress/PostalCode | //CardholderAddress/StructuredAddress/CityName",
       "pii_type": "address",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "farelogix.doc.doca_freetext",
@@ -1708,7 +1766,8 @@
         "aug": "http://ndc.farelogix.com/aug"
       },
       "pii_type": "address",
-      "method": "mask"
+      "method": "replace",
+      "replacement": "REDACTED"
     },
     {
       "id": "farelogix.freetext.names",

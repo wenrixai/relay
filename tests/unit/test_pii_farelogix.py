@@ -109,8 +109,8 @@ def test_masked_and_replaced_fields(baked_ruleset: RuleSet, pii_keyring: Keyring
     # gender replaced with the fixed valid code, not `*`-masked: it is a typed enum the caller
     # parses, and `*` is not a gender code (same contract Sabre locks in test_pii_sabre_typed_fields).
     assert set(xml_texts(redacted, "Gender")) == {"M"}
-    # identity document number masked.
-    assert all(set(v) == {"*"} for v in xml_texts(redacted, "IdentityDocumentNumber"))
+    # identity document number one-way replaced with the fixed sentinel.
+    assert set(xml_texts(redacted, "IdentityDocumentNumber")) == {"REDACTED"}
 
 
 def test_docs_free_text_names_encrypted_dob_and_gender_remain(baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
