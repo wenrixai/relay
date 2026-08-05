@@ -127,7 +127,7 @@ behavior.
 
 ### Requirement: Deterministic encryption control
 
-An encrypt action MAY set `deterministic: true` to request deterministic token encryption. The
+An encrypt action SHALL support optional `deterministic: true` to request deterministic token encryption. The
 default SHALL be false. Deterministic and non-deterministic results SHALL remain isolated even for
 the same plaintext, and `deterministic` SHALL be rejected on non-encrypt actions through strict
 action validation.
@@ -142,7 +142,7 @@ action validation.
 
 ### Requirement: Extraction patterns select rewritable spans
 
-A field rule MAY declare `extract_patterns`, each containing a compilable regex applied to the
+A field rule SHALL support optional `extract_patterns`, each containing a compilable regex applied to the
 selected node or attribute value. A match with exactly one capture group SHALL rewrite only that
 group's span; a match with zero or multiple capture groups SHALL rewrite the full match. Rewrites
 SHALL be calculated against the original value, applied without offset corruption, and SHALL NOT
@@ -159,7 +159,7 @@ unchanged.
 
 ### Requirement: Required field rules fail closed
 
-A field rule MAY set `required: true`. After ignored-content and extraction processing, a required
+A field rule SHALL support optional `required: true`. After ignored-content and extraction processing, a required
 rule SHALL be considered satisfied only when it rewrites at least one value. If it locates no target
 or rewrites no value, the complete redaction pass SHALL fail; no partially processed response SHALL
 be returned. `required` SHALL apply only to field rules.
@@ -171,3 +171,30 @@ be returned. `required` SHALL apply only to field rules.
 #### Scenario: Required target rewritten satisfies rule
 - **WHEN** a required rule rewrites at least one value
 - **THEN** that rule does not prevent the remaining redaction pass from completing
+
+### Requirement: Age and IP address are classified PII
+The PII rule vocabulary SHALL include `age` and `ip_address` so rules can redact those values without
+misclassifying their metrics as another PII category.
+
+#### Scenario: Age and IP rules load
+- **WHEN** a ruleset contains a field rule whose `pii_type` is `age` or `ip_address`
+- **THEN** strict ruleset validation accepts it and redaction counts the rewrite under that category
+
+### Requirement: Farelogix identity-document mirrors are redacted
+For `XXTransactionResponse`, the Farelogix baseline SHALL redact DOB and gender from `DOCS` SSR free
+text, passenger title, identity-document issuing country, issue date, and expiry date. Typed fields
+SHALL receive schema-valid sentinels, while the SSR code and operational ticket identifiers remain
+unchanged.
+
+#### Scenario: Farelogix identity data does not survive
+- **WHEN** an order response carries structured document metadata and a `DOCS` SSR
+- **THEN** its DOB, gender, title, issuing country, issue date, and expiry date are absent from the
+  redacted response, while the `DOCS` code and `TKNE` ticket number survive
+
+### Requirement: Travelport state is part of address redaction
+For Travelport responses, state/province children under address structures SHALL be redacted with the
+existing address action alongside street, city, and postal code.
+
+#### Scenario: Travelport state redacted
+- **WHEN** a Travelport booking address contains a `State` value
+- **THEN** the value is redacted and the country and operational record identifiers remain unchanged

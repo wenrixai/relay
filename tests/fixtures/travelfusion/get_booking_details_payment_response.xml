@@ -1089,6 +1089,26 @@
                             <Name>DateOfBirth</Name>
                             <Value>12/05/1234</Value>
                         </CustomSupplierParameter>
+                        <CustomSupplierParameter>
+                            <Name>FrequentFlyerNumber</Name>
+                            <Value>FF00012345</Value>
+                        </CustomSupplierParameter>
+                        <CustomSupplierParameter>
+                            <Name>PassportExpiryDate</Name>
+                            <Value>31/12/2030</Value>
+                        </CustomSupplierParameter>
+                        <CustomSupplierParameter>
+                            <Name>CountryOfResidence</Name>
+                            <Value>XZ</Value>
+                        </CustomSupplierParameter>
+                        <CustomSupplierParameter>
+                            <Name>PassportCountryOfIssue</Name>
+                            <Value>YZ</Value>
+                        </CustomSupplierParameter>
+                        <CustomSupplierParameter>
+                            <Name>PassportNumber</Name>
+                            <Value>P00012345</Value>
+                        </CustomSupplierParameter>
                     </CustomSupplierParameterList>
                 </Traveller>
             </TravellerList>

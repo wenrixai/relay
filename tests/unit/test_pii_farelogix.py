@@ -7,8 +7,8 @@ The NDC business elements sit in no namespace; the passenger-name echo and SSR f
 under ``AugmentationPoint`` in the ``http://ndc.farelogix.com/aug`` default namespace.
 
 Policy under test: structured PII is redacted and passenger names echoed inside SSR/remark free
-text are reference-encrypted. The DOCA address free-text node is masked wholesale; the DOB / gender
-/ document residue left in a DOCS slash-string is intentionally NOT scrubbed — only its names are.
+text are reference-encrypted. DOCA address and DOCS identity-document free text are replaced
+wholesale so no partial identity data survives.
 """
 
 from __future__ import annotations
@@ -48,12 +48,13 @@ def test_order_view_redacts_every_pii_surface(baked_ruleset: RuleSet, pii_keyrin
     redacted, counts = _redact(_fixture("order_view_response.xml"), baked_ruleset, pii_keyring)
 
     assert counts == {
-        "person": 9,
+        "person": 7,
         "email": 1,
         "frequent_flyer": 1,
-        "gender": 2,
+        "gender": 4,
         "dob": 4,
-        "passport_id": 1,
+        "passport_id": 4,
+        "nationality": 1,
         "phone": 1,
         "address": 8,
         "payment": 3,
@@ -71,6 +72,12 @@ def test_order_view_redacts_every_pii_surface(baked_ruleset: RuleSet, pii_keyrin
         b"<CityName>MIAMI</CityName>",
         b"<GivenName>DAVE</GivenName>",
         b"<Surname>DOE</Surname>",
+        b"01MAR77",
+        b"<NameTitle>MR</NameTitle>",
+        b"<NameTitle>MRS</NameTitle>",
+        b"<IssuingCountryCode>ROU</IssuingCountryCode>",
+        b"2023-12-06",
+        b"2033-12-04",
     ):
         assert gone not in redacted
 
@@ -111,16 +118,20 @@ def test_masked_and_replaced_fields(baked_ruleset: RuleSet, pii_keyring: Keyring
     assert set(xml_texts(redacted, "Gender")) == {"M"}
     # identity document number one-way replaced with the fixed sentinel.
     assert set(xml_texts(redacted, "IdentityDocumentNumber")) == {"REDACTED"}
+    assert set(xml_texts(redacted, "NameTitle")) == {"DR"}
+    assert set(xml_texts(redacted, "IssuingCountryCode")) == {"ZZ"}
+    assert set(xml_texts(redacted, "IssueDate")) == {"1900-01-01"}
+    assert set(xml_texts(redacted, "ExpiryDate")) == {"1900-01-01"}
 
 
-def test_docs_free_text_names_encrypted_dob_and_gender_remain(baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
-    """DOCS slash-string: passenger names reference-encrypted, DOB/gender residue left; DOCA
-    address free text masked wholesale; TKNE ticket number untouched."""
+def test_docs_free_text_identity_data_redacted(baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+    """DOCS identity data and DOCA address are one-way redacted; TKNE stays operational."""
     redacted, _ = _redact(_fixture("order_view_response.xml"), baked_ruleset, pii_keyring)
     text = redacted.decode()
-    # DOCS: names gone, DOB + gender token still there.
-    assert "//DOE/DAVE" not in text
-    assert "/////01MAR77/M//ENC_" in text
+    # DOCS: the whole identity-document free text is redacted, while its structural code survives.
+    assert "//DOE/DAVE" not in text and "01MAR77" not in text
+    assert "<SSRCode>DOCS</SSRCode>" in text
+    assert "<Text>REDACTED</Text>" in text
     # DOCA: whole address free-text node masked (no address fragments survive).
     assert "/D/US/" not in text and "123 STREET/MIAMI" not in text
     # Ticket number in the TKNE SSR free text is not PII and survives.

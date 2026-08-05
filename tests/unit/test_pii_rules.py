@@ -190,6 +190,13 @@ def test_unknown_pii_type_rejected() -> None:
         RuleSet.model_validate(ruleset(rule(pii_type="shoe_size")))
 
 
+@pytest.mark.parametrize("pii_type", ["age", "ip_address"])
+def test_extended_personal_data_types_load(pii_type: str) -> None:
+    loaded = RuleSet.model_validate(ruleset(rule(pii_type=pii_type)))
+
+    assert loaded.rules[0].pii_type == pii_type
+
+
 def test_namespaces_accepted() -> None:
     loaded = RuleSet.model_validate(ruleset(rule(namespaces={"m": "urn:mock:pnr"})))
     assert loaded.rules[0].namespaces == {"m": "urn:mock:pnr"}
