@@ -1,0 +1,1 @@
+<Ticket_DisplayTSTReply xmlns="http://xml.amadeus.com/TTSTRR_15_1_1A"><fareList><contextualFop><formOfPayment><creditCardNumber>411111XXXXXX1111</creditCardNumber></formOfPayment></contextualFop><fareReference><uniqueReference>1</uniqueReference></fareReference></fareList></Ticket_DisplayTSTReply>

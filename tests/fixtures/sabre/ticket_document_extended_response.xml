@@ -1,0 +1,1 @@
+<GetTicketingDocumentRS xmlns="http://www.sabre.com/ns/Ticketing/DC"><Traveler><FirstName>ALICE</FirstName><LastName>BROWN</LastName></Traveler><Payment><Card><MaskedCardNumber>555555XXXXXX4444</MaskedCardNumber></Card></Payment><DocumentNumber>1720000000001</DocumentNumber></GetTicketingDocumentRS>
