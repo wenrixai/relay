@@ -108,7 +108,13 @@ in list order. For coded remarks that carry the type in free text (Sabre `SPL ME
 5. **Both text and attributes.** The same supplier often puts names in element text in one
    structure and in `@firstName`/`@lastName` attributes in another (embedded price-quote
    blocks). Sweep for both.
-6. **Don't redact operational identifiers.** Encrypting locators/ticket numbers breaks client
+6. **Titles glued to given names defeat reference matching.** Sabre puts the honorific inside
+   `FirstName` ("ROSE  MS"), so the collector holds `ROSE MS` while remarks/history echo the bare
+   `ROSE` — the phase-2 alternation is a literal, so nothing matches (CERT v1.8.4 defect 6).
+   Strip the trailing title with an `extract_patterns` capture group
+   (`^(.+?)(?:\s+(?:MSTR|MISS|PROF|INFT|MRS|CHD|INF|MR|MS|DR))?\s*$`) so the collected value is
+   the name alone; the honorific is not PII and stays plaintext beside the token.
+7. **Don't redact operational identifiers.** Encrypting locators/ticket numbers breaks client
    workflows and violates the PII scope (§7); golden tests must assert they survive verbatim.
 
 ## 5. Verify empirically before writing tests

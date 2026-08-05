@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-baseline-2026-08-04",
+  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-baseline-2026-08-05",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -326,12 +326,17 @@
       "id": "sabre.res.passenger_name",
       "channel": "sabre",
       "operation": "^GetReservationRS$",
-      "path": "//s19:Passenger/s19:LastName | //s19:Passenger/s19:FirstName",
+      "path": "//s19:Passenger/s19:LastName | //s19:Passenger/s19:FirstName | //s19:NameHistory/s19:LastName | //s19:NameHistory/s19:FirstName",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "person",
-      "method": "encrypt"
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "^(.+?)(?:\\s+(?:MSTR|MISS|PROF|INFT|MRS|CHD|INF|MR|MS|DR))?\\s*$"
+        }
+      ]
     },
     {
       "id": "sabre.res.history_name",
@@ -342,7 +347,12 @@
         "o14": "http://services.sabre.com/res/or/v1_14"
       },
       "pii_type": "person",
-      "method": "encrypt"
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "^(.+?)(?:\\s+(?:MSTR|MISS|PROF|INFT|MRS|CHD|INF|MR|MS|DR))?\\s*$"
+        }
+      ]
     },
     {
       "id": "sabre.res.ticket_passenger_name",
@@ -1268,7 +1278,12 @@
         "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "person",
-      "method": "encrypt"
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "^(.+?)(?:\\s+(?:MSTR|MISS|PROF|INFT|MRS|CHD|INF|MR|MS|DR))?\\s*$"
+        }
+      ]
     },
     {
       "id": "sabre.trip.history_name",
@@ -1279,13 +1294,18 @@
         "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "person",
-      "method": "encrypt"
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "^(.+?)(?:\\s+(?:MSTR|MISS|PROF|INFT|MRS|CHD|INF|MR|MS|DR))?\\s*$"
+        }
+      ]
     },
     {
       "id": "sabre.trip.ticket_passenger_name",
       "channel": "sabre",
       "operation": "^Trip_SearchRS$",
-      "path": "//stl19:TicketDetails/stl19:PassengerName | //stl19:AccountingLine/stl19:PassengerName",
+      "path": "//stl19:TicketDetails/stl19:PassengerName | //stl19:AccountingLine/stl19:PassengerName | //stl19:Passengers/stl19:Name",
       "namespaces": {
         "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
@@ -1430,7 +1450,7 @@
       "channel": "sabre",
       "operation": "^Trip_SearchRS$",
       "rule_type": "reference",
-      "path": "//stl19:RemarkLine/stl19:Text | //stl19:RemarkText | //stl19:GenericSpecialRequest/stl19:FreeText | //stl19:GenericSpecialRequest/stl19:FullText | //stl19:GenericSpecialRequests/stl19:FreeText | //stl19:GenericSpecialRequests/stl19:FullText | //stl19:ETicketNumber | //stl19:OriginalTicketDetails | //stl19:FactHistory/stl19:FreeText | //stl19:FactHistory/stl19:FullText",
+      "path": "//stl19:Text | //stl19:Content | //stl19:HistoryAssociationElement | //stl19:RemarkText | //stl19:AccountingLineText | //stl19:GenericSpecialRequest/stl19:FreeText | //stl19:GenericSpecialRequest/stl19:FullText | //stl19:GenericSpecialRequests/stl19:FreeText | //stl19:GenericSpecialRequests/stl19:FullText | //stl19:ETicketNumber | //stl19:OriginalTicketDetails | //stl19:FactHistory/stl19:FreeText | //stl19:FactHistory/stl19:FullText",
       "namespaces": {
         "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },

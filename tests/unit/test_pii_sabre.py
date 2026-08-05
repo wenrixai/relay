@@ -732,6 +732,55 @@ class TestGetReservationHistoryAndContacts:
         deanonymize_request_body(redacted, keyring=pii_keyring)
 
 
+class TestRemarkAndHistoryGivenName:
+    """CERT v1.8.4 defect 6: Sabre stores the title inside ``FirstName`` ("ROSE  MS"), so the
+    value the collector held never matched the bare given name echoed in remark lines, history
+    association elements, and ``NameHistory``. The given name must be scrubbed in every
+    free-text mirror, not just in the structured passenger node."""
+
+    def test_get_reservation_given_name_gone_from_remarks_and_history(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        redacted, _ = _redact(_fixture("get_reservation_remark_name_response.xml"), baked_ruleset, pii_keyring)
+        assert b"ROSE" not in redacted
+        assert b"TESTER" not in redacted
+        # Operational content around the names survives.
+        assert b"SEBDWC" in redacted
+        assert b"PROFILE-PORTRAIT" in redacted
+        assert b"AWX" in redacted
+
+    def test_get_reservation_name_history_covered(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+    ) -> None:
+        redacted, _ = _redact(_fixture("get_reservation_remark_name_response.xml"), baked_ruleset, pii_keyring)
+        # The given name is tokenized; the honorific it shares the element with stays plaintext.
+        first_names = [text for text in xml_texts(redacted, "FirstName") if text]
+        assert first_names and all(TOKEN_RE.fullmatch(text.split()[0]) for text in first_names)
+        assert all(text.split()[1:] == ["MS"] for text in first_names)
+        assert all(TOKEN_RE.fullmatch(text) for text in xml_texts(redacted, "LastName"))
+
+    def test_get_reservation_round_trip(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture("get_reservation_remark_name_response.xml"), baked_ruleset, pii_keyring)
+        restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
+        assert b"TESTER/ROSE  MS" in restored
+        assert b"ROSE TESTER" in restored
+
+    def test_title_preserved_outside_the_token(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        """The honorific is not PII and stays as plaintext next to the token, so a consumer
+        still sees the passenger's title."""
+        redacted, _ = _redact(_fixture("get_reservation_remark_name_response.xml"), baked_ruleset, pii_keyring)
+        assert b"MS" in redacted
+
+    def test_trip_search_given_name_gone_from_remarks_and_history(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        redacted, _ = _redact(_fixture("trip_search_remark_name_response.xml"), baked_ruleset, pii_keyring)
+        assert parse_operation(parse_bytes(_fixture("trip_search_remark_name_response.xml"))) == "Trip_SearchRS"
+        assert b"ROSE" not in redacted
+        assert b"TESTER" not in redacted
+        assert b"SEBDWC" in redacted
+
+
 def test_ruleset_version_covers_sabre(baked_ruleset: RuleSet) -> None:
     assert any(rule.channel == "sabre" for rule in baked_ruleset.rules)
     assert "sabre" in baked_ruleset.rules_version

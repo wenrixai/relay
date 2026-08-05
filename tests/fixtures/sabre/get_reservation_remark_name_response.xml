@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+<soap-env:Header>
+    <eb:MessageHeader xmlns:eb="http://www.ebxml.org/namespaces/messageHeader" eb:version="1.0" soap-env:mustUnderstand="1">
+        <eb:From>
+            <eb:PartyId eb:type="URI">123123</eb:PartyId>
+        </eb:From>
+        <eb:To>
+            <eb:PartyId eb:type="URI">999999</eb:PartyId>
+        </eb:To>
+        <eb:CPAId>J5TI</eb:CPAId>
+        <eb:Service>GetReservationRQ</eb:Service>
+        <eb:Action>GetReservationRQ</eb:Action>
+        <eb:MessageData>
+            <eb:MessageId>1214392546220670611</eb:MessageId>
+            <eb:Timestamp>2026-07-24T02:03:00</eb:Timestamp>
+        </eb:MessageData>
+    </eb:MessageHeader>
+</soap-env:Header>
+<soap-env:Body>
+    <stl19:GetReservationRS xmlns:stl19="http://webservices.sabre.com/pnrbuilder/v1_19" xmlns:or114="http://services.sabre.com/res/or/v1_14" Version="1.19.0">
+        <stl19:Reservation numberInParty="1" numberOfInfants="0" NumberInSegment="1">
+            <stl19:BookingDetails>
+                <stl19:RecordLocator>SEBDWC</stl19:RecordLocator>
+                <stl19:CreationTimestamp>2026-07-24T02:03:00</stl19:CreationTimestamp>
+            </stl19:BookingDetails>
+            <stl19:PassengerReservation>
+                <stl19:Passengers>
+                    <stl19:Passenger id="9" nameType="S" nameId="01.01" nameAssocId="1" elementId="pnr-9.1">
+                        <stl19:LastName>TESTER</stl19:LastName>
+                        <stl19:FirstName>ROSE  MS</stl19:FirstName>
+                        <stl19:Profiles>
+                            <stl19:Profile id="10">
+                                <stl19:ProfileID>120402457</stl19:ProfileID>
+                                <stl19:ProfileType>TVL</stl19:ProfileType>
+                            </stl19:Profile>
+                        </stl19:Profiles>
+                        <stl19:Seats/>
+                        <stl19:Remarks>
+                            <stl19:Remark index="4" id="13" type="CODED" code="P" elementId="pnr-13">
+                                <stl19:RemarkLines>
+                                    <stl19:RemarkLine>
+                                        <stl19:Text>PROFILE-PORTRAIT</stl19:Text>
+                                    </stl19:RemarkLine>
+                                </stl19:RemarkLines>
+                            </stl19:Remark>
+                            <stl19:Remark index="2" id="15" type="REG" elementId="pnr-15">
+                                <stl19:RemarkLines>
+                                    <stl19:RemarkLine>
+                                        <stl19:Text>TESTER/ROSE  MS</stl19:Text>
+                                    </stl19:RemarkLine>
+                                </stl19:RemarkLines>
+                            </stl19:Remark>
+                            <stl19:Remark index="3" id="16" type="CLIADR" elementId="pnr-16">
+                                <stl19:RemarkLines>
+                                    <stl19:RemarkLine>
+                                        <stl19:Text>ROSE TESTER</stl19:Text>
+                                    </stl19:RemarkLine>
+                                </stl19:RemarkLines>
+                            </stl19:Remark>
+                        </stl19:Remarks>
+                        <stl19:PhoneNumbers/>
+                    </stl19:Passenger>
+                </stl19:Passengers>
+            </stl19:PassengerReservation>
+            <stl19:History>
+                <stl19:HistoryTransaction>
+                    <stl19:Signature SequenceNbr="1">
+                        <stl19:HistoryTimestamp>2026-07-24T02:03:00</stl19:HistoryTimestamp>
+                        <stl19:DutyCode>*</stl19:DutyCode>
+                        <stl19:AgentSine>AWX</stl19:AgentSine>
+                        <stl19:HomePCC>J5TI</stl19:HomePCC>
+                        <stl19:AgencyPCC>51DG</stl19:AgencyPCC>
+                        <stl19:HistoryFrom>2854908</stl19:HistoryFrom>
+                    </stl19:Signature>
+                    <stl19:AssociationHistory>
+                        <stl19:AssociationId>15</stl19:AssociationId>
+                        <stl19:HistoryAction>ANA</stl19:HistoryAction>
+                        <stl19:HistoryAssociationElement Type="REMARK">TESTER/ROSE  MS</stl19:HistoryAssociationElement>
+                        <stl19:Passengers>
+                            <stl19:Name>TESTER/ROSE MS</stl19:Name>
+                        </stl19:Passengers>
+                        <stl19:AssociationParent>
+                            <stl19:Type>Name</stl19:Type>
+                            <stl19:Content>TESTER/ROSE MS</stl19:Content>
+                        </stl19:AssociationParent>
+                        <stl19:AssociationChild>
+                            <stl19:Type>Remark</stl19:Type>
+                            <stl19:Content>TESTER/ROSE  MS</stl19:Content>
+                        </stl19:AssociationChild>
+                    </stl19:AssociationHistory>
+                    <stl19:AssociationHistory>
+                        <stl19:AssociationId>16</stl19:AssociationId>
+                        <stl19:HistoryAction>ANA</stl19:HistoryAction>
+                        <stl19:HistoryAssociationElement Type="REMARK">/ROSE TESTER</stl19:HistoryAssociationElement>
+                        <stl19:Passengers>
+                            <stl19:Name>TESTER/ROSE MS</stl19:Name>
+                        </stl19:Passengers>
+                        <stl19:AssociationParent>
+                            <stl19:Type>Name</stl19:Type>
+                            <stl19:Content>TESTER/ROSE MS</stl19:Content>
+                        </stl19:AssociationParent>
+                        <stl19:AssociationChild>
+                            <stl19:Type>Remark</stl19:Type>
+                            <stl19:Content>/ROSE TESTER</stl19:Content>
+                        </stl19:AssociationChild>
+                    </stl19:AssociationHistory>
+                    <stl19:NameHistory>
+                        <stl19:LastName>TESTER</stl19:LastName>
+                        <stl19:FirstName>ROSE MS</stl19:FirstName>
+                    </stl19:NameHistory>
+                </stl19:HistoryTransaction>
+            </stl19:History>
+        </stl19:Reservation>
+    </stl19:GetReservationRS>
+</soap-env:Body>
+</soap-env:Envelope>
