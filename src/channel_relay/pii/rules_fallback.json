@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-baseline-2026-08-05",
+  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-expanded-2026-08-05",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -323,9 +323,365 @@
       "method": "encrypt"
     },
     {
+      "id": "amadeus.pnr.dob",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply$",
+      "path": "//a:passengerData/a:dateOfBirth/a:dateAndTimeDetails/a:date | //a:enhancedPassengerData/a:dateOfBirthInEnhancedPaxData/a:dateAndTimeDetails/a:date",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "dob",
+      "method": "replace",
+      "replacement": "01011900"
+    },
+    {
+      "id": "amadeus.pnr.structured_address",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply$",
+      "path": "//a:dataElementsIndiv/a:structuredAddress/a:address",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "address",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "amadeus.pnr.hotel_payment",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply$",
+      "path": "//a:hotelReservationInfo/a:guaranteeOrDeposit/a:creditCardInfo/a:formOfPayment/a:creditCardNumber",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "amadeus.pnr.hotel_payment_expiry",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply$",
+      "path": "//a:hotelReservationInfo/a:guaranteeOrDeposit/a:creditCardInfo/a:formOfPayment/a:expiryDate",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "0199"
+    },
+    {
+      "id": "amadeus.pnr.hotel_confirmation_email",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply$",
+      "path": "//a:hotelReservationInfo/a:writtenConfirmationContact/a:contactInformation[a:comChannelQualifier='EML']/a:comAddress",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "email",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "amadeus.pnr.hotel_confirmation_phone",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply$",
+      "path": "//a:hotelReservationInfo/a:writtenConfirmationContact/a:contactInformation[not(a:comChannelQualifier='EML')]/a:comAddress",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "phone",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "amadeus.pnr.hotel_confirmation_name",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply$",
+      "path": "//a:hotelReservationInfo/a:writtenConfirmationInfo/a:partyNameDetails/a:name1",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.pnr.hotel_confirmation_address",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply$",
+      "path": "//a:hotelReservationInfo/a:writtenConfirmationInfo/a:addressDetails/a:line1 | //a:hotelReservationInfo/a:writtenConfirmationInfo/a:addressDetails/a:line2",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "address",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "amadeus.pnr.car_delivery_address",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply$",
+      "path": "//a:deliveryAndCollection/a:addressDeliveryCollection/a:addressDetails/a:line1 | //a:deliveryAndCollection/a:addressDeliveryCollection/a:city | //a:deliveryAndCollection/a:addressDeliveryCollection/a:zipCode | //a:deliveryAndCollection/a:addressDeliveryCollection/a:regionDetails/a:code",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "address",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "amadeus.pnr.car_delivery_phone",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply$",
+      "path": "//a:deliveryAndCollection/a:phoneNumber/a:telephoneNumberDetails/a:telephoneNumber",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "phone",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "amadeus.sales.v10_person_name",
+      "channel": "amadeus",
+      "operation": "^SalesReports_DisplayQueryReportReply$",
+      "path": "//a:documentData/a:passengerName/a:paxDetails/a:surname",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/TSRQRR_10_1_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.ticket.person_name",
+      "channel": "amadeus",
+      "operation": "^Ticket_ProcessEDoc(?:CCConcealed)?Reply$",
+      "path": "//t:docGroup/t:paxInfo/t:paxDetails/t:surname | //t:docGroup/t:paxInfo/t:otherPaxDetails/t:givenName | //c:docGroup/c:paxInfo/c:paxDetails/c:surname | //c:docGroup/c:paxInfo/c:otherPaxDetails/c:givenName",
+      "namespaces": {
+        "t": "http://xml.amadeus.com/TATRES_15_2_1A",
+        "c": "http://xml.amadeus.com/TCDRES_20_1_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.ticket.frequent_flyer",
+      "channel": "amadeus",
+      "operation": "^Ticket_ProcessEDoc(?:CCConcealed)?Reply$",
+      "path": "//t:couponGroup/t:frequentTravellerInfo/t:frequentTravellerDetails/t:number | //c:couponGroup/c:frequentTravellerInfo/c:frequentTravellerDetails/c:number",
+      "namespaces": {
+        "t": "http://xml.amadeus.com/TATRES_15_2_1A",
+        "c": "http://xml.amadeus.com/TCDRES_20_1_1A"
+      },
+      "pii_type": "frequent_flyer",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.ticket.payment",
+      "channel": "amadeus",
+      "operation": "^Ticket_ProcessEDoc(?:CCConcealed)?Reply$",
+      "path": "//t:docGroup/t:fop/t:formOfPayment/t:creditCardNumber | //t:docGroup/t:fop/t:formOfPayment/t:approvalCode | //c:docGroup/c:fop/c:formOfPayment/c:creditCardNumber | //c:docGroup/c:fop/c:formOfPayment/c:approvalCode",
+      "namespaces": {
+        "t": "http://xml.amadeus.com/TATRES_15_2_1A",
+        "c": "http://xml.amadeus.com/TCDRES_20_1_1A"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "amadeus.ticket.payment_expiry",
+      "channel": "amadeus",
+      "operation": "^Ticket_ProcessEDoc(?:CCConcealed)?Reply$",
+      "path": "//t:docGroup/t:fop/t:formOfPayment/t:expiryDate | //c:docGroup/c:fop/c:formOfPayment/c:expiryDate",
+      "namespaces": {
+        "t": "http://xml.amadeus.com/TATRES_15_2_1A",
+        "c": "http://xml.amadeus.com/TCDRES_20_1_1A"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "0199"
+    },
+    {
+      "id": "amadeus.tst.payment",
+      "channel": "amadeus",
+      "operation": "^Ticket_DisplayTSTReply$",
+      "path": "//a:fareList/a:contextualFop/a:formOfPayment/a:creditCardNumber",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/TTSTRR_15_1_1A"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "amadeus.tsm.person_name",
+      "channel": "amadeus",
+      "operation": "^Ticket_RetrieveListOfTSMReply$",
+      "path": "//a:detailsOfRetrievedTSMs/a:passengerName/a:paxDetails/a:surname | //a:detailsOfRetrievedTSMs/a:passengerName/a:otherPaxDetails/a:givenName",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/TTSLRR_09_1_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.transaction.person_name",
+      "channel": "amadeus",
+      "operation": "^SalesReports_DisplayTransactionReportReply$",
+      "path": "//a:transactionReportDataDetails/a:passengerName/a:paxDetails/a:surname",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/TSRTRR_17_1_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.transaction.payment",
+      "channel": "amadeus",
+      "operation": "^SalesReports_DisplayTransactionReportReply$",
+      "path": "//a:fopGroup/a:fopDescription/a:formOfPayment/a:creditCardNumber | //a:fopGroup/a:fopDescription/a:formOfPayment/a:approvalCode",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/TSRTRR_17_1_1A"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "amadeus.transaction.payment_expiry",
+      "channel": "amadeus",
+      "operation": "^SalesReports_DisplayTransactionReportReply$",
+      "path": "//a:fopGroup/a:fopDescription/a:formOfPayment/a:expiryDate",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/TSRTRR_17_1_1A"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "0199"
+    },
+    {
+      "id": "amadeus.queue.person_name",
+      "channel": "amadeus",
+      "operation": "^Queue_ListReply$",
+      "path": "//a:queueView/a:item/a:paxName/a:paxDetails/a:surname",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/QDQLRR_11_1_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.seatmap.person_name",
+      "channel": "amadeus",
+      "operation": "^Air_RetrieveSeatMapReply$",
+      "path": "//a:customerCentricData/a:travellerDetails/a:paxDetails/a:surname | //a:customerCentricData/a:travellerDetails/a:otherPaxDetails/a:givenName",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/SMPRES_17_1_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.refund.person_name",
+      "channel": "amadeus",
+      "operation": "^AMA_Ticket(?:Init|Process)RefundRS$",
+      "path": "//a:Passengers/a:Passenger/a:FirstName | //a:Passengers/a:Passenger/a:LastName",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/2010/06/TicketTypes_v2"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "amadeus.history.email",
+      "channel": "amadeus",
+      "operation": "^PNR_DisplayHistoryReply$",
+      "path": "//a:pnrHistoryData/a:textInformation",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PHIDRR_16_1_1A"
+      },
+      "pii_type": "email",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.cpnr.person",
+      "channel": "sabre",
+      "operation": "^CreatePassengerNameRecordRS$",
+      "path": "//res:CustomerInfo/res:ContactNumbers/res:ContactNumber/res:PersonName | //res:CustomerInfo/res:PersonName/res:GivenName | //res:CustomerInfo/res:PersonName/res:Surname | //res:CustomerInfo/res:PaymentInfo/res:Payment/res:CC_Info/res:CardHolderInfo/@Name",
+      "namespaces": {
+        "res": "http://services.sabre.com/sp/reservation/v2_4"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "sabre.cpnr.email",
+      "channel": "sabre",
+      "operation": "^CreatePassengerNameRecordRS$",
+      "path": "//res:CustomerInfo/res:PersonName/res:Email",
+      "namespaces": {
+        "res": "http://services.sabre.com/sp/reservation/v2_4"
+      },
+      "pii_type": "email",
+      "method": "encrypt"
+    },
+    {
+      "id": "sabre.cpnr.phone",
+      "channel": "sabre",
+      "operation": "^CreatePassengerNameRecordRS$",
+      "path": "//res:CustomerInfo/res:ContactNumbers/res:ContactNumber/@Phone | //res:CustomerInfo/res:PaymentInfo/res:Payment/res:CC_Info/res:CardHolderInfo/res:ContactNumbers/res:ContactNumber/@Phone",
+      "namespaces": {
+        "res": "http://services.sabre.com/sp/reservation/v2_4"
+      },
+      "pii_type": "phone",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "sabre.cpnr.address",
+      "channel": "sabre",
+      "operation": "^CreatePassengerNameRecordRS$",
+      "path": "//res:CustomerInfo/res:Address/res:AddressLine | //res:CustomerInfo/res:PaymentInfo/res:Payment/res:CC_Info/res:CardHolderInfo/res:Address/res:AddressLine",
+      "namespaces": {
+        "res": "http://services.sabre.com/sp/reservation/v2_4"
+      },
+      "pii_type": "address",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "sabre.cpnr.frequent_flyer",
+      "channel": "sabre",
+      "operation": "^CreatePassengerNameRecordRS$",
+      "path": "//res:CustomerInfo/res:CustLoyalty/@MembershipID",
+      "namespaces": {
+        "res": "http://services.sabre.com/sp/reservation/v2_4"
+      },
+      "pii_type": "frequent_flyer",
+      "method": "encrypt"
+    },
+    {
+      "id": "sabre.cpnr.passport",
+      "channel": "sabre",
+      "operation": "^CreatePassengerNameRecordRS$",
+      "path": "//res:CustomerInfo/res:Passport/@Number",
+      "namespaces": {
+        "res": "http://services.sabre.com/sp/reservation/v2_4"
+      },
+      "pii_type": "passport_id",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
       "id": "sabre.res.passenger_name",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//s19:Passenger/s19:LastName | //s19:Passenger/s19:FirstName | //s19:NameHistory/s19:LastName | //s19:NameHistory/s19:FirstName",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -341,8 +697,8 @@
     {
       "id": "sabre.res.history_name",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
-      "path": "//o14:NameAssociation/o14:LastName | //o14:NameAssociation/o14:FirstName",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//o14:NameAssociation/o14:LastName | //o14:NameAssociation/o14:FirstName | //o14:NameAssociationTag/o14:LastName | //o14:NameAssociationTag/o14:FirstName | //o14:InvoiceData/o14:TravellerName/o14:LastName | //o14:InvoiceData/o14:TravellerName/o14:FirstName",
       "namespaces": {
         "o14": "http://services.sabre.com/res/or/v1_14"
       },
@@ -357,7 +713,7 @@
     {
       "id": "sabre.res.ticket_passenger_name",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//s19:PassengerName | //s19:Passengers/s19:Name",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -368,7 +724,7 @@
     {
       "id": "sabre.res.email",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//s19:EmailAddress/s19:Address | //o14:Email/o14:Address | //o14:PassengerContactEmail/o14:Email",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -380,10 +736,11 @@
     {
       "id": "sabre.res.phone",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
-      "path": "//s19:PhoneNumber/s19:Number | //s19:AssociationChild[s19:Type='PhoneNumber']/s19:Content | //s19:HistoryAssociationElement[@Type='PHONE_NUMBER']",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:PhoneNumber/s19:Number | //s19:AssociationChild[s19:Type='PhoneNumber']/s19:Content | //s19:HistoryAssociationElement[@Type='PHONE_NUMBER'] | //o14:PassengerContactMobilePhone/o14:PhoneNumber",
       "namespaces": {
-        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
+        "o14": "http://services.sabre.com/res/or/v1_14"
       },
       "pii_type": "phone",
       "method": "replace",
@@ -392,7 +749,7 @@
     {
       "id": "sabre.res.address_line",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//s19:AddressLine/s19:Text",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -404,7 +761,7 @@
     {
       "id": "sabre.res.meal_special_service",
       "channel": "sabre",
-      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
       "path": "//s19:RemarkLine/s19:Text | //s19:HistoryAssociationElement | //s19:AssociationParent/s19:Content | //s19:AssociationChild/s19:Content",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -420,7 +777,7 @@
     {
       "id": "sabre.res.wheelchair_special_service",
       "channel": "sabre",
-      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
       "path": "//s19:GenericSpecialRequest[starts-with(s19:Code,'WC')]/s19:FreeText | //s19:GenericSpecialRequest[starts-with(s19:Code,'WC')]/s19:FullText | //s19:GenericSpecialRequests[starts-with(s19:Code,'WC')]/s19:FreeText | //s19:GenericSpecialRequests[starts-with(s19:Code,'WC')]/s19:FullText",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -431,7 +788,7 @@
     {
       "id": "sabre.res.meal_type_code",
       "channel": "sabre",
-      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
       "path": "//s19:SpecialMealRequest/s19:MealType",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -443,7 +800,7 @@
     {
       "id": "sabre.res.wheelchair_type_code",
       "channel": "sabre",
-      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
       "path": "//s19:WheelchairRequest/s19:WheelchairCode",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -455,8 +812,20 @@
     {
       "id": "sabre.res.docs_dob",
       "channel": "sabre",
-      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
       "path": "//s19:DOCSEntry/s19:DateOfBirth",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "dob",
+      "method": "replace",
+      "replacement": "1900-01-01"
+    },
+    {
+      "id": "sabre.res.child_dob",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
+      "path": "//s19:ChildRequest/s19:DateOfBirth",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
@@ -467,7 +836,7 @@
     {
       "id": "sabre.res.docs_dob_history",
       "channel": "sabre",
-      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
       "path": "//o14:TravelDocument/o14:DateOfBirth",
       "namespaces": {
         "o14": "http://services.sabre.com/res/or/v1_14"
@@ -479,7 +848,7 @@
     {
       "id": "sabre.res.docs_gender",
       "channel": "sabre",
-      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
       "path": "//s19:DOCSEntry/s19:Gender | //o14:TravelDocument/o14:Gender",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -492,7 +861,7 @@
     {
       "id": "sabre.res.docs_name",
       "channel": "sabre",
-      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
       "path": "//s19:DOCSEntry/s19:Surname | //s19:DOCSEntry/s19:Forename | //s19:DOCSEntry/s19:MiddleName | //o14:TravelDocument/o14:LastName | //o14:TravelDocument/o14:FirstName",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -505,7 +874,7 @@
     {
       "id": "sabre.res.doc_freetext",
       "channel": "sabre",
-      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
       "path": "//s19:DOCOEntry/s19:FreeText | //s19:DOCSEntry/s19:FreeText | //o14:ServiceRequest[@code='DOCS' or @code='DOCO' or @code='DOCA']/o14:FreeText | //o14:ServiceRequest[@code='DOCS' or @code='DOCO' or @code='DOCA']/o14:FullText",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -518,7 +887,7 @@
     {
       "id": "sabre.res.travel_document_number",
       "channel": "sabre",
-      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
       "path": "//o14:OtherSupplementaryInformation/o14:DocumentNumber | //s19:DOCSEntry/s19:DocumentNumber | //o14:TravelDocument/o14:DocumentNumber",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -531,7 +900,7 @@
     {
       "id": "sabre.res.docs_expiry",
       "channel": "sabre",
-      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
       "path": "//s19:DOCSEntry/s19:DocumentExpirationDate",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -543,7 +912,7 @@
     {
       "id": "sabre.res.docs_expiry_history",
       "channel": "sabre",
-      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
       "path": "//o14:TravelDocument/o14:DocumentExpirationDate",
       "namespaces": {
         "o14": "http://services.sabre.com/res/or/v1_14"
@@ -555,7 +924,7 @@
     {
       "id": "sabre.res.docs_nationality",
       "channel": "sabre",
-      "operation": "^(GetReservationRS|Trip_SearchRS)$",
+      "operation": "^(GetReservationRS|UpdateReservationRS|Trip_SearchRS)$",
       "path": "//s19:DOCSEntry/s19:CountryOfIssue | //s19:DOCSEntry/s19:DocumentNationalityCountry | //o14:TravelDocument/o14:DocumentIssueCountry | //o14:TravelDocument/o14:DocumentNationalityCountry",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -568,7 +937,7 @@
     {
       "id": "sabre.res.frequent_flyer",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//s19:FrequentFlyer/s19:Number | //o14:FrequentFlyerNumber",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -580,7 +949,7 @@
     {
       "id": "sabre.res.card_number",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//o14:PaymentCard/o14:CardNumber",
       "namespaces": {
         "o14": "http://services.sabre.com/res/or/v1_14"
@@ -592,7 +961,7 @@
     {
       "id": "sabre.res.card_expiry",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//o14:PaymentCard/o14:ExpiryMonth | //o14:PaymentCard/o14:ExpiryYear",
       "namespaces": {
         "o14": "http://services.sabre.com/res/or/v1_14"
@@ -604,7 +973,7 @@
     {
       "id": "sabre.res.fop_remark",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//s19:Remark[@type='FOP']//s19:RemarkLine/s19:Text",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -616,7 +985,7 @@
     {
       "id": "sabre.res.remarks_ssn",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//s19:RemarkLine/s19:Text | //s19:GenericSpecialRequest/s19:FreeText | //s19:GenericSpecialRequest/s19:FullText | //s19:GenericSpecialRequests/s19:FreeText | //s19:GenericSpecialRequests/s19:FullText | //o14:ServiceRequest/o14:FreeText | //o14:ServiceRequest/o14:FullText",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -634,7 +1003,7 @@
     {
       "id": "sabre.res.remark_obfuscated_email",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//s19:Text | //s19:Content | //s19:HistoryAssociationElement | //o14:Comment",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -651,7 +1020,7 @@
     {
       "id": "sabre.res.ctc_special_request_phone",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//s19:GenericSpecialRequest[starts-with(s19:Code,'CTC')]/s19:FreeText | //s19:GenericSpecialRequest[starts-with(s19:Code,'CTC')]/s19:FullText | //s19:GenericSpecialRequests[starts-with(s19:Code,'CTC')]/s19:FreeText | //s19:GenericSpecialRequests[starts-with(s19:Code,'CTC')]/s19:FullText",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -667,7 +1036,7 @@
     {
       "id": "sabre.res.ctc_service_request_email",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//s19:GenericSpecialRequest[starts-with(s19:Code,'CTC')]/s19:FreeText | //s19:GenericSpecialRequest[starts-with(s19:Code,'CTC')]/s19:FullText | //o14:ServiceRequest[@code='CTCE']/o14:FreeText | //o14:ServiceRequest[@code='CTCE']/o14:FullText",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -684,7 +1053,7 @@
     {
       "id": "sabre.res.remark_phone",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//s19:RemarkLine/s19:Text | //o14:PassengerContactMobilePhone/o14:PhoneNumber",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
@@ -701,7 +1070,7 @@
     {
       "id": "sabre.res.remark_traveller_id",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//s19:RemarkLine/s19:Text | //s19:HistoryAssociationElement",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -717,7 +1086,7 @@
     {
       "id": "sabre.res.received_from_phone",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "path": "//s19:ReceivedFrom/s19:Name",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
@@ -733,7 +1102,7 @@
     {
       "id": "sabre.res.remarks_reference",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "rule_type": "reference",
       "path": "//s19:Text | //s19:Content | //s19:HistoryAssociationElement | //s19:AccountingLineText | //s19:GenericSpecialRequest/s19:FreeText | //s19:GenericSpecialRequest/s19:FullText | //s19:GenericSpecialRequests/s19:FreeText | //s19:GenericSpecialRequests/s19:FullText | //s19:ETicketNumber | //s19:OriginalTicketDetails",
       "namespaces": {
@@ -751,7 +1120,7 @@
     {
       "id": "sabre.res.service_request_reference",
       "channel": "sabre",
-      "operation": "^GetReservationRS$",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "rule_type": "reference",
       "path": "//o14:ServiceRequest/o14:FreeText | //o14:ServiceRequest/o14:FullText | //o14:Comment",
       "namespaces": {
@@ -769,7 +1138,7 @@
     {
       "id": "sabre.pq.name_attributes",
       "channel": "sabre",
-      "operation": "^(GetPriceQuoteRS|GetReservationRS)$",
+      "operation": "^(GetPriceQuoteRS|GetReservationRS|UpdateReservationRS)$",
       "path": "//p:NameAssociation/@firstName | //p:NameAssociation/@lastName | //p:NameAssociationInfo/@firstName | //p:NameAssociationInfo/@lastName | //p:PassengerName/@firstName | //p:PassengerName/@lastName",
       "namespaces": {
         "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
@@ -780,7 +1149,7 @@
     {
       "id": "sabre.pq.card_number_attribute",
       "channel": "sabre",
-      "operation": "^(GetPriceQuoteRS|GetReservationRS)$",
+      "operation": "^(GetPriceQuoteRS|GetReservationRS|UpdateReservationRS)$",
       "path": "//p:PaymentInfo/p:Card/@number",
       "namespaces": {
         "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
@@ -790,9 +1159,21 @@
       "replacement": "REDACTED"
     },
     {
+      "id": "sabre.pq.card_expiry_attribute",
+      "channel": "sabre",
+      "operation": "^(GetPriceQuoteRS|GetReservationRS|UpdateReservationRS)$",
+      "path": "//p:PaymentInfo/p:Card/@expiryDate",
+      "namespaces": {
+        "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
+      },
+      "pii_type": "payment",
+      "method": "mask",
+      "mask_char": "0"
+    },
+    {
       "id": "sabre.pq.bank_identification_number",
       "channel": "sabre",
-      "operation": "^(GetPriceQuoteRS|GetReservationRS)$",
+      "operation": "^(GetPriceQuoteRS|GetReservationRS|UpdateReservationRS)$",
       "path": "//p:OBFee/p:BankIdentificationNumber",
       "namespaces": {
         "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
@@ -804,7 +1185,7 @@
     {
       "id": "sabre.pq.bin_in_description",
       "channel": "sabre",
-      "operation": "^(GetPriceQuoteRS|GetReservationRS)$",
+      "operation": "^(GetPriceQuoteRS|GetReservationRS|UpdateReservationRS)$",
       "path": "//p:OBFee/p:Description",
       "namespaces": {
         "p": "http://www.sabre.com/ns/Ticketing/pqs/1.0"
@@ -822,9 +1203,10 @@
       "id": "sabre.tkt.name",
       "channel": "sabre",
       "operation": "^AirTicketRS$",
-      "path": "//at:Summary/at:FirstName | //at:Summary/at:LastName",
+      "path": "//at:Summary/at:FirstName | //at:Summary/at:LastName | //at21:Summary/at21:FirstName | //at21:Summary/at21:LastName",
       "namespaces": {
-        "at": "http://services.sabre.com/sp/air/ticket/v1"
+        "at": "http://services.sabre.com/sp/air/ticket/v1",
+        "at21": "http://services.sabre.com/sp/air/ticket/v1_2_1"
       },
       "pii_type": "person",
       "method": "encrypt"
@@ -1151,6 +1533,29 @@
       "replacement": "REDACTED"
     },
     {
+      "id": "sabre.edoc.frequent_flyer",
+      "channel": "sabre",
+      "operation": "^GetElectronicDocumentRS$",
+      "path": "//d:Affinity/d:FrequentFlyer/d:Number",
+      "namespaces": {
+        "d": "http://www.sabre.com/ns/Ticketing/EDoc"
+      },
+      "pii_type": "frequent_flyer",
+      "method": "encrypt"
+    },
+    {
+      "id": "sabre.edoc.masked_card_number",
+      "channel": "sabre",
+      "operation": "^GetElectronicDocumentRS$",
+      "path": "//d:Payment/d:Card/d:MaskedCardNumber",
+      "namespaces": {
+        "d": "http://www.sabre.com/ns/Ticketing/EDoc"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
       "id": "sabre.edoc.fare_calc_reference",
       "channel": "sabre",
       "operation": "^GetElectronicDocumentRS$",
@@ -1214,6 +1619,18 @@
       "replacement": "REDACTED"
     },
     {
+      "id": "sabre.tktdoc.masked_card_number",
+      "channel": "sabre",
+      "operation": "^GetTicketingDocumentRS$",
+      "path": "//dc:Payment/dc:Card/dc:MaskedCardNumber",
+      "namespaces": {
+        "dc": "http://www.sabre.com/ns/Ticketing/DC"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
       "id": "sabre.tktdoc.fare_calc_reference",
       "channel": "sabre",
       "operation": "^GetTicketingDocumentRS$",
@@ -1247,6 +1664,17 @@
           "pattern": "^\\s*\\d+[A-Z]+/([A-Z]+)"
         }
       ]
+    },
+    {
+      "id": "sabre.itinhist.accounting_person_name",
+      "channel": "sabre",
+      "operation": "^TravelItineraryHistoryRS$",
+      "path": "//sx:HistoricalInfo/sx:AccountingInfo/sx:PersonName",
+      "namespaces": {
+        "sx": "http://webservices.sabre.com/sabreXML/2011/10"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
     },
     {
       "id": "sabre.itinhist.dob",

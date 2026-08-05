@@ -1,0 +1,1 @@
+<PNR_DisplayHistoryReply xmlns="http://xml.amadeus.com/PHIDRR_16_1_1A"><pnrHistory><pnrHistoryData><textInformation>CONTACT TEST.USER@EXAMPLE.COM RETAIN NOTE</textInformation></pnrHistoryData><reservationInfo><controlNumber>PNR003</controlNumber></reservationInfo></pnrHistory></PNR_DisplayHistoryReply>

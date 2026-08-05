@@ -1,0 +1,12 @@
+<PNR_Reply xmlns="http://xml.amadeus.com/PNRACC_17_1_1A">
+  <pnrHeader><reservationInfo><reservation><controlNumber>PNR001</controlNumber></reservation></reservationInfo></pnrHeader>
+  <travellerInfo>
+    <passengerData><travellerInformation><traveller><surname>BROWN</surname></traveller><passenger><firstName>ALICE MS</firstName></passenger></travellerInformation><dateOfBirth><dateAndTimeDetails><date>02021990</date></dateAndTimeDetails></dateOfBirth></passengerData>
+    <enhancedPassengerData><dateOfBirthInEnhancedPaxData><dateAndTimeDetails><date>02021990</date></dateAndTimeDetails></dateOfBirthInEnhancedPaxData></enhancedPassengerData>
+  </travellerInfo>
+  <dataElementsMaster><dataElementsIndiv><structuredAddress><address>12 TEST STREET</address></structuredAddress></dataElementsIndiv></dataElementsMaster>
+  <originDestinationDetails>
+    <itineraryInfo><hotelReservationInfo><guaranteeOrDeposit><creditCardInfo><formOfPayment><creditCardNumber>411111XXXXXX1111</creditCardNumber><expiryDate>1229</expiryDate></formOfPayment></creditCardInfo></guaranteeOrDeposit><writtenConfirmationContact><contactInformation><partyQualifier>W</partyQualifier><comAddress>HOTEL.CONTACT@EXAMPLE.COM</comAddress><comChannelQualifier>EML</comChannelQualifier></contactInformation><contactInformation><partyQualifier>W</partyQualifier><comAddress>15550000003</comAddress><comChannelQualifier>FAX</comChannelQualifier></contactInformation></writtenConfirmationContact><writtenConfirmationInfo><partyQualifier>W</partyQualifier><addressDetails><line1>34 TEST AVENUE</line1></addressDetails><partyNameDetails><name1>ALICE BROWN</name1></partyNameDetails></writtenConfirmationInfo></hotelReservationInfo></itineraryInfo>
+    <itineraryInfo><typicalCarData><deliveryAndCollection><addressDeliveryCollection><addressUsageDetails><addressUsage>DEL</addressUsage></addressUsageDetails><addressDetails><format>5</format><line1>56 TEST ROAD</line1></addressDetails><city>TESTVILLE</city><zipCode>00000</zipCode><countryCode>ZZ</countryCode><regionDetails><code>TS</code></regionDetails></addressDeliveryCollection><phoneNumber><phoneOrEmailType>PHO</phoneOrEmailType><telephoneNumberDetails><telephoneNumber>15550000002</telephoneNumber></telephoneNumberDetails></phoneNumber></deliveryAndCollection></typicalCarData></itineraryInfo>
+  </originDestinationDetails>
+</PNR_Reply>

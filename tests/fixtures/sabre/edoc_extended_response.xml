@@ -1,0 +1,1 @@
+<GetElectronicDocumentRS xmlns="http://www.sabre.com/ns/Ticketing/EDoc"><Traveler><FirstName>ALICE</FirstName><LastName>BROWN</LastName><Affinity><FrequentFlyer><Number>FF000001</Number></FrequentFlyer></Affinity></Traveler><Payment><Card><MaskedCardNumber>411111XXXXXX1111</MaskedCardNumber></Card></Payment><DocumentNumber>1720000000000</DocumentNumber></GetElectronicDocumentRS>

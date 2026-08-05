@@ -1,0 +1,1 @@
+<Ticket_RetrieveListOfTSMReply xmlns="http://xml.amadeus.com/TTSLRR_09_1_1A"><detailsOfRetrievedTSMs><passengerName><paxDetails><surname>BROWN</surname></paxDetails><otherPaxDetails><givenName>ALICE MS</givenName></otherPaxDetails></passengerName><passengerTattoo><passengerReference>1</passengerReference></passengerTattoo></detailsOfRetrievedTSMs></Ticket_RetrieveListOfTSMReply>
