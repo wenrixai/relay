@@ -36,6 +36,7 @@ class PiiType(StrEnum):
     """PII categories (§7). PNR reference, ticket number, itinerary/fare are not PII."""
 
     PERSON = "person"
+    AGE = "age"
     DOB = "dob"
     GENDER = "gender"
     NATIONALITY = "nationality"
@@ -44,6 +45,7 @@ class PiiType(StrEnum):
     PHONE = "phone"
     EMAIL = "email"
     ADDRESS = "address"
+    IP_ADDRESS = "ip_address"
     PAYMENT = "payment"
     FREQUENT_FLYER = "frequent_flyer"
     SSN = "ssn"

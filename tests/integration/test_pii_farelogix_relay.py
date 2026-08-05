@@ -56,7 +56,17 @@ def test_farelogix_variant_response_redacted_via_family_alias(monkeypatch: pytes
     assert response.status_code == 200
     body = response.content
     # Structured PII is scrubbed even though the channel type is farelogix-aa, not farelogix.
-    for gone in (b"DAVE.DOE@EXAMPLE.COM", b"17865554433", b"X1234321", b"<Surname>DOE</Surname>"):
+    for gone in (
+        b"DAVE.DOE@EXAMPLE.COM",
+        b"17865554433",
+        b"X1234321",
+        b"<Surname>DOE</Surname>",
+        b"01MAR77",
+        b"<NameTitle>MR</NameTitle>",
+        b"<IssuingCountryCode>ROU</IssuingCountryCode>",
+        b"2023-12-06",
+        b"2033-12-04",
+    ):
         assert gone not in body
     # Operational identifiers survive.
     assert b"BMSHY5" in body and b"00157549767336" in body

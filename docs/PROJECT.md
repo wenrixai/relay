@@ -194,8 +194,9 @@ hand-maintained `schema.json`. On invalid config, log the validation error and *
 - Off by default; enabled per channel.
 - Redaction on the **response**; de-anonymization on the **request** (NDC rebooking needs the real
   name).
-- PII types: `person`, `dob`, `gender`, `nationality`, `passport_id`, `visa`, `phone`, `email`,
-  `address`, `payment`, `frequent_flyer`. Not PII: PNR reference, ticket number, itinerary/fare.
+- PII types: `person`, `age`, `dob`, `gender`, `nationality`, `passport_id`, `visa`, `phone`, `email`,
+  `address`, `ip_address`, `payment`, `frequent_flyer`, `ssn`, `special_service`. Not PII: PNR
+  reference, ticket number, itinerary/fare.
 
 ---
 

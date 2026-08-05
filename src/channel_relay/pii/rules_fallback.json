@@ -860,6 +860,54 @@
       "method": "encrypt"
     },
     {
+      "id": "travelfusion.booking.traveller_age",
+      "channel": "travelfusion",
+      "operation": "^(GetBookingDetails|GetLatestBookingDetails)$",
+      "path": "//*[local-name()='BookingProfile']/*[local-name()='TravellerList']/*[local-name()='Traveller']/*[local-name()='Age']",
+      "pii_type": "age",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.title",
+      "channel": "travelfusion",
+      "operation": "^(GetBookingDetails|GetLatestBookingDetails)$",
+      "path": "//*[local-name()='BookingProfile']//*[local-name()='Name']/*[local-name()='Title']",
+      "pii_type": "gender",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.dob_parameter",
+      "channel": "travelfusion",
+      "operation": "^(GetBookingDetails|GetLatestBookingDetails)$",
+      "path": "//*[local-name()='BookingProfile']//*[local-name()='CustomSupplierParameter'][*[local-name()='Name']='DateOfBirth']/*[local-name()='Value']",
+      "pii_type": "dob",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.frequent_flyer_parameter",
+      "channel": "travelfusion",
+      "operation": "^(GetBookingDetails|GetLatestBookingDetails)$",
+      "path": "//*[local-name()='BookingProfile']//*[local-name()='CustomSupplierParameter'][*[local-name()='Name']='FrequentFlyerNumber']/*[local-name()='Value']",
+      "pii_type": "frequent_flyer",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.passport_parameter",
+      "channel": "travelfusion",
+      "operation": "^(GetBookingDetails|GetLatestBookingDetails)$",
+      "path": "//*[local-name()='BookingProfile']//*[local-name()='CustomSupplierParameter'][*[local-name()='Name']='PassportExpiryDate' or *[local-name()='Name']='PassportNumber']/*[local-name()='Value']",
+      "pii_type": "passport_id",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.nationality_parameter",
+      "channel": "travelfusion",
+      "operation": "^(GetBookingDetails|GetLatestBookingDetails)$",
+      "path": "//*[local-name()='BookingProfile']//*[local-name()='CustomSupplierParameter'][*[local-name()='Name']='CountryOfResidence' or *[local-name()='Name']='PassportCountryOfIssue']/*[local-name()='Value']",
+      "pii_type": "nationality",
+      "method": "encrypt"
+    },
+    {
       "id": "travelfusion.booking.contact_name",
       "channel": "travelfusion",
       "operation": "^GetBookingDetails$",
@@ -895,7 +943,7 @@
       "id": "travelfusion.booking.phone",
       "channel": "travelfusion",
       "operation": "^GetBookingDetails$",
-      "path": "//*[local-name()='BookingProfile']/*[local-name()='ContactDetails']/*[local-name()='HomePhone' or local-name()='WorkPhone' or local-name()='MobilePhone']",
+      "path": "//*[local-name()='BookingProfile']/*[local-name()='ContactDetails']/*[local-name()='HomePhone' or local-name()='WorkPhone' or local-name()='MobilePhone' or local-name()='Fax']/*[local-name()='InternationalCode' or local-name()='AreaCode' or local-name()='Number' or local-name()='Extension']",
       "pii_type": "phone",
       "method": "encrypt"
     },
@@ -925,6 +973,14 @@
         "person"
       ],
       "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "travelfusion.booking.client_ip",
+      "channel": "travelfusion",
+      "operation": "^(GetBookingDetails|GetLatestBookingDetails)$",
+      "path": "//*[local-name()='GeneralInfoItem'][*[local-name()='Name']='ClientAddress']/*[local-name()='Value']",
+      "pii_type": "ip_address",
       "method": "encrypt"
     },
     {
@@ -1518,7 +1574,7 @@
       "id": "travelport.core.address",
       "channel": "travelport",
       "operation": ".*Rsp$",
-      "path": "//*[local-name()='Address' or local-name()='ShippingAddress']/*[local-name()='Street'] | //*[local-name()='Address' or local-name()='ShippingAddress']/*[local-name()='City'] | //*[local-name()='Address' or local-name()='ShippingAddress']/*[local-name()='PostalCode']",
+      "path": "//*[local-name()='Address' or local-name()='ShippingAddress']/*[local-name()='Street'] | //*[local-name()='Address' or local-name()='ShippingAddress']/*[local-name()='City'] | //*[local-name()='Address' or local-name()='ShippingAddress']/*[local-name()='State' or local-name()='Province'] | //*[local-name()='Address' or local-name()='ShippingAddress']/*[local-name()='PostalCode']",
       "pii_type": "address",
       "method": "replace",
       "replacement": "REDACTED"
@@ -1715,6 +1771,15 @@
       "replacement": "M"
     },
     {
+      "id": "farelogix.pax.title",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//Individual/NameTitle",
+      "pii_type": "gender",
+      "method": "replace",
+      "replacement": "DR"
+    },
+    {
       "id": "farelogix.pax.dob",
       "channel": "farelogix",
       "operation": "^XXTransactionResponse$",
@@ -1731,6 +1796,24 @@
       "pii_type": "passport_id",
       "method": "replace",
       "replacement": "REDACTED"
+    },
+    {
+      "id": "farelogix.doc.issuing_country",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//IdentityDocument/IssuingCountryCode",
+      "pii_type": "nationality",
+      "method": "replace",
+      "replacement": "ZZ"
+    },
+    {
+      "id": "farelogix.doc.dates",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//IdentityDocument/IssueDate | //IdentityDocument/ExpiryDate",
+      "pii_type": "passport_id",
+      "method": "replace",
+      "replacement": "1900-01-01"
     },
     {
       "id": "farelogix.doc.visa_number",
@@ -1786,6 +1869,18 @@
         "aug": "http://ndc.farelogix.com/aug"
       },
       "pii_type": "address",
+      "method": "replace",
+      "replacement": "REDACTED"
+    },
+    {
+      "id": "farelogix.doc.docs_freetext",
+      "channel": "farelogix",
+      "operation": "^XXTransactionResponse$",
+      "path": "//aug:SpecialServiceRequest[aug:SSRCode='DOCS']/aug:Text",
+      "namespaces": {
+        "aug": "http://ndc.farelogix.com/aug"
+      },
+      "pii_type": "passport_id",
       "method": "replace",
       "replacement": "REDACTED"
     },

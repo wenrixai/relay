@@ -60,7 +60,18 @@ def test_travelfusion_route_name_uses_type_rules_and_swaps_credentials(monkeypat
     assert b"<XmlLoginId>relay-xml</XmlLoginId>" in forwarded
     assert b"caller-login" not in forwarded and b"caller-xml" not in forwarded
 
-    for gone in (b"4111111111111111", b"billing@example.test", b"<LoginId>", b"<XmlLoginId>"):
+    for gone in (
+        b"4111111111111111",
+        b"billing@example.test",
+        b"12/05/1234",
+        b"FF00012345",
+        b"P00012345",
+        b"<InternationalCode>435r</InternationalCode>",
+        b"<Age>20</Age>",
+        b"<Title>Ms</Title>",
+        b"<LoginId>",
+        b"<XmlLoginId>",
+    ):
         assert gone not in response.content
     assert b"ENC_" in response.content
     assert b"MasterCard" in response.content

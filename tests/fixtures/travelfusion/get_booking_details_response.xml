@@ -1491,10 +1491,10 @@
                     <Extension/>
                 </MobilePhone>
                 <Fax>
-                    <InternationalCode/>
-                    <AreaCode/>
-                    <Number/>
-                    <Extension/>
+                    <InternationalCode>44</InternationalCode>
+                    <AreaCode>20</AreaCode>
+                    <Number>70001112</Number>
+                    <Extension>9</Extension>
                 </Fax>
                 <Email>traveler@example.test</Email>
             </ContactDetails>
