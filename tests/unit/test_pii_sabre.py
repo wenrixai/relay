@@ -781,6 +781,177 @@ class TestRemarkAndHistoryGivenName:
         assert b"SEBDWC" in redacted
 
 
+class TestThirdPartyAndHistoryMirrors:
+    """A customer-reported gap with two distinct causes.
+
+    1. Non-passenger persons — emergency contact, authority-to-charge holder, travel arranger —
+       have no structured name node anywhere in the document. The phase-2 reference pass can only
+       scrub values a phase-1 field rule already collected, so nothing could see them. Observed in
+       the live payload as ``EMER-<given> <ENC_ token>``: the passenger surname beside the
+       emergency contact's name *was* scrubbed, the contact's own given name was not.
+    2. Sabre re-emits every coded passenger remark three times — ``RemarkLine/Text``,
+       ``HistoryAssociationElement``, and ``AssociationChild``/``AssociationParent`` ``Content``,
+       with ``@code`` turned into a ``P!``/``V!``/``E!`` prefix. Reference rules accept only an
+       encrypt action, so date of birth, passport, nationality and card data (all one-way) can
+       never be propagated into those mirrors by the reference pass; their field rules have to name
+       the mirror paths.
+    """
+
+    FIXTURE = "get_reservation_third_party_remarks_response.xml"
+
+    def test_emergency_contact_name_and_phone_redacted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        assert b"MAYA" not in redacted
+        assert b"972500000001" not in redacted
+        # The marker survives, and EMER-OTHER carries no PII so it is left alone.
+        assert b"EMER-" in redacted
+        assert b"EMER-OTHER" in redacted
+
+    def test_authority_to_charge_holder_redacted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        assert b"SAM BARNES" not in redacted
+        assert b"TPREF-AUTH-AUTHORITY TO CHARGE-" in redacted
+
+    def test_arranger_redacted_everywhere_and_shares_one_token(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+    ) -> None:
+        """The arranger's name is introduced by the ``CTC`` contact phone node. Collecting it there
+        in phase 1 is what lets the phase-2 reference pass reach its other renderings, so those
+        carry the same token."""
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        assert b"DANA COHEN" not in redacted
+        assert b"DANACOHEN" not in redacted
+        # The invoice UDID field and received-from both resolve to the ciphertext of the value the
+        # CTC node contributed to the collector.
+        udid = next(t for t in xml_texts(redacted, "Text") if t.startswith("*84-"))
+        token = udid.removeprefix("*84-")
+        assert TOKEN_RE.fullmatch(token)
+        assert decrypt(token, pii_keyring) == "DANA COHEN"
+        assert token in next(t for t in xml_texts(redacted, "Name") if "MARK TAYLOR" in t)
+        # The TRAVEL ARRANGER line ends in an operational "-B" qualifier. That is folded INTO the
+        # encrypted span deliberately: "-" is a base64url character, so a token placed immediately
+        # before "-B" is re-consumed by the greedy token scan on the way back upstream and never
+        # de-anonymizes — which would send a Wenrix token to the channel. Folding the suffix in
+        # keeps the marker visible, keeps the round-trip exact, and costs only a distinct token.
+        arranger = next(t for t in xml_texts(redacted, "Text") if t.startswith("TRAVEL ARRANGER/"))
+        arranger_token = arranger.removeprefix("TRAVEL ARRANGER/")
+        assert TOKEN_RE.fullmatch(arranger_token)
+        assert decrypt(arranger_token, pii_keyring) == "DANA COHEN-B"
+
+    def test_arranger_name_survives_the_whole_node_phone_rule(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+    ) -> None:
+        """Rules mutate the tree in list order, and two existing rules overwrite the very spans the
+        arranger rules read: ``sabre.res.phone`` replaces the whole ``CTC`` node with a sentinel,
+        and ``sabre.res.received_from_phone`` tokenizes the digits that
+        ``sabre.res.received_from_arranger`` keys on to tell an arranger from a lone agent name.
+        Both arranger rules must be ordered *before* their respective phone rule; otherwise the name
+        is destroyed or unmatchable, never enters the collector, and every other rendering leaks.
+        This test fails if either rule is moved after its phone rule."""
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        # The CTC node itself is masked whole (no ENC_ token abutting the phone digits) ...
+        ctc = list(xml_texts(redacted, "Number"))
+        assert ctc and all(_MASKED_RE.fullmatch(t) for t in ctc)
+        # ... yet the name it carried was collected, so the reference pass reached the remarks.
+        assert b"DANA" not in redacted
+        # ReceivedFrom: the arranger name is a reversible token, the phone is a one-way sentinel,
+        # and the agent name is untouched.
+        received_from = next(t for t in xml_texts(redacted, "Name") if "MARK TAYLOR" in t)
+        arranger, phone = received_from.removesuffix("-MARK TAYLOR").split(" ")
+        assert TOKEN_RE.fullmatch(arranger)
+        assert decrypt(arranger, pii_keyring) == "DANA COHEN"
+        assert _MASKED_RE.fullmatch(phone)
+
+    def test_ticketing_comment_name_redacted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        # A bare given name in a free-text comment: the collected value is the full name, so the
+        # reference pass cannot match it and the comment needs its own marker-anchored rule.
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        assert b"AWAITING ADVS TO ISS TKT FR " in redacted
+        comment = redacted.split(b"AWAITING ADVS TO ISS TKT FR ")[1].split(b"<")[0]
+        assert TOKEN_RE.fullmatch(comment.decode())
+        assert decrypt(comment.decode(), pii_keyring) == "DANA"
+
+    def test_identity_documents_redacted_in_all_three_renderings(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        """The regression a reference-rule-only fix would miss."""
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        for gone in (b"02FEB90", b"39000001", b"03DEC22", b"04DEC32", b"CTZN-IL", b"GENDER-F"):
+            assert gone not in redacted, gone
+        # Each of the three renderings carries the sentinel: remark, HistoryAssociationElement,
+        # AssociationChild/Content.
+        assert redacted.count(b"BIRTHDATE-01JAN00") == 3
+        assert redacted.count(b"CTZN-ZZ") == 3
+        assert redacted.count(b"PSPT-ZZ 00000000 31DEC99") == 3
+        assert b"PSPT/CO-ZZ/NR-00000000/IS-31DEC99/EX-31DEC99/CI-ZZ" in redacted
+        assert b"GENDER-M" in redacted
+        assert b"DHSNBR-PAX-1.1,01JAN00,M," in redacted
+
+    def test_history_card_fragment_and_expiry_redacted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        # The same card renders with "¥" in the remark and "/" in history. Only the remark form was
+        # covered before, and the history form appeared many times over.
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        assert b"5XXXXXXXXXXX1111" not in redacted
+        assert b"1127" not in redacted
+        assert b"11/27" not in redacted
+        assert b"*CAREDACTED/0000-XN" in redacted
+
+    def test_person_linked_identifiers_encrypted_and_org_profiles_preserved(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+    ) -> None:
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        assert b"12300001" not in redacted
+        assert b"712300001" not in redacted
+        # Employee id: same token in the attribute and in the remark that echoes it.
+        employee_tokens = _attrs(redacted, "referenceNumber")
+        assert len(employee_tokens) == 1
+        assert decrypt(employee_tokens[0], pii_keyring) == "12300001"
+        profile_remark = next(t for t in xml_texts(redacted, "Text") if t.startswith("PROFILE ILTESTCORP-"))
+        assert profile_remark == f"PROFILE ILTESTCORP-{employee_tokens[0]}"
+        # Traveller profile id encrypted in both namespaces; agency and corporate ids preserved.
+        assert _ns_texts(redacted, "//s19:Passenger/s19:Profiles/s19:Profile/s19:ProfileID") != ["712300001"]
+        assert b"118000001" in redacted
+        assert b"430000001" in redacted
+
+    def test_traveller_profile_id_also_caught_in_the_older_fixture(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        """The traveller-profile rule reaches back into evidence captured before this change: this
+        fixture carried a plaintext ``TVL`` profile id all along. Locked here because the suite that
+        owns that fixture asserts values rather than counts, so the new catch would otherwise be
+        invisible."""
+        redacted, counts = _redact(_fixture("get_reservation_remark_name_response.xml"), baked_ruleset, pii_keyring)
+        assert b"120402457" not in redacted
+        assert counts["person"] == 21
+
+    def test_agent_identity_and_commercial_data_preserved(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        """Agency staff acting professionally are not redacted: the remark trail exists to be
+        auditable, and sign-in codes are classified operational. Fares and organisation-level
+        codes must survive too."""
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        for kept in (
+            b"MARK TAYLOR",
+            b"MTAYLR",
+            b"<stl19:AgentSine>Z99</stl19:AgentSine>",
+            b"<stl19:RecordLocator>YPQGBZ</stl19:RecordLocator>",
+            b"CONT-  TOTAL FARE - USD   7100.00",
+            b"3100.00",
+            b"OIN TESTCORP",
+            b"ZT/CD-XZ00S00",
+            b"ADVISE TRAVELER-ISRAEL IS CONTROLLED.",
+        ):
+            assert kept in redacted, kept
+
+    def test_third_party_tokens_round_trip(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture(self.FIXTURE), baked_ruleset, pii_keyring)
+        restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
+        assert b"TRAVEL ARRANGER/DANA COHEN-B" in restored
+        assert b"*84-DANA COHEN" in restored
+        assert b"EMER-MAYA COHEN" in restored
+        assert b"TPREF-AUTH-AUTHORITY TO CHARGE-SAM BARNES" in restored
+        assert b"PROFILE ILTESTCORP-12300001" in restored
+
+
 def test_ruleset_version_covers_sabre(baked_ruleset: RuleSet) -> None:
     assert any(rule.channel == "sabre" for rule in baked_ruleset.rules)
     assert "sabre" in baked_ruleset.rules_version

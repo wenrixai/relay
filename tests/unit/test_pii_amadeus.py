@@ -287,6 +287,117 @@ class TestContactRemarks:
         assert b"NAME-PETER/HUGO/JOHNSON" in restored
 
 
+THIRD_PARTY_FIXTURE = FIXTURES_DIR / "amadeus" / "pnr_retrieve_third_party_remarks_response.xml"
+
+
+@pytest.fixture(name="third_party_body")
+def third_party_body_fixture() -> bytes:
+    return THIRD_PARTY_FIXTURE.read_bytes()
+
+
+class TestThirdPartyRemarks:
+    """A customer-reported gap: PII carried only by RM remark free text, plus the FP and OS
+    elements that had no rule at all.
+
+    Every RM remark is emitted twice — once under ``miscellaneousRemarks/remarks`` with the
+    leading ``*`` inside the text, once under ``extendedRemark/structuredRemark`` with that ``*``
+    hoisted into ``category``. Patterns must therefore not require the ``*``, and each assertion
+    below covers both mirrors.
+    """
+
+    def test_orderer_name_encrypted_in_both_mirrors(
+        self, third_party_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+    ) -> None:
+        redacted, _ = redact_response_body(
+            third_party_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+        )
+        # The orderer is a third party: no structured name node carries them, so the reference
+        # pass cannot see the value and a field rule has to reach it.
+        assert b"GREENE" not in redacted
+        assert b"ALICE" not in redacted
+        # Both markers survive, in both mirrors (2 x ACEORB + 2 x ACECRM-ORDERER).
+        assert redacted.count(b"ACEORB-") == 2
+        assert redacted.count(b"ACECRM-ORDERER-") == 2
+        orderer_texts = [t for t in xml_texts(redacted, "freetext") if "ACEORB-" in t]
+        assert len(orderer_texts) == 2
+        for text in orderer_texts:
+            token = text.split("ACEORB-")[1]
+            assert TOKEN_RE.fullmatch(token)
+            assert decrypt(token, pii_keyring) == "GREENE ALICE"
+
+    def test_remark_dob_and_gender_use_format_preserving_sentinels(
+        self, third_party_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+    ) -> None:
+        redacted, _ = redact_response_body(
+            third_party_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+        )
+        assert b"02FEB90" not in redacted
+        # Identity-document spans in free text keep their shape (a DDMMMYY-shaped sentinel and the
+        # existing gender sentinel), so a consumer parsing the remark line still succeeds.
+        dob_texts = [t for t in xml_texts(redacted, "freetext") if t.startswith("DOB-")]
+        assert dob_texts == ["DOB-01JAN00/GENDER-M", "DOB-01JAN00/GENDER-M"]
+
+    def test_person_linked_identifiers_encrypted(
+        self, third_party_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+    ) -> None:
+        redacted, _ = redact_response_body(
+            third_party_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+        )
+        for gone in (b"37000001", b"15000000001", b"770000001", b"LH100000000001"):
+            assert gone not in redacted
+        texts = xml_texts(redacted, "freetext")
+        employee = next(t for t in texts if t.startswith("*ACECRM-EMPLOYEE ID-"))
+        token = employee.removeprefix("*ACECRM-EMPLOYEE ID-")
+        assert TOKEN_RE.fullmatch(token)
+        assert decrypt(token, pii_keyring) == "37000001"
+        # The template remark carries the same marker with no value; it must be untouched,
+        # trailing hyphen included.
+        assert b"EMPLOYEE ID MANDATORY, RM*ACECRM-EMPLOYEE ID-<" in redacted
+
+    def test_form_of_payment_element_card_redacted(
+        self, third_party_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring, xml_texts: XmlTexts
+    ) -> None:
+        redacted, _ = redact_response_body(
+            third_party_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+        )
+        # The FP element had no rule at all. Supplier-side masking is not trusted: the surviving
+        # digits still reveal the last four.
+        assert b"XXXXXXXXXX1111" not in redacted
+        assert b"0630" not in redacted
+        fp = next(t for t in xml_texts(redacted, "longFreetext") if t.startswith("PAX CCDC"))
+        assert fp == "PAX CCDCREDACTED/0000"
+
+    def test_organisation_codes_and_ticket_number_preserved(
+        self, third_party_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        redacted, _ = redact_response_body(
+            third_party_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+        )
+        # Organisation-level corporate account codes are commercial data, not personal data:
+        # redacting them breaks fare reissue. Ticket number and locator are operational (§7).
+        for kept in (
+            b"CMP OPK000FI",
+            b"OIN FI00000",
+            b"NCA TSTCOOP",
+            b"PAX 105-2400000001/ETAY/12AUG26/HELMK0000/19000000",
+            b"<controlNumber>TQ7XF4</controlNumber>",
+        ):
+            assert kept in redacted
+
+    def test_third_party_tokens_round_trip(
+        self, third_party_body: bytes, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        redacted, _ = redact_response_body(
+            third_party_body, channel="amadeus", ruleset=baked_ruleset, keyring=pii_keyring
+        )
+        restored, _ = deanonymize_request_body(redacted, keyring=pii_keyring)
+        assert b"*ACEORB-GREENE ALICE" in restored
+        assert b"ACECRM-ORDERER-GREENE ALICE" in restored
+        assert b"*ACECRM-EMPLOYEE ID-37000001" in restored
+        assert b"CYTRIC PROFILE REF:15000000001" in restored
+        assert b"CP/LH100000000001" in restored
+
+
 def test_ruleset_version_covers_amadeus(baked_ruleset: RuleSet) -> None:
     assert any(rule.channel == "amadeus" for rule in baked_ruleset.rules)
     assert "amadeus" in baked_ruleset.rules_version
