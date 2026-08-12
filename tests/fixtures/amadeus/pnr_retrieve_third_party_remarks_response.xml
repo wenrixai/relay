@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:awsse="http://xml.amadeus.com/2010/06/Session_v3"
+    xmlns:wsa="http://www.w3.org/2005/08/addressing">
+    <soap-env:Header>
+        <wsa:To>http://www.w3.org/2005/08/addressing/anonymous</wsa:To>
+        <wsa:Action>http://webservices.amadeus.com/PNRRET_17_1_1A</wsa:Action>
+    </soap-env:Header>
+    <soap-env:Body>
+        <PNR_Reply xmlns="http://xml.amadeus.com/PNRACC_17_1_1A">
+            <pnrHeader>
+                <reservationInfo>
+                    <reservation>
+                        <companyId>1A</companyId>
+                        <controlNumber>TQ7XF4</controlNumber>
+                    </reservation>
+                </reservationInfo>
+            </pnrHeader>
+            <travellerInfo>
+                <elementManagementPassenger>
+                    <reference>
+                        <qualifier>PT</qualifier>
+                        <number>1</number>
+                    </reference>
+                    <segmentName>NM</segmentName>
+                    <lineNumber>1</lineNumber>
+                </elementManagementPassenger>
+                <passengerData>
+                    <travellerInformation>
+                        <traveller>
+                            <surname>NIEMI</surname>
+                            <quantity>1</quantity>
+                        </traveller>
+                        <passenger>
+                            <firstName>LAURA MS</firstName>
+                            <type>ADT</type>
+                        </passenger>
+                    </travellerInformation>
+                </passengerData>
+            </travellerInfo>
+            <dataElementsMaster>
+                <!-- Orderer: a third party with no structured name node anywhere in the document, so
+                     the reference pass cannot see it. Emitted twice: the leading "*" lives in the
+                     text of the miscellaneousRemarks copy and is hoisted into <category> in the
+                     extendedRemark copy. -->
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>45</number>
+                        </reference>
+                        <segmentName>RM</segmentName>
+                        <lineNumber>91</lineNumber>
+                    </elementManagementData>
+                    <miscellaneousRemarks>
+                        <remarks>
+                            <type>RM</type>
+                            <freetext>*ACEORB-GREENE ALICE</freetext>
+                        </remarks>
+                    </miscellaneousRemarks>
+                    <extendedRemark>
+                        <structuredRemark>
+                            <type>RM</type>
+                            <category>*</category>
+                            <freetext>ACEORB-GREENE ALICE</freetext>
+                        </structuredRemark>
+                    </extendedRemark>
+                </dataElementsIndiv>
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>46</number>
+                        </reference>
+                        <segmentName>RM</segmentName>
+                        <lineNumber>92</lineNumber>
+                    </elementManagementData>
+                    <miscellaneousRemarks>
+                        <remarks>
+                            <type>RM</type>
+                            <freetext>*ACECRM-ORDERER-GREENE ALICE</freetext>
+                        </remarks>
+                    </miscellaneousRemarks>
+                    <extendedRemark>
+                        <structuredRemark>
+                            <type>RM</type>
+                            <category>*</category>
+                            <freetext>ACECRM-ORDERER-GREENE ALICE</freetext>
+                        </structuredRemark>
+                    </extendedRemark>
+                </dataElementsIndiv>
+                <!-- Date of birth and gender exist ONLY here: the structured
+                     passengerData/dateOfBirth node is absent from this PNR. -->
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>47</number>
+                        </reference>
+                        <segmentName>RM</segmentName>
+                        <lineNumber>93</lineNumber>
+                    </elementManagementData>
+                    <miscellaneousRemarks>
+                        <remarks>
+                            <type>RM</type>
+                            <category>P</category>
+                            <freetext>DOB-02FEB90/GENDER-F</freetext>
+                        </remarks>
+                    </miscellaneousRemarks>
+                    <extendedRemark>
+                        <structuredRemark>
+                            <type>RM</type>
+                            <category>P</category>
+                            <freetext>DOB-02FEB90/GENDER-F</freetext>
+                        </structuredRemark>
+                    </extendedRemark>
+                </dataElementsIndiv>
+                <!-- Person-linked pseudonymous identifiers. -->
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>48</number>
+                        </reference>
+                        <segmentName>RM</segmentName>
+                        <lineNumber>94</lineNumber>
+                    </elementManagementData>
+                    <miscellaneousRemarks>
+                        <remarks>
+                            <type>RM</type>
+                            <freetext>*ACECRM-EMPLOYEE ID-37000001</freetext>
+                        </remarks>
+                    </miscellaneousRemarks>
+                    <extendedRemark>
+                        <structuredRemark>
+                            <type>RM</type>
+                            <category>*</category>
+                            <freetext>ACECRM-EMPLOYEE ID-37000001</freetext>
+                        </structuredRemark>
+                    </extendedRemark>
+                </dataElementsIndiv>
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>49</number>
+                        </reference>
+                        <segmentName>RM</segmentName>
+                        <lineNumber>95</lineNumber>
+                    </elementManagementData>
+                    <miscellaneousRemarks>
+                        <remarks>
+                            <type>RM</type>
+                            <freetext>CYTRIC PROFILE REF:15000000001</freetext>
+                        </remarks>
+                    </miscellaneousRemarks>
+                    <extendedRemark>
+                        <structuredRemark>
+                            <type>RM</type>
+                            <freetext>CYTRIC PROFILE REF:15000000001</freetext>
+                        </structuredRemark>
+                    </extendedRemark>
+                </dataElementsIndiv>
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>50</number>
+                        </reference>
+                        <segmentName>RM</segmentName>
+                        <lineNumber>96</lineNumber>
+                    </elementManagementData>
+                    <miscellaneousRemarks>
+                        <remarks>
+                            <type>RM</type>
+                            <category>H</category>
+                            <freetext>PREF HTL ID/SUP-CY/ID-770000001</freetext>
+                        </remarks>
+                    </miscellaneousRemarks>
+                    <extendedRemark>
+                        <structuredRemark>
+                            <type>RM</type>
+                            <category>H</category>
+                            <freetext>PREF HTL ID/SUP-CY/ID-770000001</freetext>
+                        </structuredRemark>
+                    </extendedRemark>
+                </dataElementsIndiv>
+                <!-- Template remark: carries the EMPLOYEE ID marker with no value. Must survive
+                     verbatim, including the trailing hyphen. -->
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>51</number>
+                        </reference>
+                        <segmentName>RM</segmentName>
+                        <lineNumber>97</lineNumber>
+                    </elementManagementData>
+                    <miscellaneousRemarks>
+                        <remarks>
+                            <type>RM</type>
+                            <category>I</category>
+                            <freetext>EMPLOYEE ID MANDATORY, RM*ACECRM-EMPLOYEE ID-</freetext>
+                        </remarks>
+                    </miscellaneousRemarks>
+                </dataElementsIndiv>
+                <!-- OS elements: one traveller-attached contract number (PII) beside three
+                     organisation-level corporate account codes (operational, must survive). -->
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>81</number>
+                        </reference>
+                        <segmentName>OS</segmentName>
+                        <lineNumber>29</lineNumber>
+                    </elementManagementData>
+                    <otherDataFreetext>
+                        <freetextDetail>
+                            <subjectQualifier>3</subjectQualifier>
+                            <type>28</type>
+                            <companyId>YY</companyId>
+                        </freetextDetail>
+                        <longFreetext>CP/LH100000000001</longFreetext>
+                    </otherDataFreetext>
+                </dataElementsIndiv>
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>82</number>
+                        </reference>
+                        <segmentName>OS</segmentName>
+                        <lineNumber>30</lineNumber>
+                    </elementManagementData>
+                    <otherDataFreetext>
+                        <freetextDetail>
+                            <subjectQualifier>3</subjectQualifier>
+                            <type>28</type>
+                            <companyId>YY</companyId>
+                        </freetextDetail>
+                        <longFreetext>CMP OPK000FI</longFreetext>
+                    </otherDataFreetext>
+                </dataElementsIndiv>
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>83</number>
+                        </reference>
+                        <segmentName>OS</segmentName>
+                        <lineNumber>31</lineNumber>
+                    </elementManagementData>
+                    <otherDataFreetext>
+                        <freetextDetail>
+                            <subjectQualifier>3</subjectQualifier>
+                            <type>28</type>
+                            <companyId>YY</companyId>
+                        </freetextDetail>
+                        <longFreetext>OIN FI00000</longFreetext>
+                    </otherDataFreetext>
+                </dataElementsIndiv>
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>84</number>
+                        </reference>
+                        <segmentName>OS</segmentName>
+                        <lineNumber>32</lineNumber>
+                    </elementManagementData>
+                    <otherDataFreetext>
+                        <freetextDetail>
+                            <subjectQualifier>3</subjectQualifier>
+                            <type>28</type>
+                            <companyId>YY</companyId>
+                        </freetextDetail>
+                        <longFreetext>NCA TSTCOOP</longFreetext>
+                    </otherDataFreetext>
+                </dataElementsIndiv>
+                <!-- FA (ticket number) must survive verbatim; FP carries the card. -->
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>155</number>
+                        </reference>
+                        <segmentName>FA</segmentName>
+                        <lineNumber>123</lineNumber>
+                    </elementManagementData>
+                    <otherDataFreetext>
+                        <freetextDetail>
+                            <subjectQualifier>3</subjectQualifier>
+                            <type>P06</type>
+                        </freetextDetail>
+                        <longFreetext>PAX 105-2400000001/ETAY/12AUG26/HELMK0000/19000000</longFreetext>
+                    </otherDataFreetext>
+                </dataElementsIndiv>
+                <dataElementsIndiv>
+                    <elementManagementData>
+                        <reference>
+                            <qualifier>OT</qualifier>
+                            <number>156</number>
+                        </reference>
+                        <segmentName>FP</segmentName>
+                        <lineNumber>124</lineNumber>
+                    </elementManagementData>
+                    <otherDataFreetext>
+                        <freetextDetail>
+                            <subjectQualifier>3</subjectQualifier>
+                            <type>16</type>
+                        </freetextDetail>
+                        <longFreetext>PAX CCDCXXXXXXXXXX1111/0630</longFreetext>
+                    </otherDataFreetext>
+                    <referenceForDataElement>
+                        <reference>
+                            <qualifier>PT</qualifier>
+                            <number>1</number>
+                        </reference>
+                    </referenceForDataElement>
+                </dataElementsIndiv>
+            </dataElementsMaster>
+        </PNR_Reply>
+    </soap-env:Body>
+</soap-env:Envelope>

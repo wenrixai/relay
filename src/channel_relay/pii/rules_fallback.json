@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-expanded-2026-08-05",
+  "rules_version": "amadeus+sabre+travelfusion+travelport+farelogix-remarks-2026-08-12",
   "rules": [
     {
       "id": "amadeus.pnr.surname",
@@ -290,6 +290,154 @@
         },
         {
           "pattern": "(?<=\\bMOB)\\d{7,15}"
+        }
+      ]
+    },
+    {
+      "id": "amadeus.pnr.remark_orderer_name",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='RM']/a:otherDataFreetext/a:longFreetext | //a:dataElementsIndiv/a:miscellaneousRemarks/a:remarks/a:freetext | //a:dataElementsIndiv/a:extendedRemark/a:structuredRemark/a:freetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "\\bACE(?:ORB|CRM-ORDERER)-([A-Z][A-Z ]{2,60}?)\\s*$"
+        }
+      ]
+    },
+    {
+      "id": "amadeus.pnr.remark_dob",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='RM']/a:otherDataFreetext/a:longFreetext | //a:dataElementsIndiv/a:miscellaneousRemarks/a:remarks/a:freetext | //a:dataElementsIndiv/a:extendedRemark/a:structuredRemark/a:freetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "dob",
+      "method": "replace",
+      "replacement": "01JAN00",
+      "extract_patterns": [
+        {
+          "pattern": "\\bDOB-(\\d{2}[A-Z]{3}\\d{2})\\b"
+        }
+      ]
+    },
+    {
+      "id": "amadeus.pnr.remark_gender",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='RM']/a:otherDataFreetext/a:longFreetext | //a:dataElementsIndiv/a:miscellaneousRemarks/a:remarks/a:freetext | //a:dataElementsIndiv/a:extendedRemark/a:structuredRemark/a:freetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "gender",
+      "method": "replace",
+      "replacement": "M",
+      "extract_patterns": [
+        {
+          "pattern": "\\bGENDER-([MF])\\b"
+        }
+      ]
+    },
+    {
+      "id": "amadeus.pnr.remark_employee_id",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='RM']/a:otherDataFreetext/a:longFreetext | //a:dataElementsIndiv/a:miscellaneousRemarks/a:remarks/a:freetext | //a:dataElementsIndiv/a:extendedRemark/a:structuredRemark/a:freetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "\\bACECRM-EMPLOYEE ID-(\\d{3,})"
+        }
+      ]
+    },
+    {
+      "id": "amadeus.pnr.remark_profile_ref",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='RM']/a:otherDataFreetext/a:longFreetext | //a:dataElementsIndiv/a:miscellaneousRemarks/a:remarks/a:freetext | //a:dataElementsIndiv/a:extendedRemark/a:structuredRemark/a:freetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "\\bCYTRIC PROFILE REF:\\s*(\\d{3,})"
+        }
+      ]
+    },
+    {
+      "id": "amadeus.pnr.remark_loyalty_pref",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='RM']/a:otherDataFreetext/a:longFreetext | //a:dataElementsIndiv/a:miscellaneousRemarks/a:remarks/a:freetext | //a:dataElementsIndiv/a:extendedRemark/a:structuredRemark/a:freetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "frequent_flyer",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "\\bPREF HTL ID/SUP-[A-Z]{2}/ID-(\\d{3,})"
+        }
+      ]
+    },
+    {
+      "id": "amadeus.pnr.fp_card_expiry",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='FP']/a:otherDataFreetext/a:longFreetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "0000",
+      "extract_patterns": [
+        {
+          "pattern": "X{4,}\\d{2,}/(\\d{4})\\s*$"
+        }
+      ]
+    },
+    {
+      "id": "amadeus.pnr.fp_card",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='FP']/a:otherDataFreetext/a:longFreetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "REDACTED",
+      "extract_patterns": [
+        {
+          "pattern": "\\bCC[A-Z]{2}(X{4,}\\d{2,})"
+        }
+      ]
+    },
+    {
+      "id": "amadeus.pnr.osi_contract_id",
+      "channel": "amadeus",
+      "operation": "^PNR_Reply",
+      "path": "//a:dataElementsIndiv[a:elementManagementData/a:segmentName='OS']/a:otherDataFreetext/a:longFreetext",
+      "namespaces": {
+        "a": "http://xml.amadeus.com/PNRACC_17_1_1A"
+      },
+      "pii_type": "frequent_flyer",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "\\bCP/([A-Z0-9]{6,})"
         }
       ]
     },
@@ -734,6 +882,22 @@
       "method": "encrypt"
     },
     {
+      "id": "sabre.res.ctc_arranger_name",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:PhoneNumber[s19:CityCode='CTC']/s19:Number",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "^[ME]-([A-Z][A-Z ]+?)-\\d"
+        }
+      ]
+    },
+    {
       "id": "sabre.res.phone",
       "channel": "sabre",
       "operation": "^(GetReservationRS|UpdateReservationRS)$",
@@ -1084,6 +1248,22 @@
       ]
     },
     {
+      "id": "sabre.res.received_from_arranger",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:ReceivedFrom/s19:Name",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "^([A-Z]{2,} [A-Z]{2,}) \\d"
+        }
+      ]
+    },
+    {
       "id": "sabre.res.received_from_phone",
       "channel": "sabre",
       "operation": "^(GetReservationRS|UpdateReservationRS)$",
@@ -1092,7 +1272,8 @@
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },
       "pii_type": "phone",
-      "method": "encrypt",
+      "method": "replace",
+      "replacement": "REDACTED",
       "extract_patterns": [
         {
           "pattern": "(\\d{7,15})"
@@ -1100,11 +1281,251 @@
       ]
     },
     {
+      "id": "sabre.res.remark_third_party_name",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:RemarkLine/s19:Text",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "\\bEMER-([A-Z]{2,}(?: [A-Z]{2,})+)"
+        },
+        {
+          "pattern": "AUTHORITY TO CHARGE-([A-Z][A-Z ]{2,40}?)\\s*$"
+        },
+        {
+          "pattern": "\\bTRAVEL ARRANGER/([A-Z][A-Z ]{2,40}?(?:-[A-Z])?)\\s*$"
+        },
+        {
+          "pattern": "\\*84-([A-Z][A-Z ]{2,40}?)\\s*$"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.remark_third_party_phone",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:RemarkLine/s19:Text | //s19:HistoryAssociationElement | //s19:AssociationChild/s19:Content | //s19:AssociationParent/s19:Content",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "phone",
+      "method": "replace",
+      "replacement": "REDACTED",
+      "extract_patterns": [
+        {
+          "pattern": "\\bEMER-(\\d{7,15})\\b"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.future_ticketing_name",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:FutureTicketing/s19:Comment",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "\\bISS TKT FR ([A-Z]{3,})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.remark_dob",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:RemarkLine/s19:Text | //s19:HistoryAssociationElement | //s19:AssociationChild/s19:Content | //s19:AssociationParent/s19:Content",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "dob",
+      "method": "replace",
+      "replacement": "01JAN00",
+      "extract_patterns": [
+        {
+          "pattern": "\\bBIRTHDATE-(\\d{2}[A-Z]{3}\\d{2})\\b"
+        },
+        {
+          "pattern": "\\bDHSNBR-PAX-[\\d.]+,(\\d{2}[A-Z]{3}\\d{2})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.remark_gender",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:RemarkLine/s19:Text | //s19:HistoryAssociationElement | //s19:AssociationChild/s19:Content | //s19:AssociationParent/s19:Content",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "gender",
+      "method": "replace",
+      "replacement": "M",
+      "extract_patterns": [
+        {
+          "pattern": "\\bGENDER-([MF])\\b"
+        },
+        {
+          "pattern": "\\bDHSNBR-PAX-[\\d.]+,\\d{2}[A-Z]{3}\\d{2},([MF])"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.remark_passport",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:RemarkLine/s19:Text | //s19:HistoryAssociationElement | //s19:AssociationChild/s19:Content | //s19:AssociationParent/s19:Content",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "passport_id",
+      "method": "replace",
+      "replacement": "00000000",
+      "extract_patterns": [
+        {
+          "pattern": "\\bPSPT-[A-Z]{2} ([A-Z0-9]{5,15})"
+        },
+        {
+          "pattern": "\\bPSPT/CO-[A-Z]{2}/NR-([A-Z0-9]{5,15})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.remark_doc_dates",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:RemarkLine/s19:Text | //s19:HistoryAssociationElement | //s19:AssociationChild/s19:Content | //s19:AssociationParent/s19:Content",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "passport_id",
+      "method": "replace",
+      "replacement": "31DEC99",
+      "extract_patterns": [
+        {
+          "pattern": "\\bPSPT-[A-Z]{2} [A-Z0-9]{5,15} (\\d{2}[A-Z]{3}\\d{2})"
+        },
+        {
+          "pattern": "/IS-(\\d{2}[A-Z]{3}\\d{2})"
+        },
+        {
+          "pattern": "/EX-(\\d{2}[A-Z]{3}\\d{2})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.remark_nationality",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:RemarkLine/s19:Text | //s19:HistoryAssociationElement | //s19:AssociationChild/s19:Content | //s19:AssociationParent/s19:Content",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "nationality",
+      "method": "replace",
+      "replacement": "ZZ",
+      "extract_patterns": [
+        {
+          "pattern": "\\bCTZN-([A-Z]{2})\\b"
+        },
+        {
+          "pattern": "\\bPSPT-([A-Z]{2}) "
+        },
+        {
+          "pattern": "\\bPSPT/CO-([A-Z]{2})/"
+        },
+        {
+          "pattern": "/CI-([A-Z]{2})\\b"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.history_card_expiry",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:RemarkLine/s19:Text | //s19:HistoryAssociationElement | //s19:AssociationChild/s19:Content | //s19:AssociationParent/s19:Content",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "0000",
+      "extract_patterns": [
+        {
+          "pattern": "X{4,}\\d{2,}[/¥](\\d{4})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.history_card_fragment",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:RemarkLine/s19:Text | //s19:HistoryAssociationElement | //s19:AssociationChild/s19:Content | //s19:AssociationParent/s19:Content",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "REDACTED",
+      "extract_patterns": [
+        {
+          "pattern": "(\\d{0,6}X{4,}\\d{2,})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.employee_id_attribute",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:Passenger/@referenceNumber",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
+      "id": "sabre.res.employee_id_remark",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:RemarkLine/s19:Text",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "person",
+      "method": "encrypt",
+      "extract_patterns": [
+        {
+          "pattern": "\\bPROFILE [A-Z]+-(\\d{5,})"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.traveller_profile_id",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:Passenger/s19:Profiles/s19:Profile[s19:ProfileType='TVL']/s19:ProfileID | //o14:Profile[o14:Type='TRAVELER']/o14:ID",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19",
+        "o14": "http://services.sabre.com/res/or/v1_14"
+      },
+      "pii_type": "person",
+      "method": "encrypt"
+    },
+    {
       "id": "sabre.res.remarks_reference",
       "channel": "sabre",
       "operation": "^(GetReservationRS|UpdateReservationRS)$",
       "rule_type": "reference",
-      "path": "//s19:Text | //s19:Content | //s19:HistoryAssociationElement | //s19:AccountingLineText | //s19:GenericSpecialRequest/s19:FreeText | //s19:GenericSpecialRequest/s19:FullText | //s19:GenericSpecialRequests/s19:FreeText | //s19:GenericSpecialRequests/s19:FullText | //s19:ETicketNumber | //s19:OriginalTicketDetails",
+      "path": "//s19:Text | //s19:Content | //s19:HistoryAssociationElement | //s19:AccountingLineText | //s19:Comment | //s19:GenericSpecialRequest/s19:FreeText | //s19:GenericSpecialRequest/s19:FullText | //s19:GenericSpecialRequests/s19:FreeText | //s19:GenericSpecialRequests/s19:FullText | //s19:ETicketNumber | //s19:OriginalTicketDetails",
       "namespaces": {
         "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
       },

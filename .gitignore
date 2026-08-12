@@ -32,3 +32,6 @@ relay.json
 
 # Raw (unsanitized) supplier payloads — never commit
 /sabre/
+/amadeus_response.xml
+/sabre_response.xml
+/*_response.xml

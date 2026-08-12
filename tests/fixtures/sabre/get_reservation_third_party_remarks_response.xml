@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap-env:Body>
+        <stl19:GetReservationRS xmlns:stl19="http://webservices.sabre.com/pnrbuilder/v1_19"
+            xmlns:or114="http://services.sabre.com/res/or/v1_14" Version="1.19.19">
+            <stl19:Reservation>
+                <stl19:BookingDetails>
+                    <stl19:RecordLocator>YPQGBZ</stl19:RecordLocator>
+                    <stl19:CreationAgentID>Z99</stl19:CreationAgentID>
+                </stl19:BookingDetails>
+                <!-- Arranger name embedded in a contact phone value. sabre.res.phone masks this node
+                     as a whole, so the arranger rule must run BEFORE it or the name is destroyed
+                     unread and never enters the collector. -->
+                <stl19:PhoneNumbers>
+                    <stl19:PhoneNumber id="254" index="6" elementId="pnr-254">
+                        <stl19:CityCode>CTC</stl19:CityCode>
+                        <stl19:Number>M-DANA COHEN-972500000002</stl19:Number>
+                    </stl19:PhoneNumber>
+                    <stl19:PhoneNumber id="255" index="7" elementId="pnr-255">
+                        <stl19:CityCode>CTC</stl19:CityCode>
+                        <stl19:Number>E-DANACOHEN//EXAMPLECORP.COM</stl19:Number>
+                    </stl19:PhoneNumber>
+                </stl19:PhoneNumbers>
+                <!-- Arranger name + phone + acting agent name in one value. The agent name is
+                     operational and must survive. -->
+                <stl19:ReceivedFrom>
+                    <stl19:Name>DANA COHEN 972500000002-MARK TAYLOR</stl19:Name>
+                </stl19:ReceivedFrom>
+                <!-- Agency / corporate / operation profiles: not traveller-linked, must survive. -->
+                <stl19:Profiles>
+                    <stl19:Profile id="100">
+                        <stl19:ProfileID>118000001</stl19:ProfileID>
+                        <stl19:ProfileType>AGY</stl19:ProfileType>
+                    </stl19:Profile>
+                    <stl19:Profile id="101">
+                        <stl19:ProfileID>430000001</stl19:ProfileID>
+                        <stl19:ProfileType>CRP</stl19:ProfileType>
+                    </stl19:Profile>
+                </stl19:Profiles>
+                <stl19:Remarks>
+                    <stl19:Remark index="1" id="301" type="HS" elementId="pnr-301">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>TRAVEL ARRANGER/DANA COHEN-B</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <!-- Agency-agent audit lines: full name and short sine. Both operational. -->
+                    <stl19:Remark index="2" id="302" type="HS" elementId="pnr-302">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>D/PASSPORT 6 MONTH VALIDITY ADVISED BY - MARK TAYLOR - 12AUG</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="3" id="303" type="HS" elementId="pnr-303">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>12AUG2026-MTAYLR-ADVISE TRAVELER-ISRAEL IS CONTROLLED.</stl19:Text>
+                            </stl19:RemarkLine>
+                            <stl19:RemarkLine>
+                                <stl19:Text>F/LOWEST FARE ACCEPTED -  3100.00-MTAYLR-08/12/26</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <!-- DHS/APIS line: name, date of birth and gender in one comma-delimited span. -->
+                    <stl19:Remark index="4" id="304" type="CODED" code="P" elementId="pnr-304">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>DHSNBR-PAX-1.1,02FEB90,F,TESTER/ANNA,</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="5" id="305" type="CODED" code="P" elementId="pnr-305">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>PSPT/CO-IL/NR-39000001/IS-03DEC22/EX-04DEC32/CI-IL</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="6" id="306" type="CODED" code="G" elementId="pnr-306">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>PROFILE ILTESTCORP-12300001</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <!-- Invoice UDID field carrying the arranger name again. -->
+                    <stl19:Remark index="7" id="307" type="INVOICE" elementId="pnr-307">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>*84-DANA COHEN</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <!-- Organisation-level commercial codes and fares: operational, must survive. -->
+                    <stl19:Remark index="8" id="308" type="CODED" code="V" elementId="pnr-308">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>OIN TESTCORP</stl19:Text>
+                            </stl19:RemarkLine>
+                            <stl19:RemarkLine>
+                                <stl19:Text>ZT/CD-XZ00S00</stl19:Text>
+                            </stl19:RemarkLine>
+                            <stl19:RemarkLine>
+                                <stl19:Text>CONT-  TOTAL FARE - USD   7100.00</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                    <stl19:Remark index="9" id="309" type="FOP" elementId="pnr-309">
+                        <stl19:RemarkLines>
+                            <stl19:RemarkLine>
+                                <stl19:Text>*CA5XXXXXXXXXXX1111¥11/27-XN</stl19:Text>
+                            </stl19:RemarkLine>
+                        </stl19:RemarkLines>
+                    </stl19:Remark>
+                </stl19:Remarks>
+                <stl19:PassengerReservation>
+                    <stl19:Passengers>
+                        <stl19:Passenger id="202" nameType="S" passengerType="ADT"
+                            referenceNumber="12300001" nameId="01.01" nameAssocId="1"
+                            elementId="pnr-202.1">
+                            <stl19:LastName>TESTER</stl19:LastName>
+                            <stl19:FirstName>ANNA MS</stl19:FirstName>
+                            <stl19:Profiles>
+                                <stl19:Profile id="205">
+                                    <stl19:ProfileID>712300001</stl19:ProfileID>
+                                    <stl19:ProfileType>TVL</stl19:ProfileType>
+                                </stl19:Profile>
+                            </stl19:Profiles>
+                            <stl19:Remarks>
+                                <stl19:Remark index="163" id="214" type="CODED" code="E" elementId="pnr-214">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>XTRAF-//ANNA TESTER</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark index="164" id="215" type="CODED" code="P" elementId="pnr-215">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>BIRTHDATE-02FEB90</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark index="165" id="216" type="CODED" code="P" elementId="pnr-216">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>GENDER-F</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark index="166" id="217" type="CODED" code="V" elementId="pnr-217">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>PSPT-IL 39000001 04DEC32 TESTER ANNA</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark index="172" id="223" type="CODED" code="F" elementId="pnr-223">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>TPREF-AUTH-AUTHORITY TO CHARGE-SAM BARNES</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark index="175" id="226" type="CODED" code="E" elementId="pnr-226">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>EMER-MAYA COHEN</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark index="184" id="235" type="CODED" code="E" elementId="pnr-235">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>EMER-972500000001</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <!-- EMER-OTHER carries no PII and must survive verbatim. -->
+                                <stl19:Remark index="185" id="236" type="CODED" code="E" elementId="pnr-236">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>EMER-OTHER</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark index="177" id="228" type="CODED" code="V" elementId="pnr-228">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>CTZN-IL</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                                <stl19:Remark index="186" id="237" type="CODED" code="V" elementId="pnr-237">
+                                    <stl19:RemarkLines>
+                                        <stl19:RemarkLine>
+                                            <stl19:Text>DRIVELIC----TESTER/ANNA</stl19:Text>
+                                        </stl19:RemarkLine>
+                                    </stl19:RemarkLines>
+                                </stl19:Remark>
+                            </stl19:Remarks>
+                        </stl19:Passenger>
+                    </stl19:Passengers>
+                    <stl19:TicketingInfo>
+                        <stl19:FutureTicketing id="435" index="1" elementId="pnr-435">
+                            <stl19:Code>TAW</stl19:Code>
+                            <stl19:BranchPCC>T00F</stl19:BranchPCC>
+                            <stl19:Date>12AUG</stl19:Date>
+                            <stl19:QueueNumber>236</stl19:QueueNumber>
+                            <stl19:Comment>AWAITING ADVS TO ISS TKT FR DANA</stl19:Comment>
+                        </stl19:FutureTicketing>
+                    </stl19:TicketingInfo>
+                </stl19:PassengerReservation>
+                <!-- Sabre re-emits every coded passenger remark three times: as
+                     HistoryAssociationElement, as AssociationChild/Content, and (for the name and
+                     form of payment) as AssociationParent/Content, with @code turned into a
+                     "<letter>!" prefix. Non-encrypt rules must name these paths explicitly, because
+                     the reference pass cannot carry a one-way action. -->
+                <stl19:History>
+                    <stl19:HistoryTransaction>
+                        <stl19:Signature>
+                            <stl19:AgentSine>Z99</stl19:AgentSine>
+                            <stl19:AgencyPCC>T00F</stl19:AgencyPCC>
+                        </stl19:Signature>
+                        <stl19:AssociationHistory>
+                            <stl19:AssociationId>215</stl19:AssociationId>
+                            <stl19:HistoryAction>ANA</stl19:HistoryAction>
+                            <stl19:HistoryAssociationElement Type="REMARK">P!BIRTHDATE-02FEB90</stl19:HistoryAssociationElement>
+                            <stl19:Passengers>
+                                <stl19:Name>TESTER/ANNA MS</stl19:Name>
+                            </stl19:Passengers>
+                            <stl19:AssociationParent>
+                                <stl19:Type>Name</stl19:Type>
+                                <stl19:Content>TESTER/ANNA MS</stl19:Content>
+                            </stl19:AssociationParent>
+                            <stl19:AssociationChild>
+                                <stl19:Type>Remark</stl19:Type>
+                                <stl19:Content>P!BIRTHDATE-02FEB90</stl19:Content>
+                            </stl19:AssociationChild>
+                        </stl19:AssociationHistory>
+                        <stl19:AssociationHistory>
+                            <stl19:AssociationId>217</stl19:AssociationId>
+                            <stl19:HistoryAction>ANA</stl19:HistoryAction>
+                            <stl19:HistoryAssociationElement Type="REMARK">V!PSPT-IL 39000001 04DEC32 TESTER ANNA</stl19:HistoryAssociationElement>
+                            <stl19:AssociationChild>
+                                <stl19:Type>Remark</stl19:Type>
+                                <stl19:Content>V!PSPT-IL 39000001 04DEC32 TESTER ANNA</stl19:Content>
+                            </stl19:AssociationChild>
+                        </stl19:AssociationHistory>
+                        <stl19:AssociationHistory>
+                            <stl19:AssociationId>226</stl19:AssociationId>
+                            <stl19:HistoryAction>ANA</stl19:HistoryAction>
+                            <stl19:HistoryAssociationElement Type="REMARK">E!EMER-MAYA COHEN</stl19:HistoryAssociationElement>
+                            <stl19:AssociationChild>
+                                <stl19:Type>Remark</stl19:Type>
+                                <stl19:Content>E!EMER-MAYA COHEN</stl19:Content>
+                            </stl19:AssociationChild>
+                        </stl19:AssociationHistory>
+                        <stl19:AssociationHistory>
+                            <stl19:AssociationId>235</stl19:AssociationId>
+                            <stl19:HistoryAction>ANA</stl19:HistoryAction>
+                            <stl19:HistoryAssociationElement Type="REMARK">E!EMER-972500000001</stl19:HistoryAssociationElement>
+                            <stl19:AssociationChild>
+                                <stl19:Type>Remark</stl19:Type>
+                                <stl19:Content>E!EMER-972500000001</stl19:Content>
+                            </stl19:AssociationChild>
+                        </stl19:AssociationHistory>
+                        <stl19:AssociationHistory>
+                            <stl19:AssociationId>223</stl19:AssociationId>
+                            <stl19:HistoryAction>ANA</stl19:HistoryAction>
+                            <stl19:HistoryAssociationElement Type="REMARK">F!TPREF-AUTH-AUTHORITY TO CHARGE-SAM BARNES</stl19:HistoryAssociationElement>
+                            <stl19:AssociationChild>
+                                <stl19:Type>Remark</stl19:Type>
+                                <stl19:Content>F!TPREF-AUTH-AUTHORITY TO CHARGE-SAM BARNES</stl19:Content>
+                            </stl19:AssociationChild>
+                        </stl19:AssociationHistory>
+                        <stl19:AssociationHistory>
+                            <stl19:AssociationId>228</stl19:AssociationId>
+                            <stl19:HistoryAction>ANA</stl19:HistoryAction>
+                            <stl19:HistoryAssociationElement Type="REMARK">V!CTZN-IL</stl19:HistoryAssociationElement>
+                            <stl19:AssociationChild>
+                                <stl19:Type>Remark</stl19:Type>
+                                <stl19:Content>V!CTZN-IL</stl19:Content>
+                            </stl19:AssociationChild>
+                        </stl19:AssociationHistory>
+                        <!-- Form of payment: the history rendering uses "/" where the remark
+                             rendering used "¥". -->
+                        <stl19:AssociationHistory>
+                            <stl19:AssociationId>309</stl19:AssociationId>
+                            <stl19:HistoryAction>ANA</stl19:HistoryAction>
+                            <stl19:HistoryAssociationElement Type="FOP">*CA5XXXXXXXXXXX1111/1127-XN</stl19:HistoryAssociationElement>
+                            <stl19:AssociationParent>
+                                <stl19:Type>FOP</stl19:Type>
+                                <stl19:Content>*CA5XXXXXXXXXXX1111/1127</stl19:Content>
+                            </stl19:AssociationParent>
+                            <stl19:AssociationChild>
+                                <stl19:Type>FOP</stl19:Type>
+                                <stl19:Content>*CA5XXXXXXXXXXX1111/1127-XN</stl19:Content>
+                            </stl19:AssociationChild>
+                        </stl19:AssociationHistory>
+                    </stl19:HistoryTransaction>
+                </stl19:History>
+                <stl19:OpenReservationElements>
+                    <or114:OpenReservationElement id="99" type="PROFILE" elementId="pnr-99">
+                        <or114:Profile>
+                            <or114:ID>118000001</or114:ID>
+                            <or114:Type>TAGENCY</or114:Type>
+                            <or114:ShortType>AGY</or114:ShortType>
+                            <or114:OwningAgency>T00F</or114:OwningAgency>
+                        </or114:Profile>
+                    </or114:OpenReservationElement>
+                    <or114:OpenReservationElement id="102" type="PROFILE" elementId="pnr-102">
+                        <or114:Profile>
+                            <or114:ID>712300001</or114:ID>
+                            <or114:Type>TRAVELER</or114:Type>
+                            <or114:ShortType>TVL</or114:ShortType>
+                            <or114:OwningAgency>T00F</or114:OwningAgency>
+                        </or114:Profile>
+                    </or114:OpenReservationElement>
+                </stl19:OpenReservationElements>
+            </stl19:Reservation>
+        </stl19:GetReservationRS>
+    </soap-env:Body>
+</soap-env:Envelope>
