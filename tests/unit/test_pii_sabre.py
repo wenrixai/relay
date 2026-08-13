@@ -540,6 +540,55 @@ class TestTripSearchPastDatePnr:
         assert counts["ssn"] >= 1
 
 
+class TestCardAuthorizationRemarks:
+    """Card authorization lines carry two pieces of payment data beyond the PAN: the acquirer
+    approval code and a ``<brand><last four>`` fragment.
+
+    This repo already classifies both as payment data elsewhere — ``amadeus.transaction.payment``
+    redacts ``approvalCode`` and ``sabre.etkt.payment_approval`` masks ``@ApprovalID`` — but the
+    reservation and trip-search remark forms were uncovered. ``GetReservationRS`` was the worst
+    case: ``XXAUTH/<approval> *Z/<brand><last4>`` passed through completely untouched, leaking the
+    last four digits of the card on the very operation a customer reported.
+    """
+
+    def test_get_reservation_authorization_redacted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture("get_reservation_pq_history_response.xml"), baked_ruleset, pii_keyring)
+        # Approval code and the brand+last-four fragment are both gone, from BOTH renderings of
+        # this authorization: the "XXAUTH/" line and the "CC APVL/" line.
+        assert b"S00000" not in redacted
+        assert b"VI0000" not in redacted
+        # Operational markers and the amount survive, so the lines stay recognisable.
+        assert b"XXAUTH/" in redacted
+        assert b"CC APVL/" in redacted
+        assert b"/TKT/DL/" in redacted
+        assert b"USD388.90 - USED" in redacted
+
+    def test_trip_search_approval_code_redacted(self, baked_ruleset: RuleSet, pii_keyring: Keyring) -> None:
+        redacted, _ = _redact(_fixture("trip_search_past_date_pnr_response.xml"), baked_ruleset, pii_keyring)
+        # Approval code appears in both the AUTH-APV and XXAUTH renderings.
+        assert b"121395" not in redacted
+        # Brand+last-four fragments alongside it.
+        assert b"AX0005" not in redacted
+        assert b"CA0000" not in redacted
+
+    def test_trip_search_authorization_operational_text_preserved(
+        self, baked_ruleset: RuleSet, pii_keyring: Keyring
+    ) -> None:
+        redacted, _ = _redact(_fixture("trip_search_past_date_pnr_response.xml"), baked_ruleset, pii_keyring)
+        # Markers, amounts, dates and the status lines that carry no card data stay verbatim. The
+        # card brand word on its own is not sensitive; the last four beside it is.
+        for kept in (
+            b"AUTH-APV/",
+            b"AUTH-AMEX/",
+            b"AUTH-MSTR/",
+            b"AUTH-AVS NOT SUPPORTED/",
+            b"AUTH-CSC NOT SUPPLIED/",
+            b"USD423.20",
+            b"20JUN",
+        ):
+            assert kept in redacted, kept
+
+
 class TestTripSearchPassportDocuments:
     """Trip_SearchRS embeds a whole ``stl19:GetReservationRS``, so its APIS block is the same shape
     the ``sabre.res.docs_*`` rules cover. A thinner ``sabre.trip.docs_*`` copy left the passport

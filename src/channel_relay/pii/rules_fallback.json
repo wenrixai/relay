@@ -1482,6 +1482,52 @@
       ]
     },
     {
+      "id": "sabre.res.auth_approval_code",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:RemarkLine/s19:Text | //s19:RemarkText | //s19:HistoryAssociationElement | //s19:AssociationChild/s19:Content | //s19:AssociationParent/s19:Content",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "REDACTED",
+      "extract_patterns": [
+        {
+          "pattern": "AUTH-APV/(\\d{4,8})"
+        },
+        {
+          "pattern": "(?:XX)?AUTH/([A-Z0-9]{5,8})(?=[/ ])"
+        },
+        {
+          "pattern": "\\bCC APVL/([A-Z0-9]{5,8})(?=/)"
+        }
+      ]
+    },
+    {
+      "id": "sabre.res.auth_card_fragment",
+      "channel": "sabre",
+      "operation": "^(GetReservationRS|UpdateReservationRS)$",
+      "path": "//s19:RemarkLine/s19:Text | //s19:RemarkText | //s19:HistoryAssociationElement | //s19:AssociationChild/s19:Content | //s19:AssociationParent/s19:Content",
+      "namespaces": {
+        "s19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "REDACTED",
+      "extract_patterns": [
+        {
+          "pattern": "AUTH-[A-Z]+/([A-Z]{2}\\d{4})"
+        },
+        {
+          "pattern": "AUTH/[A-Z0-9]{4,10} \\*[A-Z]/([A-Z]{2}\\d{4})"
+        },
+        {
+          "pattern": "\\bCC APVL/[^/]*/TKT/[A-Z]{2}/([A-Z]{2}\\d{4})"
+        }
+      ]
+    },
+    {
       "id": "sabre.res.employee_id_attribute",
       "channel": "sabre",
       "operation": "^(GetReservationRS|UpdateReservationRS)$",
@@ -2264,6 +2310,26 @@
       "pii_type": "payment",
       "method": "replace",
       "replacement": "REDACTED"
+    },
+    {
+      "id": "sabre.trip.auth_approval_code",
+      "channel": "sabre",
+      "operation": "^Trip_SearchRS$",
+      "path": "//stl19:RemarkLine/stl19:Text | //stl19:RemarkText | //stl19:FactHistory/stl19:FreeText | //stl19:FactHistory/stl19:FullText",
+      "namespaces": {
+        "stl19": "http://webservices.sabre.com/pnrbuilder/v1_19"
+      },
+      "pii_type": "payment",
+      "method": "replace",
+      "replacement": "REDACTED",
+      "extract_patterns": [
+        {
+          "pattern": "AUTH-APV/(\\d{4,8})"
+        },
+        {
+          "pattern": "(?:XX)?AUTH/([A-Z0-9]{5,8})(?=[/ ])"
+        }
+      ]
     },
     {
       "id": "sabre.trip.card_fragment_remark",
