@@ -4,7 +4,7 @@
 
 # Base images digest-pinned (supply-chain: a tag can be repointed upstream with no repo
 # diff); Dependabot's docker ecosystem keeps the pins fresh.
-FROM ghcr.io/astral-sh/uv:0.12.3@sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc AS uv
+FROM ghcr.io/astral-sh/uv:0.12.5@sha256:e85be844203885286c60ffad8a858d48afb6c5a5c237ca0e67f12e74b8f174b1 AS uv
 
 FROM python:3.14-alpine@sha256:a1321512d6a287428c50dcdf2ab3857761127e03a23b1f648e9c1c0de59288f8 AS builder
 COPY --from=uv /uv /usr/local/bin/uv
