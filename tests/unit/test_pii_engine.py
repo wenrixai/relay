@@ -380,14 +380,14 @@ class TestIntraPassTokenReuse:
         assert decrypt(remark_token, keyring) == "SMITH"
         assert decrypt(field_token, keyring) == "Smith"
 
-    def test_deterministic_and_default_modes_never_share_tokens(self, keyring: Keyring) -> None:
+    def test_deterministic_and_random_iv_modes_never_share_tokens(self, keyring: Keyring) -> None:
         body = (
             f'<PNR_Retrieve xmlns="{NS}"><Traveler><Name>SMITH</Name></Traveler>'
             "<Contact><Alias>SMITH</Alias></Contact></PNR_Retrieve>"
         ).encode()
         ruleset = _cache_ruleset(
             _encrypt_rule("r.name", "//m:Traveler/m:Name", deterministic=True),
-            _encrypt_rule("r.alias", "//m:Contact/m:Alias"),
+            _encrypt_rule("r.alias", "//m:Contact/m:Alias", deterministic=False),
         )
         redacted, _ = redact_response_body(body, channel="mock", ruleset=ruleset, keyring=keyring)
         root = parse_bytes(redacted)
@@ -397,14 +397,25 @@ class TestIntraPassTokenReuse:
         assert decrypt(det, keyring) == "SMITH"
         assert decrypt(rand, keyring) == "SMITH"
 
-    def test_no_cross_pass_reuse_in_default_mode(self, keyring: Keyring) -> None:
+    def test_no_cross_pass_reuse_in_random_iv_mode(self, keyring: Keyring) -> None:
+        body = _doc("SMITH")
+        ruleset = _cache_ruleset(_encrypt_rule("r.name", "//m:Traveler/m:Name", deterministic=False))
+        tokens = set()
+        for _ in range(2):
+            redacted, _ = redact_response_body(body, channel="mock", ruleset=ruleset, keyring=keyring)
+            tokens.add(parse_bytes(redacted).xpath("//*[local-name()='Name']")[0].text)
+        assert len(tokens) == 2
+
+    def test_default_mode_rule_stable_across_passes(self, keyring: Keyring) -> None:
+        """An encrypt rule that omits the flag is deterministic, so passes agree."""
         body = _doc("SMITH")
         ruleset = _cache_ruleset(_encrypt_rule("r.name", "//m:Traveler/m:Name"))
         tokens = set()
         for _ in range(2):
             redacted, _ = redact_response_body(body, channel="mock", ruleset=ruleset, keyring=keyring)
             tokens.add(parse_bytes(redacted).xpath("//*[local-name()='Name']")[0].text)
-        assert len(tokens) == 2
+        assert len(tokens) == 1
+        assert decrypt(tokens.pop(), keyring) == "SMITH"
 
     def test_deterministic_rule_stable_across_passes(self, keyring: Keyring) -> None:
         body = _doc("SMITH")

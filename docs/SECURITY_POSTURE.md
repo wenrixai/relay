@@ -46,9 +46,13 @@ does not add cryptographic integrity to individual PII fields in the default mod
 
 **Explicitly out of scope for v1 (stated, not hidden):**
 
-- Active token tampering / per-field cryptographic integrity in the default (AES-CTR) mode. AES-256-CTR
-  provides confidentiality, not authentication. (The optional deterministic mode uses AES-SIV, which
-  *is* authenticated — see §3.)
+- Active token tampering / per-field cryptographic integrity as a platform guarantee. The default
+  AES-SIV mode does authenticate its own tag, but the per-rule AES-256-CTR opt-out provides
+  confidentiality only, so per-field integrity must not be relied upon generally — see §3.
+- **Equality confidentiality of encrypted fields.** Deterministic encryption is the default, so an
+  honest-but-curious platform or passive observer holding two redacted payloads can tell that two
+  `ENC_` tokens cover the same plaintext, without the key and without recovering the plaintext.
+  Accepted disclosure — see §3.1.
 
 ---
 
@@ -56,25 +60,38 @@ does not add cryptographic integrity to individual PII fields in the default mod
 
 Implementation: `src/channel_relay/pii/` (`crypto.py`, `codec.py`, `engine.py`, `smaz.py`, `xml_ops.py`).
 
-### 3.1 Field encryption
+### 3.1 Field encryption (default: deterministic AES-SIV)
 
-- **Cipher:** AES-256-CTR (default mode), confidentiality-only in v1.
-- **Token format:** `ENC_ + base64url_nopad(control_byte ‖ 96-bit IV ‖ ciphertext)`. The control byte
-  carries a "compressed" flag, a "deterministic" flag, and 6 reserved-zero bits (version headroom).
-  `codec.py`.
-- **IV:** 12 random bytes (96-bit) per encryption, generated with `os.urandom`; the IV is unique per
-  `(key, field)` and random IVs prevent ciphertext-equality correlation. Contractually never reduced
-  below 96 bits.
+- **Cipher:** **AES-256-SIV** (RFC 5297, no nonce) under `K_siv` — the default for every `encrypt`
+  rule. The same plaintext yields the same token, so a consuming system can compare redacted values
+  by equality across responses, processes, and restarts while the master key is unchanged.
+- **Accepted disclosure:** that equality is observable *without the key*. An observer of two
+  redacted payloads learns which fields share a value, though not the value. It is the property
+  that makes cross-response correlation work for callers, and it applies to all encrypted fields
+  unless a rule sets `"deterministic": false`. Rule authors are expected to opt out where the
+  correlation itself is the sensitive fact. The relay does not rotate the master key (deferred to a
+  KMS store plugin), so the correlation window is the key's lifetime.
+- **Token format:** `ENC_ + base64url_nopad(control_byte ‖ body)`, `body` = 16-byte SIV synthetic
+  IV/tag ‖ ciphertext. The control byte carries a "compressed" flag, a "deterministic" flag (set in
+  this mode), and 6 reserved-zero bits (version headroom). `codec.py`.
+- **Integrity:** the 16-byte SIV synthetic IV doubles as an **authentication tag**, so default-mode
+  tokens are tamper-evident and fail closed on modification.
 - **Compression:** smaz "compress-if-smaller" applied before encryption and flagged in the control byte;
   never expands the payload.
 
-### 3.2 Deterministic mode (opt-in, authenticated)
+### 3.2 Random-IV mode (per-rule opt-out, confidentiality-only)
 
-- Optional per-rule **AES-256-SIV** (RFC 5297, no nonce). The same plaintext yields the
-  same token, so a consuming system can compare redacted values by equality. This equality is a
-  deliberate, documented, bounded leak enabled only for PII types the caller genuinely correlates.
-- The 16-byte SIV synthetic IV doubles as an **authentication tag**, so deterministic tokens are
-  additionally tamper-evident.
+- A rule may set `"deterministic": false` to use **AES-256-CTR** under `K_enc` instead. Tokens then
+  differ on every occurrence and carry no cross-response equality signal.
+- **Token format:** `ENC_ + base64url_nopad(control_byte ‖ 96-bit IV ‖ ciphertext)`, deterministic
+  flag clear.
+- **IV:** 12 random bytes (96-bit) per encryption, generated with `os.urandom`; the IV is unique per
+  `(key, field)` and random IVs prevent ciphertext-equality correlation. Contractually never reduced
+  below 96 bits.
+- Confidentiality-only: CTR provides no authentication, so this mode is not tamper-evident.
+- `decrypt` routes on the deterministic control bit, so tokens minted in either mode — including
+  every random-IV token minted before deterministic became the default — decrypt through one
+  mode-blind entry point.
 
 ### 3.3 Key management
 
@@ -406,8 +423,8 @@ From `SECURITY.md`:
 
 Called out honestly so reviewers do not have to discover them:
 
-- **v1 is confidentiality-only** in the default AES-CTR mode: no per-field cryptographic integrity
-  against an active tamperer. The optional deterministic (AES-SIV) mode is authenticated. Transport
+- **Per-field integrity is not a platform guarantee**: the default AES-SIV mode is authenticated and
+  tamper-evident, but the per-rule AES-CTR opt-out is confidentiality-only. Transport
   integrity relies on TLS. (By design — see §2.)
 - **SLSA build provenance is disabled** (`provenance: false`) on both the CI push and release image
   builds.

@@ -1,15 +1,21 @@
-"""ENC_ token codec: AES-256-CTR field encryption with smaz pre-compression (§8.4, D1-D3).
+"""ENC_ token codec: deterministic AES-256-SIV field encryption with smaz pre-compression (§8.4, D1-D3).
 
 Token layout: ``ENC_ + base64url_nopad(control ‖ body)`` where ``control`` is one byte
 (bit 4 compressed flag, bit 5 deterministic flag, bits 0-3 and 6-7 reserved zero — the
-version headroom). Default mode: ``body = iv ‖ ciphertext`` with 12 random IV bytes and
-AES-256-CTR under ``K_enc`` — confidentiality-only in v1 (TLS provides transport integrity
-per the threat model); the IV must never drop below 96 bits. Deterministic mode (bit 5):
-``body`` is AES-256-SIV (RFC 5297, no nonce) under ``K_siv`` — the same plaintext always
-yields the same token, so callers can compare redacted values by equality. That equality is
-a deliberate, bounded leak (opt-in per rule); the SIV tag also authenticates the token.
-Deploy order matters: relays that predate bit 5 reject deterministic tokens fail-closed as
-reserved-bit errors.
+version headroom). Default mode (bit 5 set): ``body`` is AES-256-SIV (RFC 5297, no nonce)
+under ``K_siv`` — the same plaintext always yields the same token, so callers can compare
+redacted values by equality across responses, processes, and restarts for as long as the
+master key is unchanged. **That equality is an accepted disclosure of the default redaction
+path**: an observer holding two redacted responses learns which fields share a value without
+learning the value. Rules whose fields must not be correlatable opt out per rule. The SIV tag
+also authenticates the token.
+
+Opt-out mode (``deterministic=False``, bit 5 clear): ``body = iv ‖ ciphertext`` with 12 random
+IV bytes and AES-256-CTR under ``K_enc`` — confidentiality-only (TLS provides transport
+integrity per the threat model); the IV must never drop below 96 bits.
+
+``decrypt`` routes on bit 5 and needs no mode hint, so both forms — including every random-IV
+token minted before deterministic became the default — decrypt through one entry point.
 """
 
 from __future__ import annotations
@@ -45,11 +51,13 @@ def _ctr(key: bytes, iv: bytes) -> Cipher[modes.CTR]:
     return Cipher(algorithms.AES(key), modes.CTR(iv + _CTR_SUFFIX))
 
 
-def encrypt(plaintext: str, keyring: Keyring, *, deterministic: bool = False) -> str:
+def encrypt(plaintext: str, keyring: Keyring, *, deterministic: bool = True) -> str:
     """Encrypt ``plaintext`` into an ``ENC_`` token under the keyring's master key.
 
-    ``deterministic=True`` uses AES-SIV with no nonce: the same plaintext always yields the
-    identical token (an opt-in, bounded equality leak).
+    Deterministic AES-SIV (no nonce) is the default: the same plaintext always yields the
+    identical token, which makes tokens equality-comparable without the key.
+    ``deterministic=False`` opts this call out to random-IV AES-CTR, whose tokens differ on
+    every call and carry no equality signal.
     """
     raw = plaintext.encode()
     compressed = smaz.compress(raw)

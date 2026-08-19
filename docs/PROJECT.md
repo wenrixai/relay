@@ -51,7 +51,7 @@ channels (Amadeus, Sabre, Travelport), and real observability/testability/Helm d
 | Models/config | **pydantic v2** + **pydantic-settings** | Primary validator; JSON Schema is **generated** from the models (§6.1). No hand-maintained `schema.json`. |
 | XML | **lxml**, hardened parser (§9.4) | Namespace-aware XPath + structural edits. `xmltodict` not used. |
 | Compression | **smaz** (antirez) | Compress PII plaintext before encryption (§8.4). |
-| Crypto | **cryptography** (`hazmat`) | AES-256-CTR, HKDF (§8.3–8.4). |
+| Crypto | **cryptography** (`hazmat`) | AES-256-SIV (default), AES-256-CTR, HKDF (§8.3–8.4). |
 | Logging | **Loguru** | Structured JSON; never logs PII/keys/bodies except opt-in `debug_mode` (§11.0). |
 | Telemetry | **OpenTelemetry SDK**; bundled **otelcol** (later phase) | MVP = in-process OTLP/metrics (§11). |
 | Lint/format | **ruff** (lint + format) | |
@@ -214,15 +214,24 @@ hand-maintained `schema.json`. On invalid config, log the validation error and *
 `path_type`: `xpath` (the only supported value). `method`: `encrypt` (default) | `mask`.
 `rule_type`: `field` (default) | `reference`.
 
-**`deterministic` (encrypt only, default `false`).** Random-IV `encrypt` yields a *different*
-token per occurrence, so any caller logic comparing PII values by equality (matching a passenger
-across responses, deduplicating names) breaks. Setting `"deterministic": true` switches that rule
-to AES-SIV (§8.4): same plaintext → same token, preserving equality for the
-caller. Authoring guidance: enable it only for pii_types the caller genuinely correlates by value
-(coordinate with the consuming team — `person` is the expected first case); it deliberately
-reveals equality patterns (the same passenger is recognizable across responses),
-an accepted, bounded leak. Rollout order matters: deploy relays that understand the flag
-everywhere *before* flipping it in rules — older relays reject deterministic tokens fail-closed.
+**`deterministic` (encrypt only, default `true`).** `encrypt` uses AES-SIV (§8.4) unless a rule
+opts out: same plaintext → same token, stable across responses, processes, and pod restarts for as
+long as the master key is unchanged. That is what makes caller logic comparing PII by equality
+(matching a passenger across responses, deduplicating names) work at all, and it is why the default
+sits here rather than on the random-IV path.
+
+The cost is a disclosure, and because it is the default it applies to **every** encrypted field
+unless you say otherwise: an observer holding two redacted responses learns which fields carry the
+same value, without the key and without learning the value. Authoring guidance: set
+`"deterministic": false` on fields where that correlation is itself the sensitive fact — a document
+or card number recurring across otherwise unrelated PNRs is a stronger signal than a recurring
+surname — and leave the default in place where the consuming team correlates by value. Random-IV
+`encrypt` (`false`) yields a different token per occurrence and carries no equality signal.
+
+No rollout ordering is required in either direction: bit 5 has been understood by the codec since
+before v1.0.0, so every deployed relay decrypts both forms through the same entry point, and
+random-IV tokens minted before this default flipped keep decrypting unchanged.
+
 Within one response no flag is needed: the engine reuses the same token for every occurrence of
 the same exact plaintext (per encryption mode) in a single redaction pass, including reference-rule
 hits, so intra-response equality always holds.
@@ -260,26 +269,29 @@ plaintext  = utf8(field_value)
 comp       = smaz(plaintext)
 payload    = comp if len(comp) < len(plaintext) else plaintext
 control    = (compressed << 4) | (deterministic << 5)  # bits 0-3 and 6-7 reserved zero
-# default mode (deterministic bit clear):
+# default mode (bit 5 set):
+token      = "ENC_" + base64url_nopad(control || AES-256-SIV(K_siv, payload))
+# random-IV mode (bit 5 clear, opt out per rule with "deterministic": false):
 iv         = random 12 bytes (96-bit)
 ciphertext = AES-256-CTR(K_enc, counter=iv||0x00000000, payload)
 token      = "ENC_" + base64url_nopad(control || iv || ciphertext)
-# deterministic mode (bit 5 set, opt-in per rule):
-token      = "ENC_" + base64url_nopad(control || AES-256-SIV(K_siv, payload))
 ```
-Regex `^ENC_([A-Za-z0-9_-]+)$`. Default mode: IV prepended in clear (CTR cannot encrypt its own
-IV); unique per (key,field); random IV prevents ciphertext-equality correlation.
-**Confidentiality-only in v1** (TLS provides transport integrity; threat model = a party *reading*
-the XML, not tampering, per `SECURITY.md`). Deterministic mode (RFC 5297, no nonce): the 16-byte
-synthetic IV doubles as an authentication tag, so those tokens are additionally
-tamper-evident; equality across responses is the intended, documented leak (§8.1). Decrypt routes
-on bit 5 — de-anonymization stays envelope-driven and mode-blind. Format is versioned via the
-remaining reserved bits; an authenticated default mode can be added later without breaking it.
-Size note: for short names the fixed 13-byte overhead dominates, so smaz gains are largest on longer
-PII; IV length is tunable in `codec.py` (never below 96-bit).
+Regex `^ENC_([A-Za-z0-9_-]+)$`. Default mode (AES-SIV, RFC 5297, no nonce): the 16-byte synthetic
+IV doubles as an authentication tag, so these tokens are tamper-evident; equality across responses
+is the intended, documented disclosure and now applies to every encrypted field unless a rule opts
+out (§8.1). Random-IV mode: IV prepended in clear (CTR cannot encrypt its own IV); unique per
+(key,field); the random IV is what suppresses ciphertext-equality correlation, and it is
+**confidentiality-only** (TLS provides transport integrity; threat model = a party *reading* the
+XML, not tampering, per `SECURITY.md`). Decrypt routes on bit 5 — de-anonymization stays
+envelope-driven and mode-blind, so both forms and every pre-flip token decrypt through one path.
+Format is versioned via the remaining reserved bits.
+Size note: for short names the fixed overhead dominates (17 bytes in the default mode: control byte
+plus SIV tag; 13 in random-IV mode), so smaz gains are largest on longer PII; IV length is tunable
+in `codec.py` (never below 96-bit).
 
 ### 8.5 / 8.6 Encrypt (response) / decrypt (request)
-Encrypt: parse → select rules → per node compute payload/iv/ciphertext → replace with `ENC_...` →
+Encrypt: parse → select rules → per node compute payload and SIV body (or iv/ciphertext when the
+rule opts out of deterministic mode) → replace with `ENC_...` →
 re-serialize. Decrypt: scan values for the `ENC_` marker (envelope-driven, no rule needed) → decode
 → select AES-SIV or CTR by the deterministic control bit → decrypt → smaz-decompress if flagged →
 replace. The scan matches each `ENC_`
@@ -567,8 +579,8 @@ required checks. Primary review skill: `thermo-nuclear-code-quality-review`.
 ## 17. Locked decisions
 | # | Decision |
 |---|---|
-| D1 | Field cipher: AES-256-CTR, confidentiality-only in v1 (TLS for integrity). |
-| D2 | Self-describing token `ENC_ + base64url(control ‖ 96-bit IV ‖ ciphertext)`; IV in payload; nothing echoed. |
+| D1 | Field cipher: **deterministic AES-256-SIV by default** (`K_siv`); AES-256-CTR (`K_enc`) as the per-rule opt-out, confidentiality-only (TLS for integrity). Token equality is an accepted disclosure of the default path (§8.1). |
+| D2 | Self-describing token `ENC_ + base64url(control ‖ body)`; `body` is the SIV output, or `96-bit IV ‖ ciphertext` in the opt-out mode; IV in payload; nothing echoed. |
 | D3 | smaz compress-if-smaller, flagged in `control` byte. |
 | D4 | Single master key from a Helm create-if-absent Secret; key rotation deferred to a future KMS store plugin. |
 | D5 | lxml only, **hardened** (§9.4); `xmltodict` not used. |

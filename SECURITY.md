@@ -95,8 +95,11 @@ individual PII fields.
 
 ### Controls
 
-- **Field confidentiality**: PII fields are encrypted with **AES-256-CTR** into
-  self-describing `ENC_<base64url(control byte || 96-bit IV || ciphertext)>` tokens.
+- **Field confidentiality**: PII fields are encrypted into self-describing
+  `ENC_<base64url(control byte || body)>` tokens. The default mode is **deterministic
+  AES-256-SIV** (RFC 5297, no nonce) under an HKDF-derived `K_siv`; the SIV tag also makes those
+  tokens tamper-evident. A rule may opt out to **AES-256-CTR** under `K_enc`
+  (`"deterministic": false`), whose body is a random 96-bit IV followed by the ciphertext.
   Plaintext is smaz-compressed before encryption. Keys are HKDF-derived from a single master key.
 - **Transport integrity**: provided by **TLS**.
 - **Credential swapping and transparency**: channel credentials are swapped
@@ -109,8 +112,17 @@ individual PII fields.
 
 - **Active token tampering** and **cryptographic integrity of individual fields**. The v1
   threat model assumes an honest-but-curious platform and passive observers, not an active
-  attacker modifying encrypted tokens in flight. AES-256-CTR provides confidentiality, not
-  authentication; per-field integrity is not a v1 guarantee and must not be relied upon.
+  attacker modifying encrypted tokens in flight. The AES-256-CTR opt-out mode provides
+  confidentiality, not authentication; per-field integrity is not a v1 guarantee and must not be
+  relied upon. (The default AES-SIV mode does authenticate its own tag, but per-field integrity
+  is still not promised as a platform guarantee.)
+- **Equality confidentiality of encrypted fields.** Because deterministic encryption is the
+  default, an honest-but-curious platform or passive observer holding two redacted payloads can
+  determine that two `ENC_` tokens cover the same plaintext — without the key and without
+  recovering the plaintext. This is an accepted, documented disclosure: it is what allows callers
+  to correlate a traveler across responses. Rules covering fields where that correlation is itself
+  sensitive must set `"deterministic": false`; note that the relay does not rotate the master key
+  (rotation is deferred to a KMS store plugin), so the correlation window is the key's lifetime.
 
 ## Related Documents
 
