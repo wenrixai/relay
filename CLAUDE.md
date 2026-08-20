@@ -116,9 +116,13 @@ Two config layers, an app factory, a handler registry, and a linear forward pipe
 - Keep pipeline stages small and independently testable.
 
 ## Security (hard constraints)
-- Field crypto: AES-256-CTR, HKDF `K_enc`, single master key; smaz-compress before encrypt
-  (compress-if-smaller, flagged); token `ENC_ + base64url(control ‖ 96-bit IV ‖ ciphertext)`.
-  Confidentiality-only in v1; do not drop IV below 96-bit; keep the format versioned.
+- Field crypto: **AES-256-SIV by default** (HKDF `K_siv`, deterministic — the same plaintext always
+  yields the same token), with AES-256-CTR (HKDF `K_enc`, random 96-bit IV) as the per-rule opt-out
+  (`"deterministic": false`). Single master key; smaz-compress before encrypt (compress-if-smaller,
+  flagged); token `ENC_ + base64url(control ‖ body)`. Because the default is deterministic, token
+  equality is observable without the key on every encrypted field — opt a rule out when that
+  correlation is itself the sensitive fact. Do not drop the CTR IV below 96-bit; keep the format
+  versioned.
 - Keys come from the mounted Secret/env; never hard-coded, logged, or committed. The Helm Secret is
   create-if-absent; never regenerate keys on upgrade.
 - Operation is parsed from the body, never trusted from a header. Constant-time secret comparison.

@@ -59,10 +59,12 @@ class EncryptAction(BaseModel):
 
     method: Literal["encrypt"] = "encrypt"
     deterministic: bool = Field(
-        default=False,
+        default=True,
         description=(
             "Use deterministic (AES-SIV) encryption: the same plaintext always yields the "
-            "same token, preserving value equality for the caller."
+            "same token, preserving value equality for the caller. This is the default; set "
+            "false to opt this rule out to random-IV (AES-CTR) tokens, which differ on every "
+            "response and so carry no cross-response equality signal."
         ),
     )
 

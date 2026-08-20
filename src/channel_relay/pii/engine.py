@@ -44,6 +44,9 @@ _Collector = dict[str, set[str]]
 # Per-pass (plaintext, deterministic) → token cache: the same value encrypted under the same
 # mode reuses one token within a single redaction pass, so intra-response equality survives
 # tokenization. Like the collector, it lives only for one pass and is never persisted or logged.
+# It stays per-pass even though the default mode is now deterministic and therefore already
+# stable across passes: cross-response stability is a property of the cipher, never of retained
+# relay state, so this cache is never widened or persisted to chase it.
 _TokenCache = dict[tuple[str, bool], str]
 
 _SOAP_LOCAL_ENVELOPE = "Envelope"

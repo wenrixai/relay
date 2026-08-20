@@ -13,8 +13,10 @@ from channel_relay.pii.crypto import Keyring
 
 TOKEN_CONTRACT = re.compile(r"^ENC_[A-Za-z0-9_-]+$")
 
-# 1 control byte + 12-byte IV; fixed pre-base64 overhead (§8.4).
+# 1 control byte + 12-byte IV; fixed pre-base64 overhead of the random-IV mode (§8.4).
 FIXED_OVERHEAD = 13
+# 1 control byte + 16-byte SIV tag; fixed pre-base64 overhead of the default mode (§8.4).
+SIV_FIXED_OVERHEAD = 17
 
 
 def make_keyring(seed: int = 1) -> Keyring:
@@ -51,14 +53,14 @@ def test_token_matches_contract_regex(keyring: Keyring) -> None:
 
 
 def test_iv_uniqueness(keyring: Keyring) -> None:
-    tokens = {encrypt("same value", keyring) for _ in range(200)}
+    tokens = {encrypt("same value", keyring, deterministic=False) for _ in range(200)}
     assert len(tokens) == 200
 
 
 def test_size_bound(keyring: Keyring) -> None:
     for plaintext in ("a", "ab", "John Smith", "日本語テキスト", "y" * 300):
         raw_len = len(plaintext.encode())
-        token = encrypt(plaintext, keyring)
+        token = encrypt(plaintext, keyring, deterministic=False)
         payload = pybase64.urlsafe_b64decode(token[len("ENC_") :] + "==")
         assert len(payload) <= raw_len + FIXED_OVERHEAD
 
@@ -176,7 +178,7 @@ def test_deterministic_token_matches_contract(keyring: Keyring) -> None:
 
 def test_deterministic_flag_encoded_in_control(keyring: Keyring) -> None:
     assert _control(encrypt("value", keyring, deterministic=True)) & 0x20
-    assert not _control(encrypt("value", keyring)) & 0x20
+    assert not _control(encrypt("value", keyring, deterministic=False)) & 0x20
 
 
 def test_deterministic_distinct_plaintexts_differ(keyring: Keyring) -> None:
@@ -220,3 +222,23 @@ def test_remaining_reserved_bits_still_rejected(keyring: Keyring) -> None:
         forged = "ENC_" + pybase64.urlsafe_b64encode(bytes(payload)).decode().rstrip("=")
         with pytest.raises(TokenError):
             decrypt(forged, keyring)
+
+
+def test_default_mode_is_deterministic(keyring: Keyring) -> None:
+    """No mode argument means AES-SIV: bit 5 set and repeated calls byte-identical."""
+    tokens = {encrypt("same value", keyring) for _ in range(50)}
+    assert len(tokens) == 1
+    assert _control(tokens.pop()) & 0x20
+
+
+def test_default_mode_stable_across_keyring_reloads() -> None:
+    """The same master key reloaded (pod restart) mints the identical default-mode token."""
+    first, second = make_keyring(5), make_keyring(5)
+    assert encrypt("SMITH/JOHN MR", first) == encrypt("SMITH/JOHN MR", second)
+
+
+def test_default_mode_size_bound(keyring: Keyring) -> None:
+    for plaintext in ("a", "ab", "John Smith", "\u65e5\u672c\u8a9e\u30c6\u30ad\u30b9\u30c8", "y" * 300):
+        raw_len = len(plaintext.encode())
+        payload = pybase64.urlsafe_b64decode(encrypt(plaintext, keyring)[len("ENC_") :] + "==")
+        assert len(payload) <= raw_len + SIV_FIXED_OVERHEAD
