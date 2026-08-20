@@ -22,6 +22,16 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     find /app/.venv -type f \( -name "*.c" -o -name "*.h" \) -delete
 
 FROM python:3.14-alpine@sha256:05b2b8b732ecd268fee8727a369f936f022d1321b59befd13c30ede22769dcdc AS runtime
+# Drop pip from the runtime stage. The venv is built in the builder and copied in whole, and it
+# sets include-system-site-packages=false, so nothing at runtime imports the base interpreter's
+# site-packages: CMD runs `channel-relay` from /app/.venv and HEALTHCHECK uses wget. Keeping pip
+# only ships its vendored tree (pip/_vendor/vendor.txt), which is where Trivy finds
+# msgpack GHSA-6v7p-g79w-8964 and setuptools CVE-2025-47273 — neither reachable, both HIGH and
+# both blocking the image scan. Globbed on python3.* so a base-image minor bump needs no edit.
+# Trade-off: `python -m pip` no longer works inside a running container.
+RUN find /usr/local/lib/python3.*/site-packages -maxdepth 1 \
+      \( -name "pip" -o -name "pip-*.dist-info" \) -exec rm -rf {} + \
+    && ! python -c "import pip" 2>/dev/null
 # Drop to a non-root user.
 RUN addgroup -g 101 -S relay && adduser -u 100 -S -G relay relay
 WORKDIR /app
