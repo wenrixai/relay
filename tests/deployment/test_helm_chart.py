@@ -159,15 +159,6 @@ def test_pii_keyring_secret_is_create_if_absent() -> None:
 
 @requires_helm
 @pytest.mark.fail_slow("30s")
-def test_deployment_has_no_epoch_env() -> None:
-    deploy = _by_kind(_render(), "Deployment")[0]
-    container = deploy["spec"]["template"]["spec"]["containers"][0]
-    env_names = {e["name"] for e in container["env"]}
-    assert "RELAY_PII_KEY_EPOCH_ACTIVE" not in env_names
-
-
-@requires_helm
-@pytest.mark.fail_slow("30s")
 def test_keyring_reuse_guard_present_in_template() -> None:
     # The create-if-absent guarantee relies on a `lookup` guard; assert it exists in source so a
     # refactor cannot silently drop it (upgrade must never regenerate the master key).

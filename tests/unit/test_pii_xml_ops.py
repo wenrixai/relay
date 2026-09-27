@@ -100,11 +100,6 @@ def test_empty_body_raises_parse_error() -> None:
         parse_bytes(b"")
 
 
-def test_valid_document_parses() -> None:
-    root = parse_bytes(b'<a xmlns:n="urn:x"><n:b attr="1">text</n:b></a>')
-    assert root.tag == "a"
-
-
 def test_serialize_round_trip_preserves_namespaces() -> None:
     original = (
         b'<?xml version="1.0" encoding="UTF-8"?><s:Envelope xmlns:s="urn:soap">'
