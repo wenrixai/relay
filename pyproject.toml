@@ -86,11 +86,14 @@ minversion = "8.0"
 addopts = "--strict-markers --strict-config --cov --cov-report=term-missing --fail-slow=500ms"
 testpaths = ["tests"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 timeout = 60
 filterwarnings = [
     "error",
     # Third-party deprecation we don't control (starlette TestClient on httpx).
     "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+    # anyio's pytest plugin still imports the pytest-9.2-deprecated CallSpec2 alias.
+    "ignore:_pytest.python.CallSpec2 has been renamed",
     # The OTel SDK LoggingHandler is the canonical Loguru->OTLP log bridge; its suggested
     # replacement (opentelemetry-instrumentation-logging) only injects trace context, it does
     # not export logs. The logs SDK is still unstable upstream — revisit when it stabilizes.

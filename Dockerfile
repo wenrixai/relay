@@ -6,7 +6,8 @@
 # diff); Dependabot's docker ecosystem keeps the pins fresh.
 FROM ghcr.io/astral-sh/uv:0.13.7@sha256:96f40d3904aad8d0bd010539001d36c8e2188b981e1334471a90c4a1d93bb490 AS uv
 
-FROM python:3.15-alpine@sha256:a0f2e268f2ce8f3709611a90054ec6a8ae31f6251f5896b8648b9bb99835e30a AS builder
+# 3.14, not 3.15: grpcio ships no cp315 musllinux wheel (source build needs a compiler).
+FROM python:3.14-alpine@sha256:a18b20ad69e74df6cf6d2e1b1a260d7a1ecf5380fd83b310f83ba88c461cf894 AS builder
 COPY --from=uv /uv /usr/local/bin/uv
 WORKDIR /app
 ENV UV_LINK_MODE=copy \
@@ -21,7 +22,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-editable && \
     find /app/.venv -type f \( -name "*.c" -o -name "*.h" \) -delete
 
-FROM python:3.15-alpine@sha256:a0f2e268f2ce8f3709611a90054ec6a8ae31f6251f5896b8648b9bb99835e30a AS runtime
+FROM python:3.14-alpine@sha256:a18b20ad69e74df6cf6d2e1b1a260d7a1ecf5380fd83b310f83ba88c461cf894 AS runtime
 # Drop pip from the runtime stage. The venv is built in the builder and copied in whole, and it
 # sets include-system-site-packages=false, so nothing at runtime imports the base interpreter's
 # site-packages: CMD runs `channel-relay` from /app/.venv and HEALTHCHECK uses wget. Keeping pip
