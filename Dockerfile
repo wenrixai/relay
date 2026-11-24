@@ -4,7 +4,7 @@
 
 # Base images digest-pinned (supply-chain: a tag can be repointed upstream with no repo
 # diff); Dependabot's docker ecosystem keeps the pins fresh.
-FROM ghcr.io/astral-sh/uv:0.13.8@sha256:5cc1805e2426484abca4ad46ea783bab281fdb225fd82d8ce6d66a81254bac85 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.9@sha256:d3b601f0c7b118bc1753febf7c41cc80981df678445e0254284eecf84db79a7d AS uv
 
 # 3.14, not 3.15: grpcio ships no cp315 musllinux wheel (source build needs a compiler).
 FROM python:3.14-alpine@sha256:a18b20ad69e74df6cf6d2e1b1a260d7a1ecf5380fd83b310f83ba88c461cf894 AS builder
